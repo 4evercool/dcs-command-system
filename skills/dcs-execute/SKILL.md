@@ -1,6 +1,6 @@
----
+﻿---
 name: dcs-execute
-description: "DCS gated execution: verify the IAP approval marker, fan out Ops Specialists per their 204 taskings, handle deviations by returning to planning, and get a binding Safety Officer verdict. Use when an DCS incident has an approved IAP ready to execute."
+description: "DCS gated execution: verify the IAP approval marker, fan out Ops Specialists per their 204 taskings, handle deviations by returning to planning, and get a binding Safety Officer verdict. Use when a DCS incident has an approved IAP ready to execute."
 argument-hint: "[notes]"
 allowed-tools:
   - Read

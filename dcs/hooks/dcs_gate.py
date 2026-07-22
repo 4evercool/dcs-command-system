@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """PreToolUse hook: mechanical enforcement of the DCS IAP-approval gate.
 
 DCS ("Development Command System") adapts the ICS Planning P to software
@@ -59,7 +59,7 @@ def deny(reason):
 def find_project_root(start):
     """CLAUDE_PROJECT_DIR if it has .dcs/, else walk up from cwd looking
     for a directory containing .dcs/. Returns None if neither finds one --
-    that means this isn't an DCS-onboarded project and the hook has
+    that means this isn't a DCS-onboarded project and the hook has
     nothing to do."""
     env_root = os.environ.get("CLAUDE_PROJECT_DIR")
     if env_root:
@@ -154,7 +154,7 @@ def main():
 
         project_root = find_project_root(os.getcwd())
         if project_root is None:
-            sys.exit(0)  # not an DCS-onboarded project -- nothing to do
+            sys.exit(0)  # not a DCS-onboarded project -- nothing to do
 
         active_path = project_root / ".dcs" / "ACTIVE"
         if not active_path.is_file():

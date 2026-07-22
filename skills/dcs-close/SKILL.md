@@ -1,6 +1,6 @@
----
+﻿---
 name: dcs-close
-description: "DCS close-out: requires a green Safety verdict, writes the AAR, routes lessons to the project's own memory system if one is documented, flags the intake source, and releases the gate. Use when an DCS incident has passed Safety review and is ready to close."
+description: "DCS close-out: requires a green Safety verdict, writes the AAR, routes lessons to the project's own memory system if one is documented, flags the intake source, and releases the gate. Use when a DCS incident has passed Safety review and is ready to close."
 argument-hint: "[notes]"
 allowed-tools:
   - Read
