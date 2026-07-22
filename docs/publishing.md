@@ -61,7 +61,7 @@ installed vs package. A release bump touches BOTH files in one commit.
    ```
 6. Verify: `npx dcs-command-system@latest version` from a directory
    outside the repo, then `dcs doctor`.
-7. Tag: `git tag vX.Y.Z && git push --tags` (once a remote exists).
+7. Tag: `git tag vX.Y.Z && git push --tags`.
 
 ## Upgrade flow for users
 
@@ -74,24 +74,12 @@ Then in each onboarded project: re-run `/dcs-init` (or copy
 `dcs/hooks/dcs_gate.py` manually) — projects hold their own gate-hook
 copy, and `settings.json` wiring survives upgrades untouched.
 
-## Repo integration checklist (after v0.3 lands — do as its own commit)
-
-- [ ] Copy `package.json` + `bin/dcs.js` + this file (as
-      `docs/publishing.md`) into `C:\DCS`.
-- [ ] Set `package.json` version = `dcs/VERSION` (0.3.0).
-- [ ] `npm pack --dry-run` — review the manifest.
-- [ ] Full temp-dir test: `DCS_CLAUDE_DIR=<temp> node bin/dcs.js install
-      && ... uninstall` (env test hooks are built into the CLI).
-- [ ] README: add the npx install one-liner near the top.
-- [ ] Commit `feat(npm): package dcs-command-system with dcs installer CLI`.
-- [ ] Owner: steps 3–7 above.
-
 ## Notes / future
 
 - A native Claude Code *plugin* format (plugin.json, marketplace) is a
   separate distribution channel; DCS mirrors GSD's flat-install model,
   which works everywhere today. Revisit if/when a public marketplace
   matters.
-- `repository`/`homepage` fields in package.json are omitted until a
-  public git remote exists; add them when the repo gets one (npm shows
-  them on the package page).
+- `repository`/`homepage`/`bugs` fields in package.json point at the
+  GitHub remote (github.com/4evercool/dcs-command-system), added once
+  the repo gained one (2026-07-23).
