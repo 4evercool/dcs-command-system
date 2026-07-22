@@ -80,8 +80,8 @@ Three cases:
 add is a whole new `hooks.PreToolUse` array (or a new array if `hooks`
 exists but has no `PreToolUse` key).
 
-**b. File has a `hooks.PreToolUse` array already** (e.g. a project like
-bread_bot with its own Bash guards). The new matcher is **appended** as an
+**b. File has a `hooks.PreToolUse` array already** (e.g. a project that
+already ships its own Bash guards). The new matcher is **appended** as an
 additional entry in that array — existing entries are never replaced,
 reordered, or removed. This is exactly the kind of drift the project's own
 guard hooks exist to prevent; DCS's hook must not create the same kind of

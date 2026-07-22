@@ -5,7 +5,7 @@ DCS ("Development Command System") adapts the ICS Planning P to software
 work: no source edit happens until an Incident Action Plan (IAP) exists and
 has been approved by the Owner. Doctrine says the rule is "mechanical, not
 behavioral" (references/doctrine.md, principle 11) -- this hook is that
-mechanism, modeled directly on bread_bot's bash_guard.py stdin-JSON /
+mechanism, speaking the standard PreToolUse stdin-JSON /
 stdout-JSON deny pattern.
 
 Fires on PreToolUse for Edit|Write|NotebookEdit (wired by /dcs-init into the
@@ -37,7 +37,7 @@ PreToolUse hooks -- never replacing them). Logic:
 7. Any internal error -> fail OPEN (exit 0). Never brick the session over
    a hook bug.
 
-No escape-hatch environment variable, unlike bash_guard.py's GUARD_OK=1 --
+No escape-hatch environment variable --
 the one sanctioned emergency release is the Owner deleting .dcs/ACTIVE, an
 explicit, visible act (doctrine principle 11). The `.dcs/CLOSED` zombie
 rule (step 2) is the one deliberate exception to "fail open when in

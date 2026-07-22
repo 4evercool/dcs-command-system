@@ -47,7 +47,7 @@ plan.
 - A well-scoped bug fix touching 1-4 files with a clear root cause
 - A small feature addition that follows existing patterns (new endpoint on
   an existing resource, new field on an existing model with its migration)
-- A plugin-level fix (e.g. a Steve heuristic change) that doesn't touch
+- A plugin-level fix (e.g. a notification-heuristic change) that doesn't touch
   shared core modules
 - An audit finding (`needs_fix` row) with a concrete, describable remediation
 

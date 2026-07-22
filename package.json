@@ -1,0 +1,38 @@
+{
+  "name": "dcs-command-system",
+  "version": "0.3.0",
+  "description": "DCS — Development Command System. An installable Claude Code skill package that adapts the ICS Planning P to the software development cycle: typed incidents, hook-enforced IAP approval gate, Opus chiefs, Sonnet specialists, adversarial Safety Officer, ESG strategic layer with Delegation of Authority.",
+  "bin": {
+    "dcs": "./bin/dcs.js"
+  },
+  "files": [
+    "bin/",
+    "dcs/",
+    "agents/",
+    "skills/",
+    "docs/",
+    "tests/",
+    "install.ps1",
+    "install.sh",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=16.7.0"
+  },
+  "scripts": {
+    "postinstall": "node bin/dcs.js postinstall",
+    "test": "python tests/test_dcs_gate.py"
+  },
+  "keywords": [
+    "claude-code",
+    "claude",
+    "agent",
+    "skills",
+    "incident-command-system",
+    "workflow",
+    "planning-p",
+    "multi-agent"
+  ],
+  "author": "4evercool",
+  "license": "MIT"
+}

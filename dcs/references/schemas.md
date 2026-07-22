@@ -20,12 +20,12 @@ Returned by `dcs-situation-analyst`.
 {
   "summary": "One paragraph: what the incident is and why it matters",
   "evidence": [
-    "action_log row: category=error, actor_id=123, ts=2026-07-22T03:14Z, traceback tail: ...",
-    "codegraph: get_blocking_ingredients has 3 callers, none touch delivery_date window"
+    "error-log row: category=error, actor_id=123, ts=2026-07-22T03:14Z, traceback tail: ...",
+    "call graph: get_blocking_ingredients has 3 callers, none touch the delivery_date window"
   ],
-  "affected_files": ["Copilot/db/inventory_repo.py", "Copilot/plugins/steve_plugin.py"],
+  "affected_files": ["src/db/inventory_repo.py", "src/plugins/reminder_plugin.py"],
   "repro_path": "1. Create order for tomorrow  2. Run get_blocking_ingredients  3. Order flagged as stuck",
-  "prior_art": "vault/Память/pitfalls/inventory.md #12 — same symptom, different root cause, closed 2026-06-01"
+  "prior_art": "docs/pitfalls.md #12 — same symptom, different root cause, closed earlier"
 }
 ```
 
@@ -47,22 +47,22 @@ only, `dcs-logistics-chief` — see its own return shape below).
   "objectives_feedback": "202's acceptance criteria are testable as written; no changes requested",
   "tactics": [
     "Add a delivery_date window check inside get_blocking_ingredients' existing transaction",
-    "Update the Steve plugin's stuck-order heuristic to respect the same window"
+    "Update the reminder plugin's stale-order heuristic to respect the same window"
   ],
   "taskings": [
     {
       "id": "S1",
       "task": "Add delivery_date window to get_blocking_ingredients per 202 acceptance criterion 1",
-      "territory": ["Copilot/db/inventory_repo.py"],
-      "forbidden": ["Copilot/plugins/**"],
-      "evidence_required": ["pytest Copilot/tests/test_inventory_repo.py -x output"]
+      "territory": ["src/db/inventory_repo.py"],
+      "forbidden": ["src/plugins/**"],
+      "evidence_required": ["pytest tests/test_inventory_repo.py -x output"]
     },
     {
       "id": "S2",
-      "task": "Stop flagging future-dated orders as stuck in Steve's heuristic per 202 acceptance criterion 2",
-      "territory": ["Copilot/plugins/steve_plugin.py"],
-      "forbidden": ["Copilot/db/**"],
-      "evidence_required": ["pytest Copilot/tests/test_steve_plugin.py -x output"]
+      "task": "Stop flagging future-dated orders as stale in the reminder heuristic per 202 acceptance criterion 2",
+      "territory": ["src/plugins/reminder_plugin.py"],
+      "forbidden": ["src/db/**"],
+      "evidence_required": ["pytest tests/test_reminder_plugin.py -x output"]
     }
   ],
   "partition_ok": true,
@@ -94,11 +94,11 @@ only, `dcs-logistics-chief` — see its own return shape below).
 
 ```json
 {
-  "deploy_path": "Copilot/deploy/deploy.sh (full deploy — migration touches backend and frontend build)",
+  "deploy_path": "deploy/deploy.sh (full deploy — migration touches backend and frontend build)",
   "env_deps": ["No new env vars", "requirements.txt: add alembic==1.13.1"],
-  "migration_ordering": "Run schema migration before restarting bread-api.service, not after",
+  "migration_ordering": "Run the schema migration before restarting the api service, not after",
   "rollback_plan": "Migration is additive (new nullable column) — rollback is redeploying the prior commit; no down-migration needed",
-  "risks": ["~2GB RAM server — avoid concurrent vite build + migration"]
+  "risks": ["low-memory host — avoid running the frontend build and the migration concurrently"]
 }
 ```
 
@@ -109,8 +109,8 @@ Returned by `dcs-ops-specialist`.
 ```json
 {
   "status": "done",
-  "files_touched": ["Copilot/db/inventory_repo.py"],
-  "tests_run": ["pytest Copilot/tests/test_inventory_repo.py -x"],
+  "files_touched": ["src/db/inventory_repo.py"],
+  "tests_run": ["pytest tests/test_inventory_repo.py -x"],
   "evidence": "5 passed in 1.2s (full pytest output pasted below)",
   "deviation": null
 }
@@ -149,9 +149,9 @@ Returned by `dcs-safety-officer`.
   "verdict": "pass",
   "refutations": [],
   "checked": [
-    "git diff Copilot/db/inventory_repo.py — window check present, matches 202 criterion 1",
-    "pytest Copilot/tests/test_inventory_repo.py -x — 5 passed (ran independently, not copied from S1's return)",
-    "pytest Copilot/tests/test_steve_plugin.py -x — 8 passed",
+    "git diff src/db/inventory_repo.py — window check present, matches 202 criterion 1",
+    "pytest tests/test_inventory_repo.py -x — 5 passed (ran independently, not copied from S1's return)",
+    "pytest tests/test_reminder_plugin.py -x — 8 passed",
     "manual repro of 201 repro_path against a scratch order — no longer flagged"
   ]
 }
@@ -168,7 +168,7 @@ Halt example:
       "evidence": "Re-ran it myself: 4 passed, 1 skipped (test_window_boundary is marked xfail and was never un-marked) — the boundary case from 202 criterion 1 is untested"
     }
   ],
-  "checked": ["git diff Copilot/db/inventory_repo.py", "pytest Copilot/tests/test_inventory_repo.py -x (independent re-run)"]
+  "checked": ["git diff src/db/inventory_repo.py", "pytest tests/test_inventory_repo.py -x (independent re-run)"]
 }
 ```
 

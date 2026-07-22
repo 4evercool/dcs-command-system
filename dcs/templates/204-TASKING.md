@@ -32,7 +32,7 @@ resolve by guessing.
      structured return's `evidence` field -- not a description of what
      should happen. -->
 
-- {{e.g. "pytest Copilot/tests/test_inventory_repo.py -x -- full output"}}
+- {{e.g. "pytest tests/test_inventory_repo.py -x -- full output"}}
 
 ## On discovering the plan doesn't fit reality
 

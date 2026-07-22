@@ -1,117 +1,116 @@
 # DCS — Development Command System
 
-Source-of-truth repository for **DCS (Development Command System)** — an
-installable Claude Code skill package that adapts the ICS (Incident Command
-System) **Planning P** to the software development cycle.
+Run your development the way emergencies are run: every feature, bug, or
+audit finding is an **incident** with a typed response level, a written
+action plan, an approval gate that is **mechanically enforced**, and an
+adversarial verifier with veto power. DCS adapts the Incident Command
+System's **Planning P** to the software development cycle, as an
+installable [Claude Code](https://claude.com/claude-code) skill package.
 
-> **This repo is canonical.** The installed copy lives in `~/.claude/`
-> (payload `~/.claude/dcs/`, agents `~/.claude/agents/dcs-*.md`, skills
-> `~/.claude/skills/dcs-*/`). Edit HERE, commit, then run `install.ps1` —
-> never patch the installed copy in place (same discipline the gate itself
-> enforces for source code).
-
-## What DCS is
-
-Every unit of work — feature, bug, audit finding — is an **incident** with
-a typed response level (5 / 3 / 1). A repeating planning cycle (the P-loop)
-runs: objectives → tactics → integrated action plan (IAP) → Owner approval
-→ **gated** execution → adversarial verification → assess → next period or
-close. The core mechanic: **no source edit until an approved IAP exists**,
-enforced mechanically by a PreToolUse hook (`dcs/hooks/dcs_gate.py`) with a
-hash-bound approval marker — editing the plan after approval voids the
-approval automatically.
-
-**v0.2 adds the ESG strategic layer** above the P-loop: a standing session
-(`/dcs-esg`) where the Owner chairs and the main session acts as Chief of
-Staff, managing an incident portfolio (`.dcs/esg/REGISTER.md`), a ranked
-`STRATEGY.md`, and a versioned `DELEGATION.md` — the Owner's written grant
-of authority letting the IC auto-approve routine (Type 3, in-bounds) IAPs
-on their behalf instead of a click-through every time. Two driver commands
-build on it: `/dcs-run` chains stem → plan → execute → close for one
-incident attended (Owner answers gates only), and `/dcs-loop` sweeps the
-register's queue unattended under the Delegation, never running a Type 1
-or deploying without the Owner. See
-[docs/spec-v0.2-esg.md](docs/spec-v0.2-esg.md) for the full spec.
-
-**v0.3 adds parallel operation**: each Type 3/1 incident gets its own git
-worktree + branch, so multiple incidents can be developed at once without
-sharing a working tree — the portfolio-level territory partition
-(`REGISTER.md`'s `territory` column) is what keeps their eventual merges
-clean. `/dcs-close` now merges the incident's branch into main and removes
-its worktree as part of closing (never a separate chore anyone can
-forget), and a new `/dcs-deploy` command runs a serialized, Owner-gated
-deploy train that ships exactly the set of merged, Safety-passed
-incidents from the always-clean main checkout. See
-[docs/spec-v0.3-parallel.md](docs/spec-v0.3-parallel.md) for the full
-spec.
-
-Chain of command (phases, not nesting — subagents can't spawn subagents):
-
-| Role | Seat | Model |
-|---|---|---|
-| Owner | human | — |
-| Incident Commander | main session if it runs Fable, else the `dcs-commander` agent (transfer of command) | Fable |
-| Dispatcher | main session, any model | any |
-| Section Chiefs (Planning / Logistics) | subagents | Opus |
-| Safety Officer (binding halt) | subagent | Opus |
-| Ops Specialists (≤4, disjoint file territories) | subagents | Sonnet |
-
-Full constitution: [dcs/references/doctrine.md](dcs/references/doctrine.md).
-Design history: [docs/design-v0.1.md](docs/design-v0.1.md).
-ESG spec (implemented in v0.2): [docs/spec-v0.2-esg.md](docs/spec-v0.2-esg.md)
-— the strategic layer (Delegation of Authority, incident register,
-escalation triggers).
-
-## Layout
-
-```
-dcs/          package payload  -> installs to ~/.claude/dcs/
-  workflows/    orchestration bodies (@-included by skills)
-  references/   doctrine, schemas, forms, typing guide
-  templates/    201/202/203/204/IAP/214/AAR + config.json
-  hooks/        dcs_gate.py (the PreToolUse gate)
-agents/       subagent charters -> installs to ~/.claude/agents/
-skills/       slash commands    -> installs to ~/.claude/skills/
-docs/         design docs and version specs
-tests/        gate lifecycle test (18 cases)
-install.ps1   copy repo -> ~/.claude (Windows; the only sanctioned install path)
-install.sh    same, for macOS/Linux
-```
-
-**Per onboarded project (v0.3):** a sibling `<repo>-wt\` directory holds
-one subdirectory per active incident worktree (`git worktree add
-<repo>-wt\<slug> -b dcs/<slug>`), created automatically the first time a
-Type 3/1 incident opens. The repo itself stays the "main checkout" — the
-only place `.dcs/esg/` state, merges, and deploys live; see doctrine's
-"Parallel operation" section.
-
-**Portability notes for new installers:** the gate hook needs `python` on
-PATH (stdlib only, 3.8+). The IC tier degrades gracefully — if your plan
-has no Fable access, `dcs-commander` falls back to the strongest available
-model (doctrine → "Model availability"). Project-specific behaviors
-(memory routing, intake-source closure) are discovered from YOUR project's
-CLAUDE.md at runtime — DCS ships none of its authors' project facts.
-
-## Commands (once installed)
-
-`/dcs-init` (onboard a project + wire the gate) · `/dcs-new` (stem: intake
-→ 201 → typing) · `/dcs-plan` (202 → chiefs → IAP → approval) ·
-`/dcs-execute` (gated fan-out + Safety Officer) · `/dcs-close` (AAR,
-merge worktree to main, release) · `/dcs-status` (sitrep / resume,
-`--campaign` for the portfolio) · `/dcs-esg` (v0.2: standing strategy
-session — priorities, register, Delegation of Authority) · `/dcs-run`
-(v0.2: attended auto-chain of the full lifecycle, pausing only at Owner
-gates) · `/dcs-loop` (v0.2: unattended queue sweep over the register,
-under the Delegation) · `/dcs-deploy` (v0.3: serialized, Owner-gated
-deploy train — ships merged incidents from the main checkout, Owner-
-triggered only, never called by `/dcs-loop`).
-
-## Testing
+## Install
 
 ```bash
-python tests/test_dcs_gate.py
+npm i -g dcs-command-system     # auto-installs into ~/.claude
 ```
 
-18 lifecycle cases against the gate hook (deny pre-approval, hash-void
-after IAP edit, fail-open on errors, BOM tolerance, cwd-walk discovery,
-and v0.3's target-path root resolution + `.dcs/CLOSED` zombie rule).
+or one-shot, no global install:
+
+```bash
+npx dcs-command-system install
+```
+
+Then, inside a Claude Code session in your project:
+
+```
+/dcs-init        # onboard the project: creates .dcs/, wires the approval gate
+/dcs-run <describe a bug or feature>
+```
+
+Requirements: Node ≥ 16.7 for the installer; Python 3.8+ on PATH for the
+approval-gate hook. `dcs doctor` checks both. The auto-install skips
+politely in CI or when `~/.claude` doesn't exist
+(`DCS_SKIP_POSTINSTALL=1` opts out).
+
+## What you get
+
+- **No code before an approved plan — enforced, not promised.** A
+  PreToolUse hook blocks source edits while an incident lacks an approved
+  IAP (Incident Action Plan). The approval marker is hash-bound: editing
+  the plan after approval voids the approval automatically.
+- **A chain of command mapped to model tiers.** You are the **Owner**
+  (ultimate authority). An **Incident Commander** (strongest available
+  model) holds command judgment at four defined command points. **Section
+  Chiefs** (Opus) plan; **Ops Specialists** (Sonnet, ≤4, disjoint file
+  territories) execute; an independent **Safety Officer** (Opus)
+  adversarially verifies the real diff and runs the tests itself — its
+  halt is binding. Any model can drive the session: command judgment
+  transfers to a dedicated commander agent when needed, never to the
+  session's own voice.
+- **Typed, scalable ceremony.** Type 5 (trivial) = one specialist, no
+  ceremony. Type 3 (well-scoped) = the standard gated loop. Type 1
+  (architectural) = full activation with mandatory Owner sign-off.
+  Ceremony is proportional to risk, decided per incident.
+- **Everything on paper.** Incidents live on disk (`.dcs/incidents/…`,
+  ICS-style forms: 201 brief, 202 objectives, 204 taskings, 214 log,
+  AAR). Any session — any model, any day — resumes an incident losslessly
+  from its files.
+- **A strategic layer when you want one.** `/dcs-esg` holds a standing
+  session: incident register, ranked strategy, and a written **Delegation
+  of Authority** that lets routine in-bounds work auto-approve on your
+  behalf — logged, never silent. `/dcs-run` chains a whole incident with
+  you only at real decisions; `/dcs-loop` sweeps the queue unattended
+  under the Delegation (never runs architectural work unattended, never
+  deploys).
+- **Parallel sessions without deploy contention** (v0.3). Each incident
+  gets its own git worktree and branch; concurrent incidents hold
+  disjoint file territories; merging is a mandatory step of closing (a
+  worktree cannot rot forgotten — every DCS surface audits and ages
+  strays); deploys run from an always-clean main via `/dcs-deploy`.
+
+## Commands
+
+| Command | What it does |
+|---|---|
+| `/dcs-init` | Onboard a project: `.dcs/` state + the approval-gate hook |
+| `/dcs-run <intake>` | Drive a full incident: stem → plan → execute → close, pausing only at Owner gates (`--next` pulls the top queued register item) |
+| `/dcs-new` / `/dcs-plan` / `/dcs-execute` / `/dcs-close` | The individual phases, for stepwise use or resuming |
+| `/dcs-status` | Sitrep; `--campaign` for the whole portfolio |
+| `/dcs-esg` | Strategy session: register, priorities, Delegation of Authority |
+| `/dcs-loop` | Unattended sweep of the queued register under the Delegation |
+| `/dcs-deploy` | The deploy train: ship all merged incidents from clean main |
+
+CLI (this npm package): `dcs install` · `dcs uninstall` · `dcs doctor` ·
+`dcs version`.
+
+## How it holds up
+
+The doctrine was hardened by running it on a real production project from
+day one: every failure mode observed in the field (dispatchers skipping
+command points, self-reported "done" without artifacts, verification
+staged before commits existed, forgotten worktrees) became a mechanical
+check — entry gates that audit the command chain at every phase boundary,
+a facts-only rule for close-out reports, hash-bound approvals, and a
+14+-case test suite for the gate hook. The full constitution is in
+[dcs/references/doctrine.md](dcs/references/doctrine.md) — workflows and
+agents quote it; if they ever disagree, doctrine wins.
+
+DCS ships none of its authors' project facts: project-specific behavior
+(memory systems, intake trackers, deploy commands) is discovered from
+YOUR project's `CLAUDE.md` at runtime, never assumed.
+
+## For maintainers of this repo
+
+This repo is canonical; `~/.claude` is the installed copy. Edit here,
+commit, then install — `install.ps1` (Windows) / `install.sh` (POSIX) /
+`node bin/dcs.js install` all perform the same flat copy. Never patch the
+installed copy in place. Version-sync rule: `package.json` and
+`dcs/VERSION` bump together (see
+[docs/publishing.md](docs/publishing.md)). Tests:
+`python tests/test_dcs_gate.py`. Design history:
+[docs/design-v0.1.md](docs/design-v0.1.md) ·
+[docs/spec-v0.2-esg.md](docs/spec-v0.2-esg.md) ·
+[docs/spec-v0.3-parallel.md](docs/spec-v0.3-parallel.md).
+
+## License
+
+MIT

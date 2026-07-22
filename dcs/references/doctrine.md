@@ -144,8 +144,8 @@ guarantee about itself.
     operation" below).
 11. **Gate is mechanical, not behavioral** — a PreToolUse hook blocks
     source edits while an active incident lacks a valid approval marker.
-    There is no escape-hatch environment variable for this rule (contrast
-    with `bash_guard.py`'s `GUARD_OK=1`): the only sanctioned emergency
+    There is no escape-hatch environment variable for this rule: the only
+    sanctioned emergency
     release is the Owner deleting `.dcs/ACTIVE` — an explicit, visible act
     that leaves a trace in the directory's absence.
 12. **Govern by delegation, not by click-through** (v0.2) — the Owner's
