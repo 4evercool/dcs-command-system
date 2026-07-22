@@ -116,6 +116,17 @@ Gather the combined `git diff` scope (all `files_touched` across
 specialists) and each specialist's `tests_run` claims — these are what the
 Safety Officer will independently re-check, not what it will accept as-is.
 
+**Commit staging (learned in the field 2026-07-22):** at this point the
+work is an **uncommitted working-tree diff, and that is correct.** The
+Safety Officer verifies the working-tree diff scoped to the territory
+files (`git diff -- <territory files>`); **the absence of a commit is
+never a refutation** — the integration commit is an IC step that happens
+AFTER the pass (step 9), because only verified work gets committed.
+Acceptance criteria that require the commit to exist at verification time
+are mis-staged (they guarantee a first halt) — if the 202/IAP contains
+one, treat it as satisfied by the post-pass integration step, and fix the
+staging in the next period's 202.
+
 ## 8. Spawn the Safety Officer
 
 Spawn `icc-safety-officer` via Task with: the period's acceptance criteria
@@ -148,8 +159,23 @@ which fits:
 
 **`pass`:** write/append `SAFETY.md` with the verdict **verbatim** (not
 summarized or softened). Append to `214-LOG.md`:
-`SAFETY: pass -- period <N> complete`. Assess against `202-OBJECTIVES.md`:
-- **Goal fully met:** tell the Owner to run `/icc-close`.
+`SAFETY: pass -- period <N> complete`.
+
+## 9b. After the pass: the integration commit
+
+Now — and only now — the IC assembles the single integration commit:
+
+- Stage the territory files **explicitly by path** (`git add <file> ...`).
+  Never `git add -A` / `git add .` — the working tree may hold unrelated
+  changes from other work, and sweeping them in silently is exactly the
+  drift ICC exists to prevent.
+- Message references the intake source ids (e.g. `audit_results #NNN-NNN`)
+  and summarizes the period's change.
+- Append to `214-LOG.md`: `integration commit <short sha> (<n> files)`.
+
+Then assess against `202-OBJECTIVES.md`:
+- **Goal fully met:** tell the Owner to run `/icc-close` (which verifies
+  this commit mechanically).
 - **Partially met / more work identified:** offer the next operational
   period — loop back to `/icc-plan`'s step 2 (fresh 202 for period N+1),
   noting what remains.

@@ -24,7 +24,15 @@ file itself.
 <!-- Each criterion must be verifiable -- by a test, a repro step, or a
      concrete observation. This is what the Safety Officer checks against;
      vague criteria produce a vague verdict. Number them -- taskings and
-     the Safety Officer both reference these numbers. -->
+     the Safety Officer both reference these numbers.
+
+     STAGING RULE: never write a criterion that requires a POST-verification
+     artifact to exist AT verification time -- "changes are committed",
+     "deployed to prod". The Safety Officer verifies the working-tree diff;
+     the integration commit happens AFTER its pass (execute.md 9b), deploy
+     after close. Such criteria guarantee a first halt (field lesson,
+     2026-07-22). Also: only criteria agents can verify in THEIR harness --
+     browser/UI observations belong in an Owner-UAT section, not here. -->
 
 1. {{criterion 1 -- verifiable}}
 2. {{criterion 2 -- verifiable}}

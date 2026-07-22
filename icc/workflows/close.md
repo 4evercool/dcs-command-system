@@ -25,6 +25,16 @@ for the current period is not `pass`: **stop.** Tell the Owner
 principle 7/10: no incident closes over an unresolved refutation. There is
 no override for this from within `/icc-close`.
 
+**Integration-commit check (mechanical, not Safety's job):** the
+integration commit from `execute.md` step 9b must exist — find it via
+`214-LOG.md`'s `integration commit <sha>` entry (or `git log` if the entry
+is missing, and note the logging gap). Verify with `git show --stat <sha>`
+that it touches ONLY territory files and its message references the intake
+source ids. If there is no commit, or it sweeps in unrelated files:
+**stop** — route back to the IC to commit properly (or split the commit)
+before closing. If the Owner-UAT section of the IAP's verification plan is
+unfinished, remind the Owner it gates close too.
+
 ## 2. Gather the incident's history
 
 Read `201-BRIEF.md`, all `202-OBJECTIVES.md` versions referenced across
