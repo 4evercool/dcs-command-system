@@ -1,0 +1,7 @@
+{
+  "incidents_dir": ".icc/incidents",
+  "guarded_paths": ["**/*"],
+  "unguarded_paths": [".icc/**", "tasks/**", "*.md", ".claude/**"],
+  "auto_approve_type3": false,
+  "language": "auto"
+}

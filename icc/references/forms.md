@@ -1,0 +1,46 @@
+# ICC Forms — What Each File Is, Who Writes It
+
+Every ICS-numbered file has exactly one writer per doctrine principle 9's
+sibling rule: one artifact, one authority, no ambiguity about who's allowed
+to edit it. "IC-transcribed" means a subagent's structured JSON return
+becomes this file's content, but the IC does the actual writing — subagents
+never write directly into the incident directory.
+
+| File | Author | Written during | Contains |
+|---|---|---|---|
+| `201-BRIEF.md` | IC, from situation-analyst findings | Stem (`/icc-new`) | Symptom, evidence (action-log/codegraph/prior-art findings per the analyst-findings schema), blast radius, TYPE + rationale |
+| `202-OBJECTIVES.md` | IC + Owner | Start of each operational period (`/icc-plan`) | Goal (outcome-shaped, not task-shaped) + measurable acceptance criteria — this is the incident's Definition of Done |
+| `203-ORG.md` | IC | `/icc-plan`, after chief(s) return | Which positions are activated this period (Planning Chief only? + Logistics Chief? how many specialists?) |
+| `204-TASKING/S1.md`, `S2.md`, ... | Chief-authored, IC-transcribed | `/icc-plan` | One file per specialist: task, file territory, forbidden zones, evidence required — transcribed verbatim from the chief-plan schema's `taskings[]` |
+| `IAP.md` | IC | `/icc-plan`, integration step | Links 202+203+204, the partition table, risks, verification plan (+ logistics-chief's deploy/rollback plan for Type 1) |
+| `IAP-APPROVED` | IC, on Owner approval | `/icc-plan`, after AskUserQuestion approval | sha256 of `IAP.md` at the moment of approval, plus approver/timestamp metadata. First line is always the bare hex hash — the gate hook only reads that line |
+| `214-LOG.md` | IC, append-only | Every phase transition, every workflow | The shift-change record — never edited or rewritten, only appended to. This is what a fresh session reads to resume losslessly |
+| `SAFETY.md` | Safety Officer, verbatim | `/icc-execute`, after specialists finish | The Safety Officer's verdict per operational period, copied in as returned — not summarized or softened by the IC |
+| `AAR.md` | IC | `/icc-close` | Close-out: what worked, lessons learned, links to where those lessons were written in the project's memory system |
+
+## Why append-only for 214-LOG.md
+
+The log is the only artifact that must never be "corrected" — if a phase
+transition happened, it happened, even if it later turns out to have been
+premature (e.g. an IAP approved and then voided by a deviation). Deleting
+or editing a past entry to make the incident's history look cleaner defeats
+its purpose: a future session (or a human auditing what went wrong) needs
+the honest sequence, not a tidied one. Log entry format:
+
+```
+[2026-07-22T14:03:00+11:00] phase: planning -> execution (IAP approved, hash=3f2a...)
+[2026-07-22T15:41:00+11:00] deviation reported by S1 -- returning to planning
+[2026-07-22T16:10:00+11:00] phase: planning -> execution (IAP re-approved, hash=9b7c...)
+[2026-07-22T17:22:00+11:00] SAFETY: pass -- period 2 complete
+[2026-07-22T17:25:00+11:00] incident closed, archived
+```
+
+## Why 204 is chief-authored but IC-transcribed
+
+The Planning Chief returns taskings as structured JSON (the chief-plan
+schema) in its response — it does not have Write access to the incident
+directory (see `agents/icc-planning-chief.md` tools list: read-only +
+codegraph). The IC is the one file-system-writing party for planning
+artifacts; this keeps a single point of truth for what the specialists
+actually receive, and lets the IC catch a malformed or partition-less
+return before it ever touches disk.
