@@ -42,16 +42,30 @@ decision in step 5 — a deploy is a natural moment to also surface
 portfolio hygiene, even though this workflow doesn't act on the findings
 itself (that's `/dcs-esg` agenda item (f)'s job).
 
-## 3. Verify main is clean
+## 3. Verify the deploy payload is clean (v0.3.4 — scoped, not whole-tree)
 
-`git status --porcelain` on the main checkout must be empty (beyond
-untracked scratch/docs the project's own `.gitignore` already excludes).
-Under v0.3, main should always be clean — Type 3/1 incidents develop in
-worktrees now, never in main — so a dirty main here is itself a signal
-worth naming to the Owner (stray WIP, an incident that skipped the
-worktree flow). If dirty: **stop**, report exactly what's dirty, and let
-the Owner decide whether to stash/commit it themselves before re-running
-`/dcs-deploy`. Do not stash or discard anything on the Owner's behalf.
+"Clean" means: **no dirty tracked files among the paths the project's
+documented deploy command actually ships** — discover the payload from
+the project's CLAUDE.md / deploy script (e.g. a deploy that ships `src/`
+and a built frontend does not care about `.claude/` hook churn or local
+settings files). Field lesson 2026-07-22: a whole-tree check stopped a
+deploy over three `.claude/` infrastructure files that the deploy would
+never ship, and asked the Owner a question the payload scoping already
+answers.
+
+- **Payload-dirty (tracked, modified, inside what ships): stop.** Report
+  exactly which files, and let the Owner commit or set them aside before
+  re-running `/dcs-deploy`. Never stash, discard, or commit on the
+  Owner's behalf (and never suggest `git stash` as the remedy — some
+  projects forbid it outright; "commit or set aside" is the language).
+- **Non-payload dirt and untracked files: never a blocker, never a
+  question.** List them as a one-line warning inside the step-5 Owner
+  confirmation summary instead — dirty main is still a *signal* under
+  v0.3 (stray WIP, an incident that skipped the worktree flow), it just
+  isn't this command's tripwire unless it ships.
+- **Payload unknowable** (project documents no deploy command paths and
+  the script can't be read): fall back to the strict whole-tree check —
+  when you can't scope, blocking is safer than guessing.
 
 If the project documents its own pre-deploy checks (a preflight hook, a
 lint/test gate in its `CLAUDE.md` or deploy script itself), this step
