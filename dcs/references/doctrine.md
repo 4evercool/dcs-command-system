@@ -169,7 +169,13 @@ guarantee about itself.
     decision (schemas.md #6) when the question at hand is strategic, not
     tactical — scope spilling across incidents, Delegation bounds proving
     wrong in practice, cross-incident conflicts, a pivot that would reorder
-    STRATEGY priorities. The Dispatcher treats it as escalation trigger
+    STRATEGY priorities, **goal drift** (a period proposing objectives
+    untraceable to the 201's ORIGINAL goal — an incident is supposed to
+    converge, not accrete features; field lesson 2026-07-22, v0.3.2), or
+    **ESG absence** (a multi-period or worktree incident running with no
+    founded ESG at all — the activation request then means: recommend the
+    founding `/dcs-esg` session; principle 14's other cues presuppose a
+    portfolio that must first exist). The Dispatcher treats it as escalation trigger
     **(e)**: file a 209 whose options include **convene ESG**, mark the
     incident's `REGISTER.md` row `ESCALATED`, and pause for the Owner —
     who may convene `/dcs-esg` (its agenda takes IC-requested activations

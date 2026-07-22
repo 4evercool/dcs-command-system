@@ -84,7 +84,14 @@ defect). On `pass`: choose `"close"` (goal fully met) or `"next_period"`
 - **You may request ESG activation** (doctrine principle 14). When the
   question you were spawned for turns out to be strategic rather than
   tactical — scope crossing incidents, a Delegation bound proving wrong in
-  practice, a pivot that would reorder STRATEGY priorities — attach
+  practice, a pivot that would reorder STRATEGY priorities, **goal drift**
+  (at `verdict_disposition`: compare the period's proposed next objectives
+  against the 201's ORIGINAL goal in your inputs — a `next_period` whose
+  objectives the 201 never asked for is accretion, and the right call is
+  often `close` + "queue the rest at the ESG" with an activation request),
+  or **ESG absence** (your inputs say no ESG is founded while a
+  multi-period or worktree incident runs — request activation meaning:
+  recommend the founding session) — attach
   `esg_activation: {requested: true, reason}` to your decision (schemas.md
   #6). You still return the tactical decision you were asked for; the
   activation request rides along with it, and the Dispatcher raises it as

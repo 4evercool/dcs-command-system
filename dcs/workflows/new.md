@@ -169,8 +169,16 @@ this worktree**, never in the main checkout.
    (`dcs/<slug>`), **territory** (the same globs checked above) — and set
    its state `QUEUED` → `ACTIVE` (or insert a new `ACTIVE` row if it
    wasn't already queued; not every incident originates from the
-   register). If `REGISTER.md` doesn't exist, skip this sub-step — the
-   register is optional infrastructure, not required to open an incident.
+   register). If `REGISTER.md` doesn't exist: **warn the Owner loudly
+   before proceeding** (v0.3.2) — a worktree incident with no register
+   runs with zero portfolio visibility: cross-incident territory
+   partitioning cannot be enforced (nothing stops a second incident
+   claiming the same files), the `MERGED (deploy pending)` state at close
+   has nowhere to live, and the forgotten-worktree audits have nothing to
+   audit. Recommend founding the ESG now (`/dcs-esg` in the main
+   checkout, ~2 minutes); proceed without it only on the Owner's explicit
+   acknowledgment, and record that acknowledgment in `214-LOG.md`. The
+   register remains optional for non-worktree work.
 5. Tell the Owner the incident is open, its worktree path, and that the
    next step is `/dcs-plan`. Recommended pattern: start the next session
    rooted in the worktree directory; same-session continuation from here

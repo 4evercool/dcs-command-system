@@ -163,12 +163,19 @@ attempt to refute completion using its own independent checks.
 
 This is a command point (doctrine: "Transfer of command"). **If this
 session is not running Fable**: spawn `dcs-commander` via Task (model
-`fable`) with the Safety Officer's verdict verbatim, the 202 acceptance
-criteria, and the period history from `214-LOG.md`; its
+`fable`) with: the Safety Officer's verdict verbatim, the 202 acceptance
+criteria, the period history from `214-LOG.md`, **the ORIGINAL goal from
+`201-BRIEF.md`** (v0.3.2 — so goal drift across periods is visible to a
+stateless judge: a `next_period` proposing objectives the 201 never asked
+for is accretion, not convergence), and **one ESG-state line** (v0.3.2 —
+whether `<esg_root>/.dcs/esg/` is founded and this incident's register
+row, or "no ESG founded / no register row"; principle 14's ESG-absence
+cue cannot fire on evidence the commander was never given). Its
 `verdict_disposition` decision (schemas.md #6) selects the path below, and
 its `directives` supply the fix-tasking content where applicable. Record it
 in `214-LOG.md` (`command: verdict -> <disposition> (IC=dcs-commander)`).
-**If this session is Fable**, the judgment below is yours.
+**If this session is Fable**, the judgment below is yours — with the same
+two inputs checked, not assumed.
 
 **`halt` (binding — no closing over this):** append to `214-LOG.md`:
 `SAFETY: halt -- <summary of refutations>`. Two paths, the IC's judgment
