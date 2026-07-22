@@ -22,7 +22,9 @@ of typing each phase command by hand.
 ## 1. Resolve the intake
 
 `$ARGUMENTS` is either an intake description, or the literal flag
-`--next`. If `--next`: read `<project>/.dcs/esg/REGISTER.md` for the
+`--next`. If `--next`: read `<esg_root>/.dcs/esg/REGISTER.md` (v0.3:
+resolve `esg_root` — the main checkout — per doctrine's "Parallel
+operation"; never a worktree's own copy) for the
 topmost `QUEUED` row (by the order `STRATEGY.md`'s ranked priorities
 implies, or table order otherwise). If `REGISTER.md` doesn't exist, or
 exists with no `QUEUED` rows: stop, and tell the Owner politely there's

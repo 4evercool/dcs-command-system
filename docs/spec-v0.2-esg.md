@@ -1,6 +1,6 @@
 # DCS v0.2 — ESG (Emergency Support Group) strategic layer
 
-**Status: QUEUED.** Implement only after DCS v0.1 has passed its verification (gate deny/allow/hash-void + end-to-end dry run). This spec is self-contained: it assumes the v0.1 package exists at `C:\Users\4ever\.claude\dcs\` (payload), `C:\Users\4ever\.claude\agents\dcs-*.md`, `C:\Users\4ever\.claude\skills\dcs-*\SKILL.md`, per the v0.1 plan at `C:\Users\4ever\.claude\plans\bubbly-jingling-candle.md`.
+**Status: implemented in v0.2.0** (commit `a3fb60b`, 2026-07-22; this line was flipped late — it originally gated implementation on v0.1's verification, which passed). This spec is self-contained: it assumes the v0.1 package exists at `C:\Users\4ever\.claude\dcs\` (payload), `C:\Users\4ever\.claude\agents\dcs-*.md`, `C:\Users\4ever\.claude\skills\dcs-*\SKILL.md`, per the v0.1 plan at `C:\Users\4ever\.claude\plans\bubbly-jingling-candle.md`.
 
 ## Context
 

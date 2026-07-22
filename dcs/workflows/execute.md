@@ -73,7 +73,9 @@ period number about to run exceeds that threshold, this period **is** the
 mandatory escalation — do not fan out. Skip to "On any escalation
 trigger" below instead of step 4.
 
-Also check trigger (d) preemptively if `<project>/.dcs/esg/DELEGATION.md`
+Also check trigger (d) preemptively if `<esg_root>/.dcs/esg/DELEGATION.md`
+(v0.3: ESG state lives in the main checkout only — resolve `esg_root` per
+doctrine's "Parallel operation" before reading, never this worktree's copy)
 is in force: if the IAP's declared territory for this period touches a
 `forbidden_globs` entry that wasn't caught at `/dcs-plan` time (e.g. the
 Delegation was tightened after this IAP was approved), treat it the same
@@ -200,7 +202,9 @@ re-plan (on `halt`), check the two verdict-time triggers:
 boundary above, before fan-out; **(e)** is an IC-requested ESG activation,
 raised via the `esg_activation` field on any command decision — doctrine
 principle 14):** write
-`<project>/.dcs/esg/SITREPS/<slug>-p<N>.md` from
+`<esg_root>/.dcs/esg/SITREPS/<slug>-p<N>.md` (v0.3: `esg_root` = the main
+checkout per doctrine's "Parallel operation" — a sitrep written into a
+worktree's own gitignored copy is a sitrep the ESG never sees) from
 `$HOME/.claude/dcs/templates/209-SITREP.md` (create the `SITREPS/`
 directory if it doesn't exist yet). Fill in status, objectives state,
 safety state, resource spend, and the three options. Pause the incident —
