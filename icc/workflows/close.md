@@ -82,7 +82,11 @@ deployed), then the correct action is **no action** — record in AAR.md
 that closure is DELEGATED to that routine, name it, and note what it needs
 to observe the fix (commit pushed, deploy done). Manually closing what a
 routine owns creates a race and duplicates its write. (Field lesson,
-2026-07-22.)
+2026-07-22.) Delegate only when the documentation is explicit that the
+routine closes items itself — a vaguely-mentioned routine of unclear
+ownership is NOT an owner; when in doubt, use the flag-for-Owner fallback
+below (a duplicate flag is annoying; a silently-never-closed finding is a
+leak).
 
 **Only if no owner is documented:** flag it for the Owner — print the
 exact identifier and the suggested action (e.g. "mark `audit_results` row

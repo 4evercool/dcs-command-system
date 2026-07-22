@@ -49,8 +49,16 @@ agents/       subagent charters -> installs to ~/.claude/agents/
 skills/       slash commands    -> installs to ~/.claude/skills/
 docs/         design docs and version specs
 tests/        gate lifecycle test (14 cases)
-install.ps1   copy repo -> ~/.claude (the only sanctioned install path)
+install.ps1   copy repo -> ~/.claude (Windows; the only sanctioned install path)
+install.sh    same, for macOS/Linux
 ```
+
+**Portability notes for new installers:** the gate hook needs `python` on
+PATH (stdlib only, 3.8+). The IC tier degrades gracefully — if your plan
+has no Fable access, `icc-commander` falls back to the strongest available
+model (doctrine → "Model availability"). Project-specific behaviors
+(memory routing, intake-source closure) are discovered from YOUR project's
+CLAUDE.md at runtime — ICC ships none of its authors' project facts.
 
 ## Commands (once installed)
 

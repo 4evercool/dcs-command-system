@@ -69,6 +69,19 @@ routing — is Dispatcher work and needs no particular model. The Dispatcher
 never substitutes its own judgment at a command point "to save a spawn";
 that is precisely the drift the transfer exists to prevent.
 
+**Model availability (portability rule):** "Fable" here means "the
+strongest model tier available in this environment." Not every user or
+plan has Fable access. If spawning `icc-commander` with `model: fable`
+fails because the model is unavailable, re-spawn with the strongest tier
+that works (`opus`, then `sonnet` as last resort) and record the actual
+seat in `214-LOG.md` (e.g. `command: ... (IC=icc-commander, opus —
+fable unavailable)`). What is NEVER acceptable is the fallback drifting
+to "the Dispatcher decides itself": even when the commander runs on the
+same tier as the Dispatcher, the separate spawn preserves the structural
+value — a fresh context, the defined inputs, and a logged decision
+against the schema, none of which the Dispatcher mid-conversation can
+guarantee about itself.
+
 ## Hierarchy (chain of command)
 
 | Role | Seat | Model | Authority |
