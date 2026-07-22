@@ -22,6 +22,13 @@ If no `ACTIVE`, or `phase` is not `execution`: stop. If `phase` is
 `planning`, tell the Owner to finish `/dcs-plan` first. If there's nothing
 active, there's nothing to execute.
 
+**Command-chain check (entry gate):** `214-LOG.md` must contain both a
+`command: typed` and a `command: iap_review` entry. If either is missing,
+the command chain was skipped somewhere upstream — **stop**, route to
+`/dcs-plan`, whose own entry gate and pre-stamp checklist will repair the
+chain. Do not fan out specialists on an unratified plan even if the
+approval marker is technically valid.
+
 ## 2. Verify the approval marker — do this even though the hook also checks it
 
 ```bash

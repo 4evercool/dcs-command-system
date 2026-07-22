@@ -30,6 +30,19 @@ Determine the operational period number `N` — 1 if this is the first pass
 through this step for this incident, else increment from the last period
 recorded in `214-LOG.md`.
 
+**Command-chain check (entry gate — do this before drafting anything):**
+read `214-LOG.md` and confirm a `command: typed` entry exists (command
+point 1). If it is missing, the Dispatcher in `/dcs-new` typed the
+incident itself — a doctrine violation observed repeatedly in the field
+(three times on day one, always by the weakest-model dispatcher, always
+in its own voice: "this is clearly a Type N"). Repair NOW, before any
+202 work: run command point 1 properly (spawn `dcs-commander` with the
+201 text if this session is not Fable; decide yourself if it is), log
+the decision, and if the commander's type differs from what the 201
+recorded, correct the 201 and re-confirm with the Owner. Do not carry an
+unratified typing decision into planning — the whole activation level
+(chiefs, ceremony, approval requirements) hangs off it.
+
 ## 2. Draft 202-OBJECTIVES.md
 
 Read `201-BRIEF.md`. Draft the goal (outcome-shaped) and numbered,
