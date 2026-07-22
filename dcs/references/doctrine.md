@@ -338,14 +338,24 @@ tracked copy would diverge across every incident branch) and why an
 incident's own worktree never carries a copy of the register it has a row
 in.
 
+**"Main" means the integration branch (v0.3.3).** Wherever this doctrine
+says "merge to main" / "merged into main", it means the branch the
+primary checkout (`esg_root`) **currently has checked out** — whatever
+its name. Many projects' primary checkouts live on long-running work
+branches, and the deploy pipeline ships that checkout's HEAD, not a
+branch literally named `main`. DCS never switches the primary checkout's
+branch; asking the Owner "which branch should I merge into?" is a
+question the doctrine already answers: the current one.
+
 **The worktree audit** — the canonical checklist. `/dcs-status
 --campaign`, `/dcs-esg` step 1, `/dcs-loop`'s preconditions, and
 `/dcs-deploy` all run this exact check rather than each restating their
 own version of it:
 
 1. `git worktree list --porcelain` — every worktree actually on disk.
-2. `git branch --list 'dcs/*' --no-merged main` — every incident branch
-   not yet merged into main.
+2. `git -C <esg_root> branch --list 'dcs/*' --no-merged HEAD` — every
+   incident branch not yet merged into the integration branch (HEAD of
+   the primary checkout, NOT a branch literally named `main` — v0.3.3).
 3. Cross-reference both against `REGISTER.md`, and flag, with ages (days
    since the relevant date):
    - **Orphans** — a worktree on disk with no matching `ACTIVE` row.

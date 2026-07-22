@@ -143,8 +143,27 @@ the main checkout) — go straight to step 6.
    writes (step 4) that belong to the repo (not to an external system)
    must be committed on the incident's branch before merging — `git add`
    the specific files (never `-A`/`.`, same discipline as `execute.md`
-   step 9b), commit message referencing the incident slug.
-2. **Merge to main.** From the main checkout: `git merge --no-ff
+   step 9b), commit message referencing the incident slug. **All these
+   writes target the WORKTREE's copies of the files** (v0.3.3 — a session
+   in the field routed vault lessons into the main checkout's copies by
+   reflex and had to revert; the worktree is the incident's whole world
+   until the merge).
+2. **Merge into the integration branch.** The merge target is **whatever
+   branch the primary checkout (`esg_root`) currently has checked out** —
+   its name is irrelevant, and it is frequently NOT `main` (v0.3.3, field
+   lesson: a project's primary checkout lived on a long-running work
+   branch; the session recommended checking out `main` first, which would
+   have swapped the branch under the tree that other sessions and the
+   deploy pipeline treat as the integration point). Three hard rules:
+   **never switch the primary checkout's branch** — if the project wants
+   a different integration branch, that is the Owner's manual act, not
+   the close's; **unrelated dirty or untracked files in the primary
+   checkout do not block the merge** — git only objects when the merge
+   itself would overwrite them, so check overlap
+   (`git diff --name-only <base>..dcs/<slug>` vs `git status --short`),
+   don't ask; **do not ask the Owner which branch to merge into** — the
+   answer is always the current one, and only an actual file-overlap or
+   conflict escalates. From the primary checkout: `git merge --no-ff
    dcs/<slug>`. The territory partition (doctrine principle 6, portfolio
    level) makes this merge trivially clean in the normal case. **A
    conflict means the territory promise was violated somewhere** — treat
