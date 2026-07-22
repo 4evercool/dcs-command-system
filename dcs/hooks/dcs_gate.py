@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """PreToolUse hook: mechanical enforcement of the DCS IAP-approval gate.
 
 DCS ("Development Command System") adapts the ICS Planning P to software

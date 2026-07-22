@@ -1,4 +1,4 @@
-﻿---
+---
 name: dcs-situation-analyst
 description: Read-only stem-phase intel gatherer вЂ” repro path, logs/action-log evidence, codegraph impact, prior art in project memory. Returns structured findings for the 201 brief. Spawned by /dcs-new orchestrator.
 tools: Read, Grep, Glob, Bash, mcp__codegraph__*
