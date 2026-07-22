@@ -67,7 +67,11 @@ immediately — do not proceed into planning. Mark the register row
 This is the one place `/dcs-loop` overrides `run.md`'s normal flow,
 because `run.md` alone has no queue to fall back to.
 
-**Hard rule 2 — never deploy from the loop.** `run.md`'s close-out (step
+**Hard rule 2 — never deploy from the loop.** This holds even under a
+v0.4 deploy Delegation: `run.md` step 7a's `auto_after_close` branch is
+for ATTENDED runs only and is skipped entirely in the loop context — a
+Delegation reduces prompts for a watching Owner; it never turns an
+unattended sweep into an unattended shipper. `run.md`'s close-out (step
 7, following `close.md`) never invokes a deploy script, regardless of
 what the incident's changes would normally call for — every incident this
 loop drives stops at committed + safety-passed. Where `close.md`'s AAR

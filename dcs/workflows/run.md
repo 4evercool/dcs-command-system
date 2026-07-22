@@ -124,6 +124,20 @@ is even reachable (guaranteed by step 5 above), and the Owner-UAT check in
 pause here for the Owner's done / defer-with-explicit-consent answer via
 `AskUserQuestion` exactly as a standalone `/dcs-close` would.
 
+## 7a. After the close: the deploy train, if delegated (v0.4)
+
+If `<esg_root>/.dcs/esg/DELEGATION.md`'s latest bounds have
+`deploy.auto_after_close: true`: read
+`$HOME/.claude/dcs/workflows/deploy.md` and run the deploy train now,
+in-line — its own step 5 delegation check governs whether the ship
+proceeds without a prompt or stops to ask (an out-of-bounds row still
+asks; a migration-bearing row always asks). If `auto_after_close` is
+absent or `false`, or there is no ESG: just report the close's
+`deploy pending` state as before. This applies to **attended** `/dcs-run`
+only — `/dcs-loop` never reaches this step's deploy branch (doctrine
+automation-layers hard rule 2, unchanged: the unattended loop never
+deploys, no matter what the Delegation says).
+
 ## 8. Command points throughout
 
 Every command point `new.md`, `plan.md`, and `execute.md` define (typing,

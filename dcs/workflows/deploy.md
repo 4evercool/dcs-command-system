@@ -83,10 +83,24 @@ what this deploy will ship. Separately warn about any `dcs/*` branch from
 **not** ship (they were never merged) and the warning exists so the Owner
 isn't surprised their existence didn't affect the deploy scope.
 
-## 5. Owner confirms
+## 5. Owner confirms — Delegation-aware (v0.4, Owner-requested)
 
-Use `AskUserQuestion`: present the exact list of `MERGED` rows about to
-ship (id, title, merge commit sha) and ask for an explicit go/no-go. This
+**Deploy-delegation check first:** read the latest `delegation-bounds`
+block from `<esg_root>/.dcs/esg/DELEGATION.md`. If it has a `deploy`
+object with `auto: true`, evaluate EVERY row about to ship against its
+bounds (schemas.md #7): territory vs `frontend_only` and the deploy
+`forbidden_globs` (migration-bearing rows are never routine), row count
+vs `max_rows_per_train`. **All rows in-bounds:** the go/no-go prompt is
+covered by the Owner's standing, signed authorization — announce in one
+visible line ("shipping N rows under Delegation v<X> deploy authority:
+<ids>"), log `deployed under Delegation v<X>` against each register row,
+and continue to step 6. Never silent (principle 12); the Owner sees
+every delegated ship, they just don't have to click it.
+
+**Any row out of bounds, no `deploy` block, or `auto: false`:** use
+`AskUserQuestion` — present the exact list of `MERGED` rows about to
+ship (id, title, merge commit sha), name the specific failed bound if a
+delegation check was attempted, and ask for an explicit go/no-go. This
 follows the same "explicit permission required" discipline as any other
 irreversible action — a deploy ships real code to production. On "no":
 release the lock (step 9) and stop; nothing changed. On "go": continue.

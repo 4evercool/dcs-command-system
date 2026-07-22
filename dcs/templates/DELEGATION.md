@@ -28,7 +28,14 @@ session.
   "forbidden_globs": ["**/migrations.py", "**/auth/**", "**/payment*/**"],
   "forbidden_topics": ["schema migration", "payments", "auth/JWT", "deploy scripts"],
   "require_tests_green": true,
-  "max_specialists": 2
+  "max_specialists": 2,
+  "deploy": {
+    "auto": false,
+    "auto_after_close": false,
+    "frontend_only": true,
+    "forbidden_globs": ["{{the project's schema-migration paths -- REQUIRED; migration-bearing deploys are never routine}}", "**/auth/**", "**/payment*/**"],
+    "max_rows_per_train": 3
+  }
 }
 ```
 

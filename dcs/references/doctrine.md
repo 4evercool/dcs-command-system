@@ -279,7 +279,14 @@ Owner to type each phase command by hand.
   `execute.md`, `close.md` exactly as written. Pauses only at the Owner's
   own gates: typing confirm, IAP approval (unless the Delegation covers
   it), deviation `escalate_owner`, verdict `escalate_owner`, escalation
-  triggers, Owner-UAT/close.
+  triggers, Owner-UAT/close. **(v0.4)** After a close, an attended run
+  may invoke the deploy train in-line when the Delegation's `deploy`
+  bounds say so (`auto_after_close`) — `deploy.md` step 5's bound check
+  still governs, out-of-bounds and migration-bearing rows still ask, and
+  every delegated ship is announced and logged, never silent
+  (principle 12). Deploy delegation exists for the Owner who has watched
+  routine ships long enough to sign them off in writing; it is a
+  narrowing of prompts, never of evidence.
 - **`/dcs-loop`** — unattended queue sweep. Cycles `/dcs-run --next` over
   `.dcs/esg/REGISTER.md`'s `QUEUED` items, with the Owner involved only at
   real decisions. Legitimate only *because* the ESG's Delegation of

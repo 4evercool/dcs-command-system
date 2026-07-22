@@ -236,7 +236,14 @@ humans only.
   "forbidden_globs": ["**/migrations.py", "**/auth/**", "**/payment*/**"],
   "forbidden_topics": ["schema migration", "payments", "auth/JWT", "deploy scripts"],
   "require_tests_green": true,
-  "max_specialists": 2
+  "max_specialists": 2,
+  "deploy": {
+    "auto": false,
+    "auto_after_close": false,
+    "frontend_only": true,
+    "forbidden_globs": ["**/migrations.py", "**/auth/**", "**/payment*/**"],
+    "max_rows_per_train": 3
+  }
 }
 ```
 
@@ -249,6 +256,7 @@ humans only.
 | `forbidden_topics` | string[] | Checked against the 201/202 text |
 | `require_tests_green` | boolean | If `true`, the chief's `verification_plan` must name a concrete automated test run, not "manual only" |
 | `max_specialists` | number | Compared against the 204 tasking count |
+| `deploy` (v0.4) | object, optional | Deploy delegation. `auto: true` = `/dcs-deploy` skips the go/no-go prompt when EVERY row about to ship is in-bounds; `auto_after_close: true` = an attended `/dcs-run` may invoke the deploy train immediately after a close (`/dcs-loop` still never deploys — hard rule 2 is untouched by this block); `frontend_only: true` = rows whose territory touches anything outside the project's frontend paths always ask; `forbidden_globs` = rows touching these ALWAYS ask (**must include the project's schema-migration paths — migration-bearing deploys are never routine**); `max_rows_per_train` = more rows than this always ask. Any bound failing on any row ⇒ the ordinary Owner prompt, naming the row and bound |
 
 `esg.max_periods_before_review` (doctrine principle 13, trigger c) is
 **not** part of this block — it lives in `config.json`'s `esg` key
