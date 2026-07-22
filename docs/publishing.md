@@ -43,25 +43,48 @@ installed vs package. A release bump touches BOTH files in one commit.
 
 ## Release steps (Owner runs these; the assistant prepares but never publishes)
 
-1. Ensure the repo is at the release state: tests green
+Repeat this whole sequence for every update, not just the first one.
+
+1. Land the change on `main`: commit, `git push`, tests green
    (`python tests/test_dcs_gate.py`), `git status` clean.
-2. Bump `dcs/VERSION` and `package.json` version together; commit
-   (`chore(release): vX.Y.Z`).
+2. Pick the version bump (semver) and bump `dcs/VERSION` and
+   `package.json` → `version` together, same value, one commit
+   (`chore(release): vX.Y.Z`), push:
+   - patch `0.4.x` — fixes, docs, internal cleanup
+   - minor `0.x.0` — new capability, backward-compatible
+   - major `x.0.0` — breaking change to hook behavior, schemas, or CLI
+     flags that existing installs rely on
 3. Dry-run the tarball and READ the file list — nothing unexpected, no
-   junk, `files:` whitelist doing its job:
+   junk, new files actually covered by the `files:` whitelist:
    ```bash
    npm pack --dry-run
    ```
-4. First time only: `npm login` (enable 2FA on the account). Optional but
-   recommended: verify the name is still free right before first publish:
-   `npm view dcs-command-system` should error with 404.
+4. Confirm you're logged in (`npm whoami`; re-run `npm login` if it
+   errors) and that this version isn't already on the registry:
+   `npm view dcs-command-system versions` shouldn't list `X.Y.Z` yet.
 5. Publish (unscoped packages are public by default):
    ```bash
    npm publish
    ```
-6. Verify: `npx dcs-command-system@latest version` from a directory
-   outside the repo, then `dcs doctor`.
-7. Tag: `git tag vX.Y.Z && git push --tags`.
+6. Verify end-to-end, from a directory outside the repo:
+   ```bash
+   npx dcs-command-system@latest version
+   ```
+   should print the new version; `dcs doctor` too if installed globally.
+7. Tag and push it — two separate commands, `&&` is bash syntax and
+   breaks in Windows PowerShell 5.1:
+   ```bash
+   git tag vX.Y.Z
+   git push --tags
+   ```
+8. Cut a GitHub Release off the tag, so the update is visible to
+   watchers instead of sitting as a bare tag:
+   ```bash
+   gh release create vX.Y.Z --title vX.Y.Z --notes "..."
+   ```
+
+Existing installs don't get any of this automatically — see "Upgrade
+flow for users" below for what they still have to run.
 
 ## Upgrade flow for users
 
