@@ -5,6 +5,7 @@
   "auto_approve_type3": false,
   "language": "auto",
   "esg": {
-    "max_periods_before_review": 3
+    "max_periods_before_review": 3,
+    "max_incident_age_days": 7
   }
 }

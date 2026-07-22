@@ -98,5 +98,13 @@ above. Still read-only — no writes, no subagent spawns.
 4. List any files under `SITREPS/` whose `Decision` field is still
    `{{continue | pivot | demobilize}}` (unfilled) or otherwise blank —
    these are pending sitreps awaiting an Owner decision; name each one.
+5. **(v0.3)** Run doctrine's canonical worktree audit ("Parallel
+   operation" section) and print its findings (orphans, stale actives,
+   deploy-pending, dangling branches) — still read-only, the audit itself
+   only inspects `git worktree list` / `git branch --list` and reads
+   `REGISTER.md`, it writes nothing. This is the same checklist
+   `/dcs-esg` step 1, `/dcs-loop`'s preconditions, and `/dcs-deploy` run;
+   `--campaign` is simply another place a stale or orphaned worktree gets
+   surfaced instead of quietly rotting.
 
 </process>

@@ -111,6 +111,18 @@ and note why.
   status), risks, verification plan, and (Type 1) the Logistics Chief's
   deploy/env/migration/rollback plan.
 
+## 5a. Refine the register's territory (v0.3)
+
+Now that `IAP.md`'s partition table is final, resolve `esg_root`
+(doctrine "Parallel operation": `git worktree list --porcelain`, first
+entry). If `<esg_root>/.dcs/esg/REGISTER.md` exists, update this
+incident's row's `territory` column to the **union** of every
+`204-TASKING/*.md`'s `territory[]` globs — this replaces the coarser
+201-blast-radius estimate `/dcs-new` recorded when the incident opened,
+with the plan's own precise partition. This is what keeps the portfolio-
+level territory check in `new.md` step 7b accurate for whatever incident
+gets typed next. If `REGISTER.md` doesn't exist, skip this step.
+
 ## 6. Approve the IAP — Delegation-aware (v0.2)
 
 **Delegation check (Type 3 only):** if the incident is Type 3 AND

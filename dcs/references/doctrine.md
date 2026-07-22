@@ -116,7 +116,12 @@ guarantee about itself.
 6. **Terrain partitioning** — the IAP must declare disjoint file
    territories per specialist. Overlap ⇒ sequential stages or worktree
    isolation. The IC **rejects** any IAP without a partition and re-spawns
-   the Planning Chief.
+   the Planning Chief. **(v0.3)** The same principle applies one level up,
+   across the whole portfolio: concurrent incidents hold disjoint file
+   territories too (`REGISTER.md`'s `territory` column), which is what
+   lets their eventual `git merge --no-ff` into main stay trivially
+   clean — same reasoning, just scaled from "specialists inside one
+   incident" to "incidents inside one portfolio."
 7. **Independent safety authority** — verification is never done by the
    section that produced the work. The Safety Officer is not a section
    chief's rubber stamp.
@@ -131,8 +136,12 @@ guarantee about itself.
    between "I did the task" and "I did *a* task."
 10. **Mandatory AAR** — every incident closes with lessons written to the
     project's own memory system (if it documents one) and the incident
-    archived in place. No dangling incidents — `/dcs-close` is not optional
-    ceremony, it's how the gate gets released for the next incident.
+    archived in place. **(v0.3)** No dangling incidents **or worktrees** —
+    a worktree exists only while its incident is `ACTIVE`; close, park,
+    and kill all remove it. `/dcs-close` is not optional ceremony, it's
+    how the gate gets released for the next incident AND how the worktree
+    stops being the human's job to remember to clean up (see "Parallel
+    operation" below).
 11. **Gate is mechanical, not behavioral** — a PreToolUse hook blocks
     source edits while an active incident lacks a valid approval marker.
     There is no escape-hatch environment variable for this rule (contrast
@@ -206,9 +215,17 @@ several periods (each a fresh 202→IAP→execute→verify cycle) before closing
 
 ## v0.1 constraints (deliberate, not oversights)
 
-- **One incident active at a time**, matching solo operation. `.dcs/ACTIVE`
-  presence is the lock; `/dcs-new` refuses to open a second incident while
-  one is active.
+- **One incident active at a time** *(superseded by v0.3 — see below)*,
+  matching solo operation. `.dcs/ACTIVE` presence is the lock; `/dcs-new`
+  refuses to open a second incident while one is active.
+  **(v0.3)** This becomes **one incident per worktree**: `.dcs/ACTIVE` is
+  now per-worktree state (git-ignored, never merges), so the lock still
+  holds exactly as written — one Fable/dcs-commander seat, one `ACTIVE`
+  file, one incident — just scoped to whichever tree (main checkout or an
+  incident worktree) the session is rooted in, instead of to the whole
+  project. The portfolio-level constraint this used to also imply (no two
+  incidents running *anywhere* in the project) moves to the register: see
+  "Parallel operation" below for the territory partition that replaces it.
 - **No manifest, no updater, no multi-project registry.** Over-engineering
   for one user. Each project gets its own `.dcs/` via `/dcs-init`; the
   payload under `~/.claude/dcs/` is shared read-only source material.
@@ -270,8 +287,11 @@ Owner to type each phase command by hand.
 1. **Never execute a Type 1 incident unattended** — register it, mark
    `PARKED` with reason `"awaits Owner"`, continue to the next queued item.
 2. **Never deploy from the loop** — every incident it drives stops at
-   committed + safety-passed; deploys are batched for the Owner, and the
-   register row for that incident notes `"deploy pending"`.
+   committed + safety-passed; deploys are batched for the Owner. **(v0.3)**
+   Concretely, this is `close.md`'s anti-rot core running its merge step
+   but never `/dcs-deploy`: the register row lands on `MERGED (deploy
+   pending)`, not `DEPLOYED` — the loop closes and merges incidents, it
+   never ships them.
 3. **At any Owner gate the Delegation does not cover:** send one
    notification if a push/notification tool is available in the session,
    write the pause state to disk (the incident stays mid-phase, resumable
@@ -283,3 +303,72 @@ rather than reckless: `/dcs-loop` never invents its own authority to act
 — it only exercises what the Owner already signed off on in
 `DELEGATION.md`, in writing, at an `/dcs-esg` session, and stops cleanly
 at the edge of that grant.
+
+## Parallel operation (v0.3)
+
+Three ICS analogies keep the mental model straight, full spec:
+`docs/spec-v0.3-parallel.md`.
+
+- **A worktree is a division of the fire line** — physically separate
+  ground (its own git worktree + branch), worked without coordinating
+  every move with other divisions, because the portfolio-level territory
+  partition (principle 6) already keeps the ground disjoint. One incident
+  per worktree (v0.1's constraint, rescoped — see above).
+- **The main checkout is the staging area** — where merged, Safety-passed
+  work marshals before shipping. Nobody develops a Type 3/1 incident in
+  staging; only Type 5 express fixes and portfolio bookkeeping (ESG
+  sessions, the register, deploys) happen there.
+- **The deploy train (`/dcs-deploy`) is demobilization to the line** —
+  it only ships resources already IN staging (merged to main) and only
+  runs from staging itself; it never reaches into a worktree early.
+
+**`esg_root` resolution rule:** every workflow that touches `.dcs/esg/`
+state (`REGISTER.md`, `DELEGATION.md`, `STRATEGY.md`, `SITREPS/`,
+`DEPLOY-LOCK`, `REGISTER-LOCK`) resolves the main checkout first —
+`git worktree list --porcelain`'s first listed entry is always the main
+checkout — and reads/writes `.dcs/esg/` there, never wherever the current
+session happens to be rooted. This is why `.dcs/esg/` is git-ignored (a
+tracked copy would diverge across every incident branch) and why an
+incident's own worktree never carries a copy of the register it has a row
+in.
+
+**The worktree audit** — the canonical checklist. `/dcs-status
+--campaign`, `/dcs-esg` step 1, `/dcs-loop`'s preconditions, and
+`/dcs-deploy` all run this exact check rather than each restating their
+own version of it:
+
+1. `git worktree list --porcelain` — every worktree actually on disk.
+2. `git branch --list 'dcs/*' --no-merged main` — every incident branch
+   not yet merged into main.
+3. Cross-reference both against `REGISTER.md`, and flag, with ages (days
+   since the relevant date):
+   - **Orphans** — a worktree on disk with no matching `ACTIVE` row.
+   - **Stale actives** — an `ACTIVE` row older than `config.json`'s
+     `esg.max_incident_age_days` (default 7).
+   - **Deploy-pending** — a `MERGED` row with no later `DEPLOYED`
+     transition yet.
+   - **Dangling branches** — a `dcs/*` branch, unmerged, with no live
+     worktree and no `ACTIVE`/`QUEUED` row referencing it.
+4. Nothing found by the audit is auto-deleted. Every flagged item is
+   surfaced loudly with the exact cleanup command (`git worktree remove
+   <path>`, `git branch -D dcs/<slug>`) — the audit's job is to make
+   forgetting impossible, never to act unilaterally on the Owner's behalf.
+
+Three surfaces turn an audit finding into an actual fix, none of them
+optional: the audit itself (above) finds it; `/dcs-esg` agenda item (f)
+— worktree/branch hygiene — is where the Owner decides (finish / park /
+kill) at a standing session, and **parking an incident always removes its
+worktree** (a parked incident is a register row and a kept branch, never
+a directory quietly aging on disk); the gate's `.dcs/CLOSED` zombie rule
+(`dcs_gate.py`) makes a worktree that slipped past both unusable in the
+meantime, so it can never quietly become a second life for stale, already-
+merged work (principle 11's one deliberate fail-closed exception).
+
+**Automation layers note:** `/dcs-loop` (v0.2) stays serial in v0.3 — it
+still runs exactly one incident at a time off the register queue, even
+though that queue may now hold several `ACTIVE` rows opened by human-
+driven parallel sessions. Running `/dcs-loop` itself *across* parallel
+worktrees is explicitly out of scope for v0.3 (`docs/spec-v0.3-parallel.md`'s
+non-goals): parallelism in this version is for human-driven parallel
+sessions — one worktree, one session — not for the unattended loop to fan
+out on its own.

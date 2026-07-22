@@ -46,6 +46,19 @@ Owner just confirmed an overwrite in step 2).
 Do **not** create `.dcs/ACTIVE` — its absence is the gate's "open" state,
 and an onboarded-but-idle project should have no active incident.
 
+## 3a. Gitignore the per-worktree/main-only state (v0.3)
+
+Ensure `<project>/.gitignore` contains `.dcs/ACTIVE`, `.dcs/CLOSED`, and
+`.dcs/esg/` — append them (creating `.gitignore` if it doesn't exist yet)
+if missing, never removing or reordering anything already there. These
+three are deliberately per-worktree or main-checkout-only state (doctrine
+"Parallel operation" / `docs/spec-v0.3-parallel.md`'s state-split table):
+a tracked `ACTIVE` would ride an incident's merge into main and wedge the
+gate for every future incident; a tracked `esg/` would diverge across
+every branch instead of staying the single portfolio source of truth.
+`.dcs/config.json` and `.dcs/incidents/` stay tracked as before —
+unaffected by this step.
+
 ## 4. Copy the gate hook
 
 Copy `$HOME/.claude/dcs/hooks/dcs_gate.py` to
@@ -129,10 +142,13 @@ wired — say this plainly.
 
 ## 9. Report completion
 
-Summarize: `.dcs/` created (config.json path), `dcs_gate.py` copied to
-(path), gate wiring status (armed / copied-but-not-wired / already wired),
-and the v0.1 one-incident-at-a-time constraint (only one `.dcs/ACTIVE` at a
-time — `/dcs-new` will refuse to open a second incident while one is
-active).
+Summarize: `.dcs/` created (config.json path), `.gitignore` entries added
+(step 3a), `dcs_gate.py` copied to (path), gate wiring status (armed /
+copied-but-not-wired / already wired), and the one-incident-per-worktree
+constraint (only one `.dcs/ACTIVE` per tree — `/dcs-new` will refuse to
+open a second incident in the same tree while one is active; Type 3/1
+incidents each get their own worktree via `git worktree add`, so multiple
+can run in parallel across different worktrees — see doctrine's
+"Parallel operation" section).
 
 </process>

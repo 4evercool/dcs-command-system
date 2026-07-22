@@ -33,6 +33,18 @@ register's queue unattended under the Delegation, never running a Type 1
 or deploying without the Owner. See
 [docs/spec-v0.2-esg.md](docs/spec-v0.2-esg.md) for the full spec.
 
+**v0.3 adds parallel operation**: each Type 3/1 incident gets its own git
+worktree + branch, so multiple incidents can be developed at once without
+sharing a working tree — the portfolio-level territory partition
+(`REGISTER.md`'s `territory` column) is what keeps their eventual merges
+clean. `/dcs-close` now merges the incident's branch into main and removes
+its worktree as part of closing (never a separate chore anyone can
+forget), and a new `/dcs-deploy` command runs a serialized, Owner-gated
+deploy train that ships exactly the set of merged, Safety-passed
+incidents from the always-clean main checkout. See
+[docs/spec-v0.3-parallel.md](docs/spec-v0.3-parallel.md) for the full
+spec.
+
 Chain of command (phases, not nesting — subagents can't spawn subagents):
 
 | Role | Seat | Model |
@@ -61,10 +73,17 @@ dcs/          package payload  -> installs to ~/.claude/dcs/
 agents/       subagent charters -> installs to ~/.claude/agents/
 skills/       slash commands    -> installs to ~/.claude/skills/
 docs/         design docs and version specs
-tests/        gate lifecycle test (14 cases)
+tests/        gate lifecycle test (18 cases)
 install.ps1   copy repo -> ~/.claude (Windows; the only sanctioned install path)
 install.sh    same, for macOS/Linux
 ```
+
+**Per onboarded project (v0.3):** a sibling `<repo>-wt\` directory holds
+one subdirectory per active incident worktree (`git worktree add
+<repo>-wt\<slug> -b dcs/<slug>`), created automatically the first time a
+Type 3/1 incident opens. The repo itself stays the "main checkout" — the
+only place `.dcs/esg/` state, merges, and deploys live; see doctrine's
+"Parallel operation" section.
 
 **Portability notes for new installers:** the gate hook needs `python` on
 PATH (stdlib only, 3.8+). The IC tier degrades gracefully — if your plan
@@ -77,12 +96,15 @@ CLAUDE.md at runtime — DCS ships none of its authors' project facts.
 
 `/dcs-init` (onboard a project + wire the gate) · `/dcs-new` (stem: intake
 → 201 → typing) · `/dcs-plan` (202 → chiefs → IAP → approval) ·
-`/dcs-execute` (gated fan-out + Safety Officer) · `/dcs-close` (AAR +
-release) · `/dcs-status` (sitrep / resume, `--campaign` for the portfolio)
-· `/dcs-esg` (v0.2: standing strategy session — priorities, register,
-Delegation of Authority) · `/dcs-run` (v0.2: attended auto-chain of the
-full lifecycle, pausing only at Owner gates) · `/dcs-loop` (v0.2:
-unattended queue sweep over the register, under the Delegation).
+`/dcs-execute` (gated fan-out + Safety Officer) · `/dcs-close` (AAR,
+merge worktree to main, release) · `/dcs-status` (sitrep / resume,
+`--campaign` for the portfolio) · `/dcs-esg` (v0.2: standing strategy
+session — priorities, register, Delegation of Authority) · `/dcs-run`
+(v0.2: attended auto-chain of the full lifecycle, pausing only at Owner
+gates) · `/dcs-loop` (v0.2: unattended queue sweep over the register,
+under the Delegation) · `/dcs-deploy` (v0.3: serialized, Owner-gated
+deploy train — ships merged incidents from the main checkout, Owner-
+triggered only, never called by `/dcs-loop`).
 
 ## Testing
 
@@ -90,5 +112,6 @@ unattended queue sweep over the register, under the Delegation).
 python tests/test_dcs_gate.py
 ```
 
-14 lifecycle cases against the gate hook (deny pre-approval, hash-void
-after IAP edit, fail-open on errors, BOM tolerance, cwd-walk discovery).
+18 lifecycle cases against the gate hook (deny pre-approval, hash-void
+after IAP edit, fail-open on errors, BOM tolerance, cwd-walk discovery,
+and v0.3's target-path root resolution + `.dcs/CLOSED` zombie rule).

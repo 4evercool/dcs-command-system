@@ -8,7 +8,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-HOOK = r"C:\Users\4ever\.claude\dcs\hooks\dcs_gate.py"
+HOOK = str(Path(__file__).resolve().parent.parent / "dcs" / "hooks" / "dcs_gate.py")
 results = []
 
 
@@ -91,6 +91,70 @@ try:
                        capture_output=True, text=True, cwd=str(proj / "src"), env=env_less, timeout=30)
     got = "deny" if '"deny"' in p.stdout else "allow"
     check("no env var, cwd-walk finds root -> deny", got, "deny")
+
+    # --- v0.3: root resolution from the TARGET's own path, not env/cwd ---
+    # Two sibling .dcs projects: a session rooted (cwd + CLAUDE_PROJECT_DIR)
+    # in A edits a file that physically lives in B (the worktree case).
+    # A is deliberately type=5 (which the gate always allows regardless of
+    # phase) so a wrong resolution against A would read "allow" -- if these
+    # checks instead see B's real state, the old bug is proven fixed.
+    projA = root / "parallel" / "projA"
+    projB = root / "parallel" / "projB"
+    (projA / ".dcs").mkdir(parents=True)
+    (projA / ".dcs" / "ACTIVE").write_text("a-incident|5|planning")
+
+    incB = projB / ".dcs" / "incidents" / "b-incident"
+    incB.mkdir(parents=True)
+    (projB / "src").mkdir()
+    (projB / "src" / "app.py").write_text("z = 1\n")
+    (projB / ".dcs" / "config.json").write_text(json.dumps({
+        "incidents_dir": ".dcs/incidents",
+        "guarded_paths": ["**/*"],
+        "unguarded_paths": [".dcs/**", "tasks/**", "*.md", ".claude/**"],
+    }))
+    (projB / ".dcs" / "ACTIVE").write_text("b-incident|3|planning")
+
+    def run_gate_cross(target, project_dir_env, cwd):
+        payload = json.dumps({"tool_name": "Edit", "tool_input": {"file_path": str(target)}})
+        env = dict(os.environ, CLAUDE_PROJECT_DIR=str(project_dir_env))
+        p = subprocess.run([sys.executable, HOOK], input=payload, capture_output=True,
+                           text=True, cwd=str(cwd), env=env, timeout=30)
+        out = p.stdout.strip()
+        if not out:
+            return "allow"
+        try:
+            return json.loads(out)["hookSpecificOutput"]["permissionDecision"]
+        except Exception:
+            return f"unparseable: {out[:120]}"
+
+    check(
+        "v0.3(a): env=A, target lives in B (planning) -> judged against B, deny",
+        run_gate_cross(projB / "src" / "app.py", projA, projA), "deny",
+    )
+
+    iapB = incB / "IAP.md"
+    iapB.write_text("# IAP\nobjectives...\n")
+    digestB = hashlib.sha256(iapB.read_bytes()).hexdigest()
+    (incB / "IAP-APPROVED").write_text(f"{digestB}\napproved_by: owner\n")
+    (projB / ".dcs" / "ACTIVE").write_text("b-incident|3|execution")
+    check(
+        "v0.3(b): env=A, target lives in B (execution, valid marker) -> allow",
+        run_gate_cross(projB / "src" / "app.py", projA, projA), "allow",
+    )
+
+    (projB / ".dcs" / "CLOSED").write_text("merged into main 2026-07-22\n")
+    check(
+        "v0.3(c): .dcs/CLOSED zombie marker in B -> deny even with valid IAP marker",
+        run_gate_cross(projB / "src" / "app.py", projA, projA), "deny",
+    )
+    (projB / ".dcs" / "CLOSED").unlink()
+
+    outside_file = root / "parallel" / "elsewhere.py"
+    outside_file.write_text("q = 1\n")
+    check(
+        "v0.3(d): target outside any .dcs project, env points elsewhere -> allow",
+        run_gate_cross(outside_file, projA, projA), "allow",
+    )
 
     failed = [r for r in results if not r[0]]
     print(f"\n{len(results) - len(failed)}/{len(results)} passed")

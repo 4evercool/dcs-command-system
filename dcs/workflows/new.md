@@ -39,11 +39,16 @@ and tell the Owner to run `/dcs-init` first.
 cat "<project>/.dcs/ACTIVE" 2>/dev/null
 ```
 
-If present: **stop.** Report the active incident (slug, type, phase) and
+Here `<project>` is wherever this session is rooted — the main checkout,
+or (v0.3) an incident worktree if the session was started there. If
+present: **stop.** Report the active incident (slug, type, phase) and
 tell the Owner to finish it (`/dcs-plan`, `/dcs-execute`, or `/dcs-close`
 as appropriate — see `/dcs-status` for exactly which) or explicitly close
-it before opening a new one. v0.1 is single-incident by design (doctrine's
-v0.1 constraints) — this is not negotiable from within this workflow.
+it before opening a new one. This is single-incident-per-tree by design
+(doctrine's v0.1 constraints, rescoped by v0.3) — not negotiable from
+within this workflow. It is **not** the portfolio-wide check — a second
+incident can be perfectly legitimate in a different worktree; that's
+what the territory check in step 7b guards, not this one.
 
 ## 3. Spawn situation analysts
 
@@ -110,8 +115,36 @@ No incident directory, no `ACTIVE` file, no gate involvement at all.
 
 ## 7b. Type 3 / Type 1 — open a gated incident
 
-1. Create `<project>/.dcs/incidents/<YYYY-MM-DD>-<slug>/` (slug: a short
-   kebab-case description derived from the symptom).
+**(v0.3) Territory check against the register — before anything else.**
+Resolve `esg_root` (doctrine "Parallel operation": `git worktree list
+--porcelain`, first entry is always the main checkout). If
+`<esg_root>/.dcs/esg/REGISTER.md` exists, compute this incident's initial
+territory as glob(s) from the situation analysts' `affected_files` (the
+201's blast radius), and compare it against every `ACTIVE` row's
+`territory` column. If any overlap: **refuse by default** — do not create
+a worktree yet. Tell the Owner which `ACTIVE` incident conflicts and why,
+add this incident as a `QUEUED` row in the register (territory recorded,
+no worktree/branch yet), and stop — it opens once the conflicting
+incident closes, or is parked/killed. The Owner may explicitly override
+(accept merge-conflict risk); if so, record the override in **both**
+rows' Notes (this incident's and the conflicting one's) and continue
+below. If `REGISTER.md` doesn't exist, skip this check — no portfolio to
+conflict with yet.
+
+**(v0.3) Create the branch and worktree** (Type 5 never gets one — see
+step 7a). From the main checkout:
+
+```bash
+git worktree add "<repo-parent>\<repo>-wt\<slug>" -b "dcs/<slug>"
+```
+
+(`<repo>-wt\` is a sibling directory of the repo, created automatically
+the first time any incident needs one). Everything below — the incident
+directory, `201-BRIEF.md`, `214-LOG.md`, `ACTIVE` — is written **inside
+this worktree**, never in the main checkout.
+
+1. Create `<worktree>/.dcs/incidents/<YYYY-MM-DD>-<slug>/` (slug: the same
+   short kebab-case description used for the branch and worktree above).
 2. Write the finished `201-BRIEF.md` into that directory.
 3. Initialize `214-LOG.md` from the template, with the incident's slug and
    first entry (`incident opened, type {N}, phase=planning`), followed
@@ -119,16 +152,26 @@ No incident directory, no `ACTIVE` file, no gate involvement at all.
    (`command: typed {N} -- <rationale> (IC=<dcs-commander|this Fable
    session>)`) — `/dcs-plan`'s pre-stamp checklist will refuse to stamp an
    approval if this entry is missing.
-4. Write `<project>/.dcs/ACTIVE` with content: `<slug>|<type>|planning`
+4. Write `<worktree>/.dcs/ACTIVE` with content: `<slug>|<type>|planning`
    (exact pipe-delimited format — the gate hook parses this literally).
-4a. **(v0.2)** If `<project>/.dcs/esg/REGISTER.md` exists: add or update
-   this incident's row — id (slug), title, type, priority, intake source,
-   opened date — and set its status `QUEUED` → `ACTIVE` (or insert a new
-   `ACTIVE` row if it wasn't already queued; not every incident originates
-   from the register). If `REGISTER.md` doesn't exist, skip this
-   sub-step — the register is optional infrastructure, not required to
-   open an incident.
-5. Tell the Owner the incident is open and the next step is `/dcs-plan`.
+   **(v0.3)** `.dcs/ACTIVE` is per-worktree and git-ignored — it never
+   rides the branch into main.
+4a. **(v0.2, amended v0.3)** Resolve `esg_root` as above. If
+   `<esg_root>/.dcs/esg/REGISTER.md` exists: add or update this incident's
+   row — id (slug), title, type, priority, intake source, opened date,
+   **worktree** (the path from `git worktree add` above), **branch**
+   (`dcs/<slug>`), **territory** (the same globs checked above) — and set
+   its state `QUEUED` → `ACTIVE` (or insert a new `ACTIVE` row if it
+   wasn't already queued; not every incident originates from the
+   register). If `REGISTER.md` doesn't exist, skip this sub-step — the
+   register is optional infrastructure, not required to open an incident.
+5. Tell the Owner the incident is open, its worktree path, and that the
+   next step is `/dcs-plan`. Recommended pattern: start the next session
+   rooted in the worktree directory; same-session continuation from here
+   also works (the gate now judges by the target file's own path, not
+   session cwd — see `dcs_gate.py`'s v0.3 root resolution), just be
+   deliberate about writing into the worktree path, not the main
+   checkout's.
 
 ## 8. Report
 

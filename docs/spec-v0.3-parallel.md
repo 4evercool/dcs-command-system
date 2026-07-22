@@ -1,8 +1,8 @@
 # DCS v0.3 — Parallel incidents: worktree isolation + deploy train
 
-**Status: DRAFT — awaiting Owner review.** Implements multi-incident
-operation. Supersedes the v0.1 "one incident active at a time" constraint
-and the v0.2 non-goal "no multi-active-incident execution."
+**Status: implemented in v0.3.0.** Implements multi-incident operation.
+Supersedes the v0.1 "one incident active at a time" constraint and the
+v0.2 non-goal "no multi-active-incident execution."
 
 ## Context
 

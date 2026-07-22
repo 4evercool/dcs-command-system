@@ -18,7 +18,14 @@ the P-loop's job.
 
 ## 1. Prepare (Chief of Staff hat)
 
-Check `<project>/.dcs/esg/` for `STRATEGY.md`, `DELEGATION.md`,
+**(v0.3)** Resolve `esg_root` first (doctrine "Parallel operation":
+`git worktree list --porcelain`, first entry — always the main checkout).
+`/dcs-esg` operates on `<esg_root>/.dcs/esg/`, never on whatever tree this
+session happens to be rooted in — run this session from the main checkout
+by convention, but the resolution rule is what actually matters
+mechanically.
+
+Check `<esg_root>/.dcs/esg/` for `STRATEGY.md`, `DELEGATION.md`,
 `REGISTER.md`. **If any are missing:** this is the founding session —
 create all of them (plus an empty `SITREPS/` directory) from
 `$HOME/.claude/dcs/templates/{STRATEGY,DELEGATION,REGISTER,209-SITREP}.md`.
@@ -44,6 +51,13 @@ it needs file or DB digging beyond a simple read. **Never any writes** to
 a project's own data during this sweep, even read-modify-write on an
 audit-style table — analysts read only, same as their stem-phase charter.
 
+**(v0.3) Run the worktree audit.** Follow doctrine's canonical checklist
+("Parallel operation" section) in full: `git worktree list --porcelain`,
+`git branch --list 'dcs/*' --no-merged main`, cross-referenced against
+`REGISTER.md` for orphans, stale actives (older than
+`esg.max_incident_age_days`), deploy-pending `MERGED` rows, and dangling
+branches. Its findings feed agenda item (f) below.
+
 ## 2. Draft agenda
 
 Present to the Owner:
@@ -63,6 +77,17 @@ Present to the Owner:
     Type 3 closes this month with no bound violations → propose raising
     `max_files` 4→6") — never a generic "loosen it" suggestion with no
     evidence behind it.
+(f) **(v0.3) Worktree/branch hygiene** — the worktree audit's findings
+    from step 1, presented as concrete Owner decisions: for each orphan,
+    stale `ACTIVE`, deploy-pending `MERGED` row, or dangling branch —
+    **finish** (no action here; the Owner just needs to go run
+    `/dcs-plan`/`/dcs-execute`/`/dcs-close`/`/dcs-deploy` themselves),
+    **park** (worktree removed, branch kept, row → `PARKED`), or **kill**
+    (worktree removed, branch deleted, row → `KILLED` with reason).
+    **Parking always removes the worktree** — never leave a "parked"
+    incident's directory sitting on disk; that is precisely the half-
+    measure this audit exists to prevent (doctrine principle 10 amended,
+    v0.3).
 
 ## 3. Decide
 
@@ -74,7 +99,12 @@ at face value into step 4.
 ## 4. Record
 
 - Update `STRATEGY.md`'s ranked priorities per the Owner's decisions.
-- Update `REGISTER.md` rows per the (a)/(c)/(e) decisions above.
+- Update `REGISTER.md` rows per the (a)/(c)/(e)/(f) decisions above. For
+  (f) specifically: `git worktree remove <path>` for every park/kill
+  decision (write `.dcs/CLOSED` into the worktree and note manual
+  removal is owed if the removal fails, same fallback as `close.md` step
+  5a.4), `git branch -D dcs/<slug>` additionally for kill decisions only
+  (park keeps the branch).
 - If the Delegation changed: append a **new version block** to
   `DELEGATION.md` — bump `version`, date-stamp it, and keep every prior
   version block in the file exactly as written. It is the audit trail;
@@ -88,8 +118,11 @@ at face value into step 4.
 If the Owner opened incident(s) this session: tell them the next step is
 `/dcs-new <top-priority item>` (or `/dcs-run <top-priority item>` /
 `/dcs-run --next` if they want the whole chain driven automatically).
-**Do not auto-start it yourself.** One incident active at a time still
-holds — doctrine's v0.1 constraints are unchanged by the ESG layer;
-`/dcs-esg` sets priorities, it does not run incidents.
+**Do not auto-start it yourself.** `/dcs-esg` sets priorities, it does not
+run incidents — that's unchanged from v0.1 through v0.3; what v0.3
+changes is only that "run incidents" can now mean several, each in its
+own worktree, opened one `/dcs-new` at a time (each with its own
+territory check against the register — see doctrine's "Parallel
+operation").
 
 </process>

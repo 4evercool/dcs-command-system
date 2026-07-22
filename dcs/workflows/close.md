@@ -1,7 +1,9 @@
 <purpose>
 Close out an incident: require a green Safety verdict, write the AAR,
 route lessons to the project's own memory system (if it documents one),
-flag the intake source for closure without touching prod, release the
+flag the intake source for closure without touching prod, merge the
+incident's worktree into main and remove it (v0.3 — the anti-rot core
+that keeps worktrees from being the human's job to remember), release the
 gate, and deliver a final sitrep.
 </purpose>
 
@@ -43,6 +45,12 @@ periods (or the final one plus `214-LOG.md`'s summary of earlier ones),
 phase-transition entries in `214-LOG.md`.
 
 ## 3. Write AAR.md
+
+**(v0.3)** If this incident lives in a worktree (the standard case for
+Type 3/1 since v0.3), this write — and step 4's memory-routing writes —
+happen **in the worktree**, on the incident's branch. They get committed
+there (step 5a below) and ride the merge into main; there is no separate
+"copy the AAR into main" step.
 
 Using `$HOME/.claude/dcs/templates/AAR.md`: outcome (final goal state vs.
 the last period's acceptance criteria), what worked (tactics that survived
@@ -121,27 +129,78 @@ in AAR.md.
 If the intake source is "ad hoc" / has no external reference, note that
 and move on.
 
+## 5a. Merge to main and remove the worktree (v0.3 — the anti-rot core)
+
+**An incident is NOT closed until every one of these five steps
+succeeds.** This is the mechanism that kills the standing Owner pain of
+forgotten worktrees — merging is a close step, not a chore anyone can
+forget, and closing without it is impossible from within this workflow.
+Skip this section entirely only for an incident that never got a
+worktree (Type 5 has none; a pre-v0.3 incident still running directly in
+the main checkout) — go straight to step 6.
+
+1. **Commit in the worktree.** The AAR (step 3) and any memory-routing
+   writes (step 4) that belong to the repo (not to an external system)
+   must be committed on the incident's branch before merging — `git add`
+   the specific files (never `-A`/`.`, same discipline as `execute.md`
+   step 9b), commit message referencing the incident slug.
+2. **Merge to main.** From the main checkout: `git merge --no-ff
+   dcs/<slug>`. The territory partition (doctrine principle 6, portfolio
+   level) makes this merge trivially clean in the normal case. **A
+   conflict means the territory promise was violated somewhere** — treat
+   it as escalation trigger (a) (doctrine principle 13): stop here, file
+   a 209 sitrep, and put it to the Owner. **Never resolve a merge
+   conflict silently or unilaterally** — that is exactly the kind of
+   silent judgment call the escalation-trigger machinery exists to catch.
+3. **Register row → `MERGED` (deploy pending).** Resolve `esg_root`
+   (doctrine "Parallel operation"). If `<esg_root>/.dcs/esg/REGISTER.md`
+   exists: move this incident's row from `ACTIVE` to `MERGED`, filling in
+   the closed date and a one-line outcome (from `AAR.md`'s Outcome
+   section) — this supersedes the pre-v0.3 `ACTIVE → CLOSED` transition;
+   see step 6a below. If never registered, skip silently.
+4. **Remove the worktree.** `git worktree remove <path>`. The branch
+   (`dcs/<slug>`) is **kept** — it stays the rollback reference until
+   `/dcs-deploy` confirms the merge shipped and deletes it. **If removal
+   fails** (locked files, a session still running inside it): write
+   `.dcs/CLOSED` into the worktree (no content required — its mere
+   presence is the signal) and tell the Owner it needs manual removal
+   once whatever's holding it releases. `dcs_gate.py`'s zombie rule makes
+   that worktree deny every guarded edit in the meantime, so it can't
+   quietly become a second life for already-merged work.
+5. Only now does the incident's story name the worktree's fate — carry
+   the merge commit sha and the deploy-pending state into the final
+   sitrep (step 7).
+
 ## 6. Release the gate
 
 Append a final entry to `214-LOG.md`: `incident closed, archived`.
 
-Delete `<project>/.dcs/ACTIVE`. The incident directory itself is **not**
-moved or deleted — it remains under `.dcs/incidents/<date>-<slug>/`
-permanently as the archived record; "archived" means "closed in place",
-not "relocated".
+**(v0.3)** In the normal worktree case, this is already accomplished by
+5a step 4 — `.dcs/ACTIVE` lived inside the worktree that was just
+removed, so there is nothing further to delete. Only explicitly delete
+`<project>/.dcs/ACTIVE` here for an incident that never had a worktree
+(Type 5 has none to begin with — it never set `ACTIVE`; a pre-v0.3
+incident still running in the main checkout does). The incident directory
+itself is **not** moved or deleted — for a merged worktree incident it
+now lives under `.dcs/incidents/<date>-<slug>/` in the **main checkout**
+(having ridden the merge in); "archived" means "closed in place," not
+"relocated."
 
-## 6a. Update the register (v0.2)
+## 6a. Update the register (v0.2, superseded by 5a in v0.3)
 
-If `<project>/.dcs/esg/REGISTER.md` exists: find this incident's row (by
-slug) and move it `ACTIVE` → `CLOSED`, filling in the closed date and a
-one-line outcome (from `AAR.md`'s Outcome section). If the incident was
-never registered (no ESG in use on this project, or it was opened before
-the founding `/dcs-esg` session), skip silently — `REGISTER.md` is
-optional infrastructure, not a close-blocking requirement.
+**v0.3: this transition now happens at step 5a.3** (`ACTIVE` → `MERGED`,
+not `ACTIVE` → `CLOSED` — the register's terminal state for a shipped
+incident is `DEPLOYED`, reached later via `/dcs-deploy`). This heading is
+kept as a stable cross-reference target; there is nothing further to do
+here for a v0.3 incident. For a pre-v0.3 / never-worktreed incident
+(step 5a skipped): find this incident's row (by slug) and move it
+`ACTIVE` → `CLOSED` directly, filling in the closed date and outcome —
+the old v0.2 behavior, still correct for an incident that has no merge
+step to wait on.
 
-If `<project>/.dcs/esg/STRATEGY.md` exists, read its ranked priorities and
-note the next queued priority in the final sitrep (step 7) so the Owner
-sees what's next without a separate `/dcs-esg` round.
+If `<esg_root>/.dcs/esg/STRATEGY.md` exists, read its ranked priorities
+and note the next queued priority in the final sitrep (step 7) so the
+Owner sees what's next without a separate `/dcs-esg` round.
 
 ## 7. Final sitrep
 
@@ -149,8 +208,12 @@ One paragraph to the Owner: incident slug and type, number of operational
 periods, key changes made, Safety Officer's final pass verdict, whether
 lessons were routed to memory (and where, or that none was documented),
 whether an intake source was flagged for the Owner's own action,
-confirmation the gate is released (`.dcs/ACTIVE` removed — the project is
-free to open a new incident with `/dcs-new`), and (v0.2) whether the
-register was updated plus the next queued `STRATEGY.md` priority, if any.
+confirmation the gate is released, and (v0.2) whether the register was
+updated plus the next queued `STRATEGY.md` priority, if any. **(v0.3)**
+For a worktree incident: name the merge commit sha (from step 5a.2), state
+plainly the register row is `MERGED (deploy pending)` — not shipped yet
+— and that `/dcs-deploy` is the next step whenever the Owner batches a
+deploy; if worktree removal failed and `.dcs/CLOSED` was written instead,
+say so explicitly and name the manual cleanup still owed.
 
 </process>

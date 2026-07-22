@@ -15,9 +15,17 @@ section for the three hard rules this workflow enforces without exception.
 
 ## 1. Preconditions
 
+**(v0.3)** Resolve `esg_root` first (doctrine "Parallel operation":
+`git worktree list --porcelain`, first entry — always the main checkout).
+Everything below reads `<esg_root>/.dcs/esg/`, never a worktree's own
+tree. Run doctrine's canonical worktree audit and note its findings in
+the final report (step 9) — `/dcs-loop` doesn't act on them (that's
+`/dcs-esg` agenda item (f)), but a sweep is a natural moment to surface
+them alongside whatever the sweep itself accomplishes.
+
 Check, in order, and stop with plain instructions if any fails:
 
-- `<project>/.dcs/esg/` must exist, with both `REGISTER.md` and
+- `<esg_root>/.dcs/esg/` must exist, with both `REGISTER.md` and
   `DELEGATION.md` present. If missing: stop — tell the Owner `/dcs-loop`
   needs an ESG in place first; run `/dcs-esg`'s founding session (it
   creates `.dcs/esg/` from templates).
@@ -138,6 +146,10 @@ holds command judgment.
 
 ## 9. Report
 
-Per the stop condition reached — see step 6.
+Per the stop condition reached — see step 6. **(v0.3)** Append the
+worktree audit's findings from step 1, if any — orphans, stale actives,
+deploy-pending rows, dangling branches — so a sweep that ran clean still
+surfaces portfolio hygiene the Owner may want to raise at the next
+`/dcs-esg`.
 
 </process>
