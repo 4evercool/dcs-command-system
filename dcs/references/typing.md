@@ -58,10 +58,11 @@ unknown (that's more investigation before typing, not a bigger type).
 **Activation:** IC + Planning Chief + 1-4 `dcs-ops-specialist` + Safety
 Officer.
 
-**Approval:** Owner approves the IAP via `AskUserQuestion`
-(`config.json → auto_approve_type3` can delegate this later — default
-`false`, since it's new and untested; revisit once the Owner trusts the
-loop).
+**Approval:** Owner approves the IAP via `AskUserQuestion` — unless (v0.2)
+`.dcs/esg/DELEGATION.md` is in force and every bound holds, in which case
+the IC approves on the Owner's behalf, logged per doctrine principle 12
+(`plan.md` step 6). Projects without an ESG fall back to the older
+`config.json → auto_approve_type3` (default `false`).
 
 ## Type 1 — Architectural, multi-file, schema, or migration
 

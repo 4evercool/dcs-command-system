@@ -86,14 +86,15 @@ guarantee about itself.
 
 | Role | Seat | Model | Authority |
 |---|---|---|---|
-| **Owner** | Human user | — | Ultimate authority. Approves IAPs, decides scope changes, receives sitreps. |
+| **Owner** | Human user | — | Ultimate authority, exercised primarily through ESG sessions and the Delegation of Authority (v0.2); direct IAP approval only where the Delegation doesn't cover it. Decides scope changes, receives sitreps. |
+| **ESG** | Standing body: Owner (chair) + main session as Chief of Staff | Fable | Sets strategy and priorities across incidents, opens/parks/kills incidents, issues and amends the Delegation of Authority, decides continue/pivot/demobilize at escalations. Does **not** plan or run incidents. |
 | **Incident Commander (IC)** | Main session *when it runs Fable*; otherwise the `dcs-commander` agent (transfer of command, below) | Fable | Holds command judgment: types the incident, accepts/rejects the IAP, arbitrates deviations, disposes of Safety verdicts. Writes no code — delegates even trivia. |
 | **Dispatcher** | Main session, any model (Opus, Sonnet, even Haiku) | any | Takes the initial report, runs the mechanics: spawns agents, transcribes artifacts, does bookkeeping, relays between Owner and IC. Holds **no** command judgment — at command points it must consult the IC. When the main session runs Fable, IC and Dispatcher merge into one seat. |
 | **Section Chiefs** | Subagents | Opus | Planning Chief authors the IAP's tactics; Logistics Chief (Type 1 only) plans deploy/env. Command specialists **through the tasking they author and later review**, never through a live link. |
 | **Safety Officer** | Subagent | Opus | Outside the sections; reports to the IC. Adversarial verification of "done" — its halt is **binding**. No incident closes over an unresolved refutation. |
 | **Specialists** | Subagents | Sonnet | ≤4 per section per operational period. Execute one 204 tasking each, inside a declared file territory, return a structured report. |
 
-## The 11 working principles
+## The 13 working principles
 
 1. **Phases, not nesting** — chiefs plan (phase A), IC approves, specialists
    execute (phase B), the Safety Officer reviews (phase C). The temporal
@@ -138,18 +139,43 @@ guarantee about itself.
     with `bash_guard.py`'s `GUARD_OK=1`): the only sanctioned emergency
     release is the Owner deleting `.dcs/ACTIVE` — an explicit, visible act
     that leaves a trace in the directory's absence.
+12. **Govern by delegation, not by click-through** (v0.2) — the Owner's
+    routine control instrument is the written Delegation of Authority
+    (`.dcs/esg/DELEGATION.md`), reviewed and amended at ESG sessions
+    (`/dcs-esg`). IC approvals made on the Owner's behalf under the
+    Delegation are always logged — `214-LOG.md` **and** `REGISTER.md` —
+    never silent.
+13. **Escalation triggers are mandatory** (v0.2) — the IC MUST file a 209
+    sitrep and convene the Owner (pause the incident) when ANY of: (a)
+    scope grows beyond the approved IAP's stated blast radius; (b) the
+    Safety Officer halts twice on the same objective; (c) the incident
+    enters operational period N+1, where N = `esg.max_periods_before_review`
+    (default 3); (d) a Delegation bound would be crossed. Continue / pivot
+    / demobilize is the Owner's decision, recorded in the sitrep — never
+    the IC's to decide alone, Delegation or not.
 
 ## Incident typing (decided at the stem, recorded in 201)
 
 | Type | Trigger | Activation | Approval |
 |---|---|---|---|
 | **5** | Trivial, obvious, ≤1 file | IC + 1 specialist; no sections, no gate; auto-close with a one-line AAR | none (IC verifies) |
-| **3** | Well-scoped feature/bug | IC + Planning Chief + 1–4 specialists + Safety Officer | Owner approves the IAP (`config.json → auto_approve_type3` can delegate this later; default off) |
+| **3** | Well-scoped feature/bug | IC + Planning Chief + 1–4 specialists + Safety Officer | Owner approves the IAP, unless `.dcs/esg/DELEGATION.md` (v0.2) is in force and every bound holds — then the IC approves on the Owner's behalf, logged (principle 12). Projects without an ESG fall back to `config.json → auto_approve_type3` (default off). |
 | **1** | Architectural / multi-file / schema / migration | Full org: + Logistics Chief; optional deterministic Workflow-script execution | Owner approval **mandatory**, plus sign-off at any scope change |
 
 Full decision guide with concrete software examples: `references/typing.md`.
 
 ## The lifecycle (Planning P mapped to software)
+
+Since v0.2, the P-loop runs inside a larger strategic loop the ESG owns:
+
+```
+ESG SESSION (standing, periodic):  sweep intake → update REGISTER → set priorities
+     → amend STRATEGY / DELEGATION → open next incident(s) via /dcs-new
+INCIDENT (tactical):  stem → P-loop → close   [escalation triggers → 209 → ESG decision]
+CLOSE:  AAR → register updated → next incident per STRATEGY priority
+```
+
+The P-loop itself is unchanged by v0.2:
 
 ```
 STEM (once):  intake → initial response (situation analysts: repro, logs, impact)
@@ -179,8 +205,9 @@ several periods (each a fresh 202→IAP→execute→verify cycle) before closing
 
 ## Communication convention: slash commands are chat input, not shell
 
-`/dcs-new`, `/dcs-plan`, `/dcs-execute`, `/dcs-close`, `/dcs-status` are
-Claude Code slash commands — the Owner types them into the **chat input**,
+`/dcs-new`, `/dcs-plan`, `/dcs-execute`, `/dcs-close`, `/dcs-status`,
+`/dcs-esg`, `/dcs-run`, `/dcs-loop` are Claude Code slash commands — the
+Owner types them into the **chat input**,
 never into a terminal. When a workflow's report step says "tell the Owner
 the next step is /dcs-plan", write the command as inline code
 (`` `/dcs-plan` ``) in plain prose. **Never put a slash command inside a
@@ -201,3 +228,44 @@ evidence for the 201; a `dcs-planning-chief` planning tactics on a project
 with a vault protocol reads the relevant domain pages before proposing
 tactics. DCS does not know these protocols itself — it discovers them by
 reading the target project's `CLAUDE.md`, the same way any agent would.
+
+## Automation layers (v0.2)
+
+Two optional commands sequence the P-loop without eliminating its gates —
+neither changes who holds command judgment (see "Transfer of command"
+above) or what counts as approval; they only remove the need for the
+Owner to type each phase command by hand.
+
+- **`/dcs-run`** — attended auto-chain. Runs the full incident lifecycle
+  (stem → plan → execute, looping operational periods as needed → close)
+  in one command, reading and following `workflows/new.md`, `plan.md`,
+  `execute.md`, `close.md` exactly as written. Pauses only at the Owner's
+  own gates: typing confirm, IAP approval (unless the Delegation covers
+  it), deviation `escalate_owner`, verdict `escalate_owner`, escalation
+  triggers, Owner-UAT/close.
+- **`/dcs-loop`** — unattended queue sweep. Cycles `/dcs-run --next` over
+  `.dcs/esg/REGISTER.md`'s `QUEUED` items, with the Owner involved only at
+  real decisions. Legitimate only *because* the ESG's Delegation of
+  Authority (principle 12) defines what "routine" means in writing —
+  without an active delegation, `/dcs-loop` still runs, but pauses at
+  every IAP approval; that is the honest degenerate case of "nothing has
+  been delegated yet," not a bug to route around.
+
+**Hard rules for unattended operation (`/dcs-loop`), non-negotiable:**
+
+1. **Never execute a Type 1 incident unattended** — register it, mark
+   `PARKED` with reason `"awaits Owner"`, continue to the next queued item.
+2. **Never deploy from the loop** — every incident it drives stops at
+   committed + safety-passed; deploys are batched for the Owner, and the
+   register row for that incident notes `"deploy pending"`.
+3. **At any Owner gate the Delegation does not cover:** send one
+   notification if a push/notification tool is available in the session,
+   write the pause state to disk (the incident stays mid-phase, resumable
+   by any future session via `/dcs-status`), and end the loop turn —
+   never busy-wait, never self-approve outside Delegation bounds.
+
+ESG and the Delegation are what make unattended operation legitimate
+rather than reckless: `/dcs-loop` never invents its own authority to act
+— it only exercises what the Owner already signed off on in
+`DELEGATION.md`, in writing, at an `/dcs-esg` session, and stops cleanly
+at the edge of that grant.

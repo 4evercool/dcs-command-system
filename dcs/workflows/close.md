@@ -130,13 +130,27 @@ moved or deleted — it remains under `.dcs/incidents/<date>-<slug>/`
 permanently as the archived record; "archived" means "closed in place",
 not "relocated".
 
+## 6a. Update the register (v0.2)
+
+If `<project>/.dcs/esg/REGISTER.md` exists: find this incident's row (by
+slug) and move it `ACTIVE` → `CLOSED`, filling in the closed date and a
+one-line outcome (from `AAR.md`'s Outcome section). If the incident was
+never registered (no ESG in use on this project, or it was opened before
+the founding `/dcs-esg` session), skip silently — `REGISTER.md` is
+optional infrastructure, not a close-blocking requirement.
+
+If `<project>/.dcs/esg/STRATEGY.md` exists, read its ranked priorities and
+note the next queued priority in the final sitrep (step 7) so the Owner
+sees what's next without a separate `/dcs-esg` round.
+
 ## 7. Final sitrep
 
 One paragraph to the Owner: incident slug and type, number of operational
 periods, key changes made, Safety Officer's final pass verdict, whether
 lessons were routed to memory (and where, or that none was documented),
-whether an intake source was flagged for the Owner's own action, and
+whether an intake source was flagged for the Owner's own action,
 confirmation the gate is released (`.dcs/ACTIVE` removed — the project is
-free to open a new incident with `/dcs-new`).
+free to open a new incident with `/dcs-new`), and (v0.2) whether the
+register was updated plus the next queued `STRATEGY.md` priority, if any.
 
 </process>

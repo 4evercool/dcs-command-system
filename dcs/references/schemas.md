@@ -212,3 +212,69 @@ occurs — the decision is still logged in `214-LOG.md` the same way.
 | `rationale` / `reasons` | string / string[] | One line; grounded in verified inputs, not the Dispatcher's summary |
 | `required_changes` / `directives` | string[] | Concrete, one line each — usable verbatim as re-spawn or fix-tasking instructions |
 | `open_questions` | string[] | Only where the call is genuinely the Owner's — framed as the exact question to relay |
+
+## 7. Delegation bounds (v0.2 — feeds `.dcs/esg/DELEGATION.md`, parsed by `plan.md`/`run.md`/`loop.md`)
+
+The fenced ```delegation-bounds``` JSON block inside `DELEGATION.md` — the
+only part of that file workflows parse; the surrounding prose is for
+humans only.
+
+```json
+{
+  "version": 1,
+  "auto_approve_type3": false,
+  "max_files": 4,
+  "forbidden_globs": ["**/migrations.py", "**/auth/**", "**/payment*/**"],
+  "forbidden_topics": ["schema migration", "payments", "auth/JWT", "deploy scripts"],
+  "require_tests_green": true,
+  "max_specialists": 2
+}
+```
+
+| Field | Type | Notes |
+|---|---|---|
+| `version` | number | Bumped every amendment; `DELEGATION.md` keeps every prior version block — this is the one currently in force |
+| `auto_approve_type3` | boolean | Master switch. `false` = identical to v0.1 behavior even with a `DELEGATION.md` present |
+| `max_files` | number | Compared against the IAP's total partitioned file count |
+| `forbidden_globs` | string[] | Any 204 tasking's `territory` glob matching one of these voids auto-approval for that IAP |
+| `forbidden_topics` | string[] | Checked against the 201/202 text |
+| `require_tests_green` | boolean | If `true`, the chief's `verification_plan` must name a concrete automated test run, not "manual only" |
+| `max_specialists` | number | Compared against the 204 tasking count |
+
+`esg.max_periods_before_review` (doctrine principle 13, trigger c) is
+**not** part of this block — it lives in `config.json`'s `esg` key
+(default `3`), because trigger (c) applies to every incident regardless
+of whether a Delegation is even in force.
+
+## 8. 209 sitrep (v0.2 — feeds `.dcs/esg/SITREPS/<slug>-p<N>.md`)
+
+Filed by the IC at any escalation trigger (doctrine principle 13). Not a
+subagent return — the IC assembles this directly from `202-OBJECTIVES.md`,
+`SAFETY.md`, and `214-LOG.md`, then the Owner's `AskUserQuestion` answer
+fills in `decision`/`decided_by`.
+
+```json
+{
+  "incident": "slug",
+  "period": 2,
+  "status_summary": "One paragraph: what's true right now",
+  "objectives_state": "criterion 1 met, criterion 2 partially met",
+  "safety_state": "halt -- boundary case untested (second halt on this objective)",
+  "resource_spend": "2 periods, 3 specialists total",
+  "options": ["continue", "pivot", "demobilize"],
+  "decision": "pivot",
+  "decided_by": "Owner"
+}
+```
+
+| Field | Type | Notes |
+|---|---|---|
+| `incident` | string | slug |
+| `period` | number | operational period this sitrep was filed during |
+| `status_summary` | string | one paragraph, no hedging |
+| `objectives_state` | string | plain-language rollup of 202 criteria |
+| `safety_state` | string | last verdict + why, if `halt` |
+| `resource_spend` | string | periods/specialists/scope, for the Owner's cost judgment |
+| `options` | `["continue","pivot","demobilize"]` | fixed enum, always all three offered |
+| `decision` | one of `options` | filled in only after the Owner answers `AskUserQuestion` |
+| `decided_by` | string | always `"Owner"` — this decision is never delegated, Delegation bounds or not |

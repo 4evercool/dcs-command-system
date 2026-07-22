@@ -111,12 +111,58 @@ and note why.
   status), risks, verification plan, and (Type 1) the Logistics Chief's
   deploy/env/migration/rollback plan.
 
-## 6. Present the IAP to the Owner
+## 6. Approve the IAP — Delegation-aware (v0.2)
+
+**Delegation check (Type 3 only):** if the incident is Type 3 AND
+`<project>/.dcs/esg/DELEGATION.md` exists, parse its latest (highest
+`version`) fenced ```delegation-bounds``` JSON block — never the prose
+around it (schemas.md #7 is the authoritative shape). Evaluate ALL of:
+
+- `max_files` is >= the IAP's total partitioned file count.
+- every `territory[]` glob across every `204-TASKING/*.md` misses every
+  entry in `forbidden_globs`.
+- the `201-BRIEF.md` / `202-OBJECTIVES.md` text doesn't match any string
+  in `forbidden_topics`.
+- `max_specialists` is >= the 204 tasking count.
+- if `require_tests_green` is `true`, the chief's `verification_plan`
+  names a concrete automated test run, not "manual only."
+
+**All bounds hold AND `auto_approve_type3` is `true`:** the IC approves on
+the Owner's behalf — skip the `AskUserQuestion` in step 6b below and
+proceed directly to step 7 (stamp the marker), with `approved_by: IC
+(Delegation v<N>)` instead of `approved_by: Owner` in `IAP-APPROVED`'s
+metadata. Append to `214-LOG.md`: `approved under Delegation v<N> (Type 3,
+bounds held)`. If `<project>/.dcs/esg/REGISTER.md` exists, also update or
+add this incident's row there (id, title, type, priority, intake source,
+opened date) so the register reflects every incident that ran, delegated
+or not — doctrine principle 12: never silent. **Tell the Owner in one
+visible line regardless:** e.g. "IAP for `<slug>` auto-approved under
+Delegation v`<N>` (all bounds held); proceeding to `/dcs-execute`."
+
+**Any bound fails, `auto_approve_type3` is `false`/absent, no
+`DELEGATION.md`, or Type 1:** fall through to step 6b — if a delegation
+check was attempted and failed, name the specific failed bound(s) in the
+summary so the Owner sees exactly why it didn't auto-approve.
+
+**No `DELEGATION.md` at all (project has no ESG):** `config.json`'s
+`auto_approve_type3` key is superseded by, but still the fallback for,
+projects without an ESG — it carries no bounds beyond the Type/config
+check itself (no `max_files`, no `forbidden_globs`), so treat it far more
+conservatively: only auto-approve on this fallback path if `Type == 3`
+AND `auto_approve_type3: true` AND the IAP touches no file matching any
+glob in `guarded_paths` outside the ordinary source tree (i.e. nothing
+that already looks unusual for a routine change). This fallback predates
+v0.2 and is unchanged by it; a project that runs `/dcs-esg` and gets a
+real `DELEGATION.md` should prefer that path — it is auditable per-bound,
+this one isn't.
+
+## 6b. Present the IAP to the Owner
 
 Use `AskUserQuestion` — **not** plan mode. This is deliberate: DCS's own
 approval gate is a distinct mechanism from the global ExitPlanMode
 handoff hook, and routing IAP approval through plan mode would collide
-with it. Summarize the IAP (goal, tactics, partition, risks) and ask:
+with it. Summarize the IAP (goal, tactics, partition, risks) — and, if a
+delegation check ran and failed, the named failed bound(s) — then ask:
 approve / request changes / reject.
 
 - **Request changes:** revise the relevant artifact(s) (202, taskings, or
@@ -157,6 +203,10 @@ approved_by: Owner
 approved_at: <ISO8601 local timestamp>
 period: <N>
 ```
+
+(v0.2: if step 6 auto-approved under a Delegation, `approved_by: IC
+(Delegation v<N>)` instead — the hash mechanism and every other line are
+identical either way.)
 
 **Windows caveat:** write this file WITHOUT a BOM. PowerShell 5.1's
 `Set-Content -Encoding utf8` prepends one; use the Write tool, or

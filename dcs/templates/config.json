@@ -3,5 +3,8 @@
   "guarded_paths": ["**/*"],
   "unguarded_paths": [".dcs/**", "tasks/**", "*.md", ".claude/**"],
   "auto_approve_type3": false,
-  "language": "auto"
+  "language": "auto",
+  "esg": {
+    "max_periods_before_review": 3
+  }
 }

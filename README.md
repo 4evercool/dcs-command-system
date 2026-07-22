@@ -21,6 +21,18 @@ enforced mechanically by a PreToolUse hook (`dcs/hooks/dcs_gate.py`) with a
 hash-bound approval marker — editing the plan after approval voids the
 approval automatically.
 
+**v0.2 adds the ESG strategic layer** above the P-loop: a standing session
+(`/dcs-esg`) where the Owner chairs and the main session acts as Chief of
+Staff, managing an incident portfolio (`.dcs/esg/REGISTER.md`), a ranked
+`STRATEGY.md`, and a versioned `DELEGATION.md` — the Owner's written grant
+of authority letting the IC auto-approve routine (Type 3, in-bounds) IAPs
+on their behalf instead of a click-through every time. Two driver commands
+build on it: `/dcs-run` chains stem → plan → execute → close for one
+incident attended (Owner answers gates only), and `/dcs-loop` sweeps the
+register's queue unattended under the Delegation, never running a Type 1
+or deploying without the Owner. See
+[docs/spec-v0.2-esg.md](docs/spec-v0.2-esg.md) for the full spec.
+
 Chain of command (phases, not nesting — subagents can't spawn subagents):
 
 | Role | Seat | Model |
@@ -34,8 +46,9 @@ Chain of command (phases, not nesting — subagents can't spawn subagents):
 
 Full constitution: [dcs/references/doctrine.md](dcs/references/doctrine.md).
 Design history: [docs/design-v0.1.md](docs/design-v0.1.md).
-Roadmap: [docs/spec-v0.2-esg.md](docs/spec-v0.2-esg.md) — the ESG strategic
-layer (Delegation of Authority, incident register, escalation triggers).
+ESG spec (implemented in v0.2): [docs/spec-v0.2-esg.md](docs/spec-v0.2-esg.md)
+— the strategic layer (Delegation of Authority, incident register,
+escalation triggers).
 
 ## Layout
 
@@ -65,7 +78,11 @@ CLAUDE.md at runtime — DCS ships none of its authors' project facts.
 `/dcs-init` (onboard a project + wire the gate) · `/dcs-new` (stem: intake
 → 201 → typing) · `/dcs-plan` (202 → chiefs → IAP → approval) ·
 `/dcs-execute` (gated fan-out + Safety Officer) · `/dcs-close` (AAR +
-release) · `/dcs-status` (sitrep / resume).
+release) · `/dcs-status` (sitrep / resume, `--campaign` for the portfolio)
+· `/dcs-esg` (v0.2: standing strategy session — priorities, register,
+Delegation of Authority) · `/dcs-run` (v0.2: attended auto-chain of the
+full lifecycle, pausing only at Owner gates) · `/dcs-loop` (v0.2:
+unattended queue sweep over the register, under the Delegation).
 
 ## Testing
 

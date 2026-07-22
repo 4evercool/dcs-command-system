@@ -17,6 +17,10 @@ never write directly into the incident directory.
 | `214-LOG.md` | IC, append-only | Every phase transition, every workflow | The shift-change record — never edited or rewritten, only appended to. This is what a fresh session reads to resume losslessly |
 | `SAFETY.md` | Safety Officer, verbatim | `/dcs-execute`, after specialists finish | The Safety Officer's verdict per operational period, copied in as returned — not summarized or softened by the IC |
 | `AAR.md` | IC | `/dcs-close` | Close-out: what worked, lessons learned, links to where those lessons were written in the project's memory system |
+| `.dcs/esg/STRATEGY.md` | ESG (Owner decides, Chief of Staff drafts) | `/dcs-esg` | Long-term objectives + ranked priorities — incident-centric, decides WHICH incidents get opened, never HOW |
+| `.dcs/esg/DELEGATION.md` | Owner-signed, Chief of Staff-drafted | `/dcs-esg` | Versioned Delegation of Authority — human-readable terms plus the machine-readable `delegation-bounds` JSON block workflows actually parse |
+| `.dcs/esg/REGISTER.md` | Chief of Staff (CoS) | `/dcs-esg`, and touched by `/dcs-new`, `/dcs-plan`, `/dcs-close` | Incident portfolio: QUEUED / ACTIVE / PARKED / CLOSED table |
+| `.dcs/esg/SITREPS/<slug>-p<N>.md` | IC files it, Owner decides | `/dcs-execute`, at any escalation trigger | 209-style rollup: status, objectives/safety state, resource spend, continue/pivot/demobilize decision |
 
 ## Why append-only for 214-LOG.md
 

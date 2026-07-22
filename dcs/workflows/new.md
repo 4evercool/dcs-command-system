@@ -22,6 +22,14 @@ reference to an `audit_results` `needs_fix` row. If it's a bare reference
 it's asking for before proceeding (e.g. query the row itself if the
 project documents how).
 
+**(v0.2)** Intake may also simply be `"next from the register"`. If so,
+read `<project>/.dcs/esg/REGISTER.md`'s `QUEUED` rows (topmost by the
+order `STRATEGY.md`'s ranked priorities implies, or table order if
+`STRATEGY.md` doesn't exist) and use that row's title as the intake
+description. If `REGISTER.md` doesn't exist, or exists with no `QUEUED`
+rows, stop and tell the Owner there's nothing queued — run `/dcs-esg`
+first, or pass a concrete intake description instead.
+
 Determine the project root. Verify `<project>/.dcs/` exists — if not, stop
 and tell the Owner to run `/dcs-init` first.
 
@@ -113,6 +121,13 @@ No incident directory, no `ACTIVE` file, no gate involvement at all.
    approval if this entry is missing.
 4. Write `<project>/.dcs/ACTIVE` with content: `<slug>|<type>|planning`
    (exact pipe-delimited format — the gate hook parses this literally).
+4a. **(v0.2)** If `<project>/.dcs/esg/REGISTER.md` exists: add or update
+   this incident's row — id (slug), title, type, priority, intake source,
+   opened date — and set its status `QUEUED` → `ACTIVE` (or insert a new
+   `ACTIVE` row if it wasn't already queued; not every incident originates
+   from the register). If `REGISTER.md` doesn't exist, skip this
+   sub-step — the register is optional infrastructure, not required to
+   open an incident.
 5. Tell the Owner the incident is open and the next step is `/dcs-plan`.
 
 ## 8. Report

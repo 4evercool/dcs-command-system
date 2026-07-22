@@ -64,6 +64,21 @@ still applies conceptually (fan-out becomes script phases, structured
 returns still get collected and validated the same way) — adapt, don't
 skip the deviation/Safety Officer gates below.
 
+## Escalation-trigger check — period boundary (v0.2, doctrine principle 13)
+
+Before spawning any specialist this period, check trigger (c): read
+`esg.max_periods_before_review` from `<project>/.dcs/config.json`'s `esg`
+key (default `3` if unset or the key is absent). If the operational
+period number about to run exceeds that threshold, this period **is** the
+mandatory escalation — do not fan out. Skip to "On any escalation
+trigger" below instead of step 4.
+
+Also check trigger (d) preemptively if `<project>/.dcs/esg/DELEGATION.md`
+is in force: if the IAP's declared territory for this period touches a
+`forbidden_globs` entry that wasn't caught at `/dcs-plan` time (e.g. the
+Delegation was tightened after this IAP was approved), treat it the same
+way — do not fan out over a plan that now crosses a bound.
+
 ## 4. Fan out Ops Specialists
 
 Up to 4 `dcs-ops-specialist` subagents, each given **exactly one**
@@ -167,6 +182,36 @@ which fits:
 **`pass`:** write/append `SAFETY.md` with the verdict **verbatim** (not
 summarized or softened). Append to `214-LOG.md`:
 `SAFETY: pass -- period <N> complete`.
+
+## Escalation-trigger check — after the Safety verdict (v0.2, doctrine principle 13)
+
+Before moving on to 9b (on `pass`) or looping back into fix-taskings /
+re-plan (on `halt`), check the two verdict-time triggers:
+
+- **Trigger (b):** this is the **second** `SAFETY: halt` entry in
+  `214-LOG.md` for the same objective (same 202 goal text, not merely the
+  same incident — a halt on a *different* period's objective doesn't
+  count). Grep `214-LOG.md` for prior `SAFETY: halt` lines before deciding.
+- **Trigger (a):** the specialists' combined `files_touched` (step 5)
+  exceeds the blast radius `201-BRIEF.md` declared, in a way the IAP's
+  partition table didn't already account for.
+
+**On any escalation trigger (a/b/c/d — c and d are checked at the period
+boundary above, before fan-out):** write
+`<project>/.dcs/esg/SITREPS/<slug>-p<N>.md` from
+`$HOME/.claude/dcs/templates/209-SITREP.md` (create the `SITREPS/`
+directory if it doesn't exist yet). Fill in status, objectives state,
+safety state, resource spend, and the three options. Pause the incident —
+do not proceed to 9b or back into planning yet. Ask the Owner via
+`AskUserQuestion`: continue / pivot / demobilize. Record the decision in
+the sitrep's `decision`/`decided_by` fields and append to `214-LOG.md`:
+`ESCALATION: trigger <a|b|c|d> -- <one-line reason> -- Owner: <decision>`.
+Then proceed per the decision: **continue** resumes the normal path this
+step interrupted (9b, or the fix-tasking/re-plan branch above);
+**pivot** routes to `/dcs-plan` for a re-scoped period; **demobilize**
+routes to `/dcs-close` with the sitrep's outcome noted (or, if objectives
+were never met, treat it as an abandoned incident per `/dcs-plan` step
+6b's Reject path).
 
 ## 9b. After the pass: the integration commit
 

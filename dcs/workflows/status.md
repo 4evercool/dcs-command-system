@@ -81,4 +81,22 @@ Compare against the first line of `IAP-APPROVED`.
 
 No writes, no subagent spawns. This workflow only reads and reports.
 
+## `--campaign` variant (v0.2)
+
+If `$ARGUMENTS` contains `--campaign`, report the portfolio instead of (or
+alongside, if an incident is also active) the single-incident sitrep
+above. Still read-only — no writes, no subagent spawns.
+
+1. If `<project>/.dcs/esg/` doesn't exist: report "no ESG on this
+   project — run `/dcs-esg` to found one" and stop.
+2. Read `REGISTER.md` and print its full table (QUEUED / ACTIVE / PARKED
+   / CLOSED, all rows — CLOSED rows give the Owner history at a glance).
+3. Read `DELEGATION.md`'s latest version block and report the delegation
+   version in force plus `auto_approve_type3`'s current value (so the
+   Owner knows at a glance whether routine work is currently unattended-
+   capable).
+4. List any files under `SITREPS/` whose `Decision` field is still
+   `{{continue | pivot | demobilize}}` (unfilled) or otherwise blank —
+   these are pending sitreps awaiting an Owner decision; name each one.
+
 </process>
