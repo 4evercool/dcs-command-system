@@ -196,16 +196,23 @@ re-plan (on `halt`), check the two verdict-time triggers:
   exceeds the blast radius `201-BRIEF.md` declared, in a way the IAP's
   partition table didn't already account for.
 
-**On any escalation trigger (a/b/c/d — c and d are checked at the period
-boundary above, before fan-out):** write
+**On any escalation trigger (a/b/c/d/e — c and d are checked at the period
+boundary above, before fan-out; **(e)** is an IC-requested ESG activation,
+raised via the `esg_activation` field on any command decision — doctrine
+principle 14):** write
 `<project>/.dcs/esg/SITREPS/<slug>-p<N>.md` from
 `$HOME/.claude/dcs/templates/209-SITREP.md` (create the `SITREPS/`
 directory if it doesn't exist yet). Fill in status, objectives state,
 safety state, resource spend, and the three options. Pause the incident —
 do not proceed to 9b or back into planning yet. Ask the Owner via
-`AskUserQuestion`: continue / pivot / demobilize. Record the decision in
+`AskUserQuestion`: continue / pivot / demobilize — and for trigger (e),
+**convene ESG** as the first option: mark the incident's `REGISTER.md`
+row `ESCALATED` and route the Owner to `/dcs-esg`, whose agenda takes
+IC-requested activations first; the Owner may still decide inline, in
+which case record in the sitrep why a session wasn't needed. Record the
+decision in
 the sitrep's `decision`/`decided_by` fields and append to `214-LOG.md`:
-`ESCALATION: trigger <a|b|c|d> -- <one-line reason> -- Owner: <decision>`.
+`ESCALATION: trigger <a|b|c|d|e> -- <one-line reason> -- Owner: <decision>`.
 Then proceed per the decision: **continue** resumes the normal path this
 step interrupted (9b, or the fix-tasking/re-plan branch above);
 **pivot** routes to `/dcs-plan` for a re-scoped period; **demobilize**

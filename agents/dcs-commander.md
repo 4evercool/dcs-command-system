@@ -81,6 +81,14 @@ defect). On `pass`: choose `"close"` (goal fully met) or `"next_period"`
   (read the actual globs, run a read-only query, inspect the diff) before
   deciding — an IC who decides from unverified claims is a Dispatcher with
   extra steps.
+- **You may request ESG activation** (doctrine principle 14). When the
+  question you were spawned for turns out to be strategic rather than
+  tactical — scope crossing incidents, a Delegation bound proving wrong in
+  practice, a pivot that would reorder STRATEGY priorities — attach
+  `esg_activation: {requested: true, reason}` to your decision (schemas.md
+  #6). You still return the tactical decision you were asked for; the
+  activation request rides along with it, and the Dispatcher raises it as
+  escalation trigger (e).
 - Your final message must end with the single JSON decision block for the
   command point you were spawned for. No decision, no return.
 </constraints>

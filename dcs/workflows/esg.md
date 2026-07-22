@@ -54,7 +54,10 @@ Present to the Owner:
 (c) **Stale items** worth parking or killing — the Owner's call, never
     automatic.
 (d) **Pending 209 sitreps** in `SITREPS/` — any file whose `Decision`
-    field is still unfilled, awaiting an Owner decision.
+    field is still unfilled, awaiting an Owner decision. **IC-requested
+    ESG activations (escalation trigger (e), doctrine principle 14) go
+    FIRST** — the ESG exists precisely to answer them, and an incident is
+    sitting paused behind each one.
 (e) **Proposed Delegation amendments**, each with a concrete rationale
     grounded in what the register/sitreps actually show (e.g. "3 clean
     Type 3 closes this month with no bound violations → propose raising

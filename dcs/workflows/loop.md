@@ -82,7 +82,10 @@ bounds.**
 
 1. Send **one** notification if a push/notification tool is available in
    this session — check what's actually available; don't assume one
-   exists just because this is an automation context.
+   exists just because this is an automation context. If the pause is an
+   IC-requested ESG activation (escalation trigger (e)), say so
+   explicitly: the Owner is being asked to convene `/dcs-esg`, not just
+   answer a prompt.
 2. Confirm the pause state is genuinely on disk (the incident directory,
    `.dcs/ACTIVE`'s phase, `214-LOG.md`) — the underlying workflows are
    already paper-based (doctrine principle 5), so this is a check, not

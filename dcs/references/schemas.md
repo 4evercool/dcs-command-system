@@ -205,6 +205,14 @@ occurs — the decision is still logged in `214-LOG.md` the same way.
 {"command_point": "verdict_disposition", "disposition": "fix_taskings", "rationale": "refutation is one untested boundary case", "directives": ["S3: un-xfail test_window_boundary and make it pass, territory unchanged"]}
 ```
 
+Any decision may additionally carry an ESG-activation request (doctrine
+principle 14, v0.2.1) — the tactical decision is still returned; the
+request rides along with it:
+
+```json
+{"command_point": "deviation", "disposition": "escalate_owner", "rationale": "fix requires touching the payment flow", "directives": [], "esg_activation": {"requested": true, "reason": "payment flow is a forbidden_globs bound AND the same defect pattern spans two other queued register items -- scope is strategic, not tactical"}}
+```
+
 | Field | Type | Notes |
 |---|---|---|
 | `command_point` | `"typing"` \| `"iap_review"` \| `"deviation"` \| `"verdict_disposition"` | Which decision this is |
@@ -212,6 +220,7 @@ occurs — the decision is still logged in `214-LOG.md` the same way.
 | `rationale` / `reasons` | string / string[] | One line; grounded in verified inputs, not the Dispatcher's summary |
 | `required_changes` / `directives` | string[] | Concrete, one line each — usable verbatim as re-spawn or fix-tasking instructions |
 | `open_questions` | string[] | Only where the call is genuinely the Owner's — framed as the exact question to relay |
+| `esg_activation` | object, optional | `{requested: bool, reason: string}` — the IC requesting ESG activation (escalation trigger (e)); the Dispatcher files a 209 with a **convene ESG** option, marks the register row `ESCALATED`, and pauses for the Owner |
 
 ## 7. Delegation bounds (v0.2 — feeds `.dcs/esg/DELEGATION.md`, parsed by `plan.md`/`run.md`/`loop.md`)
 

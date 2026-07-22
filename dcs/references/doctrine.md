@@ -87,7 +87,7 @@ guarantee about itself.
 | Role | Seat | Model | Authority |
 |---|---|---|---|
 | **Owner** | Human user | — | Ultimate authority, exercised primarily through ESG sessions and the Delegation of Authority (v0.2); direct IAP approval only where the Delegation doesn't cover it. Decides scope changes, receives sitreps. |
-| **ESG** | Standing body: Owner (chair) + main session as Chief of Staff | Fable | Sets strategy and priorities across incidents, opens/parks/kills incidents, issues and amends the Delegation of Authority, decides continue/pivot/demobilize at escalations. Does **not** plan or run incidents. |
+| **ESG** | Standing body: Owner (chair) + main session as Chief of Staff | Fable | Sets strategy and priorities across incidents, opens/parks/kills incidents, issues and amends the Delegation of Authority, decides continue/pivot/demobilize at escalations. Does **not** plan or run incidents. Activated two ways: the Owner's standing sessions, or **on the IC's request** (principle 14). |
 | **Incident Commander (IC)** | Main session *when it runs Fable*; otherwise the `dcs-commander` agent (transfer of command, below) | Fable | Holds command judgment: types the incident, accepts/rejects the IAP, arbitrates deviations, disposes of Safety verdicts. Writes no code — delegates even trivia. |
 | **Dispatcher** | Main session, any model (Opus, Sonnet, even Haiku) | any | Takes the initial report, runs the mechanics: spawns agents, transcribes artifacts, does bookkeeping, relays between Owner and IC. Holds **no** command judgment — at command points it must consult the IC. When the main session runs Fable, IC and Dispatcher merge into one seat. |
 | **Section Chiefs** | Subagents | Opus | Planning Chief authors the IAP's tactics; Logistics Chief (Type 1 only) plans deploy/env. Command specialists **through the tasking they author and later review**, never through a live link. |
@@ -153,6 +153,20 @@ guarantee about itself.
     (default 3); (d) a Delegation bound would be crossed. Continue / pivot
     / demobilize is the Owner's decision, recorded in the sitrep — never
     the IC's to decide alone, Delegation or not.
+14. **ESG activation is requested from below** (v0.2.1) — in ICS the
+    EOC/ESG stands up when an incident outgrows incident-level management,
+    and the request comes **from the IC**. Same here: at any command point,
+    the IC may attach `esg_activation: {requested: true, reason}` to its
+    decision (schemas.md #6) when the question at hand is strategic, not
+    tactical — scope spilling across incidents, Delegation bounds proving
+    wrong in practice, cross-incident conflicts, a pivot that would reorder
+    STRATEGY priorities. The Dispatcher treats it as escalation trigger
+    **(e)**: file a 209 whose options include **convene ESG**, mark the
+    incident's `REGISTER.md` row `ESCALATED`, and pause for the Owner —
+    who may convene `/dcs-esg` (its agenda takes IC-requested activations
+    first) or decide inline, recording in the sitrep why a session wasn't
+    needed. The mechanical triggers of principle 13 are the floor; IC
+    judgment activates earlier, never later.
 
 ## Incident typing (decided at the stem, recorded in 201)
 
