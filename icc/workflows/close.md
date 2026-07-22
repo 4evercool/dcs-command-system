@@ -72,13 +72,25 @@ a new file.
 
 If `201-BRIEF.md`'s "Intake source" names something external (e.g. an
 `audit_results` row id, a ticket): **do not** write to it directly,
-especially if it lives in a production database. Flag it for the Owner
-instead — print the exact identifier and the suggested action (e.g. "mark
-`audit_results` row id=482 resolved via the admin UI") and ask them to
-confirm or perform it. This mirrors any project's own rule against ad hoc
-production writes from an automated routine (e.g. "never
-INSERT/UPDATE/DELETE — read-only only" for an append-only audit table).
-Record the flag (not a completed action) in AAR.md.
+especially if it lives in a production database.
+
+**First check who owns closure.** Read the project's `CLAUDE.md` (and the
+201 itself): if a documented routine or pipeline curates the intake source
+and closes items itself upon observing the fix (e.g. a daily
+validate-findings routine that stamps rows when the fixing commit is
+deployed), then the correct action is **no action** — record in AAR.md
+that closure is DELEGATED to that routine, name it, and note what it needs
+to observe the fix (commit pushed, deploy done). Manually closing what a
+routine owns creates a race and duplicates its write. (Field lesson,
+2026-07-22.)
+
+**Only if no owner is documented:** flag it for the Owner — print the
+exact identifier and the suggested action (e.g. "mark `audit_results` row
+id=482 resolved via the admin UI") and ask them to confirm or perform it.
+This mirrors any project's own rule against ad hoc production writes from
+an automated routine (e.g. "never INSERT/UPDATE/DELETE — read-only only"
+for an append-only audit table). Record the flag (not a completed action)
+in AAR.md.
 
 If the intake source is "ad hoc" / has no external reference, note that
 and move on.
