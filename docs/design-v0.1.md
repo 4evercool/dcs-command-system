@@ -1,3 +1,5 @@
+> **Historical document.** Written under the working name "ICC — Incident Command for Code"; the system was rebranded to **DCS — Development Command System** on 2026-07-22 (commands /dcs-*, agents dcs-*, state dir .dcs/, hook dcs_gate.py). Names below are as originally written.
+
 # ICC — Incident Command for Code (installable skill package)
 
 ## Context
