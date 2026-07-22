@@ -152,10 +152,16 @@ this worktree**, never in the main checkout.
    (`command: typed {N} -- <rationale> (IC=<dcs-commander|this Fable
    session>)`) — `/dcs-plan`'s pre-stamp checklist will refuse to stamp an
    approval if this entry is missing.
-4. Write `<worktree>/.dcs/ACTIVE` with content: `<slug>|<type>|planning`
-   (exact pipe-delimited format — the gate hook parses this literally).
-   **(v0.3)** `.dcs/ACTIVE` is per-worktree and git-ignored — it never
-   rides the branch into main.
+4. Write `<worktree>/.dcs/ACTIVE` with content:
+   `<incident-directory-name>|<type>|planning` — the first field is the
+   **EXACT directory name** under `.dcs/incidents/`, i.e. the full
+   `<YYYY-MM-DD>-<slug>` including the date prefix, NOT the bare slug
+   (field defect 2026-07-22: a bare slug made a valid approval invisible
+   to the gate's lookup and every territory edit was denied; the hook now
+   tolerates the bare form when it's unambiguous, but the exact name is
+   the contract). Exact pipe-delimited format — the gate hook parses this
+   literally. **(v0.3)** `.dcs/ACTIVE` is per-worktree and git-ignored —
+   it never rides the branch into main.
 4a. **(v0.2, amended v0.3)** Resolve `esg_root` as above. If
    `<esg_root>/.dcs/esg/REGISTER.md` exists: add or update this incident's
    row — id (slug), title, type, priority, intake source, opened date,

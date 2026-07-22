@@ -26,8 +26,10 @@ PreToolUse hooks -- never replacing them). Logic:
    handling -- /dcs-close normally deletes ACTIVE outright rather than
    transitioning through a closed state) has nothing left to enforce.
 5. Active incident, phase=execution -> the gate is open IF the approval
-   marker (.dcs/incidents/<slug>/IAP-APPROVED) still matches the current
-   IAP.md's sha256. Editing IAP.md after approval changes its hash and
+   marker (.dcs/incidents/<dir>/IAP-APPROVED) still matches the current
+   IAP.md's sha256. ACTIVE's first field resolves to the incident dir by
+   exact name, or tolerantly to the UNIQUE dir ending in "-<slug>" (the
+   date-prefixed form; ambiguity denies -- see resolve_incident_dir). Editing IAP.md after approval changes its hash and
    silently revokes the marker -- this is deliberate: an edited plan is no
    longer the plan the Owner approved (deviation doctrine, principle 8).
 6. Active incident, phase=planning (pre-approval) -> only paths matching
@@ -133,6 +135,34 @@ def sha256_of(path):
     return h.hexdigest()
 
 
+def resolve_incident_dir(project_root, slug):
+    """ACTIVE's first field should be the incident directory's EXACT name,
+    but that convention was ambiguous before v0.3.1 and sessions wrote the
+    bare slug without the YYYY-MM-DD- prefix (field defect, 2026-07-22: a
+    real, valid approval became invisible to the exact-join lookup and
+    every territory edit was denied with a misleading hash-mismatch
+    message). Resolution order:
+      1. exact directory match;
+      2. otherwise the UNIQUE directory whose name ends with "-<slug>"
+         (the date-prefixed form).
+    Two or more candidates -> None (deny, naming them): guessing between
+    incidents would be worse than blocking."""
+    base = project_root / ".dcs" / "incidents"
+    exact = base / slug
+    if exact.is_dir():
+        return exact
+    try:
+        candidates = [
+            d for d in base.iterdir()
+            if d.is_dir() and d.name.endswith("-" + slug)
+        ]
+    except OSError:
+        return None
+    if len(candidates) == 1:
+        return candidates[0]
+    return None
+
+
 def marker_valid(incident_dir):
     approved = incident_dir / "IAP-APPROVED"
     iap = incident_dir / "IAP.md"
@@ -232,15 +262,23 @@ def main():
             sys.exit(0)  # express lane / closed incident -- nothing to enforce
 
         if phase == "execution":
-            incident_dir = project_root / ".dcs" / "incidents" / slug
+            incident_dir = resolve_incident_dir(project_root, slug)
+            if incident_dir is None:
+                deny(
+                    f"DCS gate: ACTIVE names incident '{slug}' but no "
+                    "unique matching directory exists under "
+                    ".dcs/incidents/ (none, or several ending in "
+                    f"'-{slug}'). Fix .dcs/ACTIVE's first field to the "
+                    "EXACT incident directory name, then retry."
+                )
             if marker_valid(incident_dir):
                 sys.exit(0)  # approved IAP still matches -- gate open
             deny(
                 f"DCS gate: incident {slug} (Type {inc_type}) has no valid "
-                "IAP approval -- IAP.md was edited after approval (hash "
-                "mismatch) or IAP-APPROVED is missing. Re-approve via "
-                "/dcs-plan before editing source. Emergency release: Owner "
-                "deletes .dcs/ACTIVE."
+                f"IAP approval in {incident_dir.name} -- IAP-APPROVED is "
+                "missing, or IAP.md was edited after approval (hash "
+                "mismatch). Re-approve via /dcs-plan before editing "
+                "source. Emergency release: Owner deletes .dcs/ACTIVE."
             )
             return  # unreachable (deny() exits), keeps linters happy
 

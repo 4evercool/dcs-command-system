@@ -156,6 +156,36 @@ try:
         run_gate_cross(outside_file, projA, projA), "allow",
     )
 
+    # --- v0.3.1: ACTIVE slug vs date-prefixed incident dir (field defect
+    # 2026-07-22: a session wrote the bare slug into ACTIVE while the dir
+    # was <date>-<slug>; the exact-join lookup missed a VALID approval and
+    # denied every territory edit with a misleading hash-mismatch message).
+    projC = root / "parallel" / "projC"
+    incC = projC / ".dcs" / "incidents" / "2026-07-22-slug-mismatch"
+    incC.mkdir(parents=True)
+    (projC / "src").mkdir()
+    (projC / "src" / "app.py").write_text("q = 1\n")
+    iapC = incC / "IAP.md"
+    iapC.write_text("# IAP C\n")
+    dC = hashlib.sha256(iapC.read_bytes()).hexdigest()
+    (incC / "IAP-APPROVED").write_text(f"{dC}\napproved_by: owner\n")
+    (projC / ".dcs" / "ACTIVE").write_text("slug-mismatch|1|execution")
+    check(
+        "v0.3.1(a): bare-slug ACTIVE, date-prefixed dir, valid marker -> allow",
+        run_gate(projC, projC / "src" / "app.py"), "allow",
+    )
+    iapC.write_text("# IAP C edited after approval\n")
+    check(
+        "v0.3.1(b): bare-slug ACTIVE resolves, but hash void -> deny",
+        run_gate(projC, projC / "src" / "app.py"), "deny",
+    )
+    iapC.write_text("# IAP C\n")  # restore the valid marker state
+    (projC / ".dcs" / "incidents" / "2026-07-23-slug-mismatch").mkdir()
+    check(
+        "v0.3.1(c): ambiguous suffix match (two dirs) -> deny, never guess",
+        run_gate(projC, projC / "src" / "app.py"), "deny",
+    )
+
     failed = [r for r in results if not r[0]]
     print(f"\n{len(results) - len(failed)}/{len(results)} passed")
     sys.exit(1 if failed else 0)
