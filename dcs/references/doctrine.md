@@ -359,13 +359,28 @@ question the doctrine already answers: the current one.
 `/dcs-deploy` all run this exact check rather than each restating their
 own version of it:
 
-1. `git worktree list --porcelain` — every worktree actually on disk.
+1. `git worktree list --porcelain` — every worktree actually on disk,
+   then **split them into DCS-owned and foreign (v0.4.2, non-negotiable
+   scoping):** a worktree is DCS's only if it sits under the DCS
+   container (`<repo>-wt/`) **or** has a `dcs/*` branch checked out.
+   Everything else — the agent harness's own worktrees (e.g. under
+   `.claude/worktrees/`, usually detached HEAD with generated names), a
+   deploy script's temporary worktree, a human's personal one — is
+   **foreign**. Foreign worktrees are NEVER orphans, NEVER flagged for
+   cleanup, and NEVER handed a removal command: DCS does not own them,
+   frequently cannot know what they are for, and one of them may be a
+   deploy in flight. Mention them at most as a one-line "N non-DCS
+   worktrees also present (not ours)" footnote. Field lesson 2026-07-23:
+   a real audit found four foreign worktrees — three harness ones and
+   the deploy script's own — every one of which the pre-v0.4.2 rule
+   would have called an orphan and proposed deleting.
 2. `git -C <esg_root> branch --list 'dcs/*' --no-merged HEAD` — every
    incident branch not yet merged into the integration branch (HEAD of
    the primary checkout, NOT a branch literally named `main` — v0.3.3).
-3. Cross-reference both against `REGISTER.md`, and flag, with ages (days
-   since the relevant date):
-   - **Orphans** — a worktree on disk with no matching `ACTIVE` row.
+3. Cross-reference **the DCS-owned set only** against `REGISTER.md`, and
+   flag, with ages (days since the relevant date):
+   - **Orphans** — a DCS-owned worktree on disk with no matching `ACTIVE`
+     row.
    - **Stale actives** — an `ACTIVE` row older than `config.json`'s
      `esg.max_incident_age_days` (default 7).
    - **Deploy-pending** — a `MERGED` row with no later `DEPLOYED`
@@ -376,6 +391,15 @@ own version of it:
    surfaced loudly with the exact cleanup command (`git worktree remove
    <path>`, `git branch -D dcs/<slug>`) — the audit's job is to make
    forgetting impossible, never to act unilaterally on the Owner's behalf.
+5. **When removal is refused, diagnose before escalating (v0.4.2).**
+   `git worktree remove` refusing over "modified or untracked files" is
+   usually a *small* truth worth resolving, not a mystery: run
+   `git -C <worktree> status --short` and say exactly which files, and
+   whether they matter (a file byte-identical to what's already
+   committed elsewhere is zero-loss; genuine unmerged work is not). Only
+   then offer `--force`, with the loss assessment attached — and never
+   run a forced removal on the Owner's behalf if the harness gates it;
+   print the command (v0.4.1's blocked-path rule applies here too).
 
 Three surfaces turn an audit finding into an actual fix, none of them
 optional: the audit itself (above) finds it; `/dcs-esg` agenda item (f)
