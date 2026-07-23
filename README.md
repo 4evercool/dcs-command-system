@@ -61,6 +61,13 @@ politely in CI or when `~/.claude` doesn't exist
   you only at real decisions; `/dcs-loop` sweeps the queue unattended
   under the Delegation (never runs architectural work unattended, never
   deploys).
+- **An audit trail regulators would recognize.** Every incident leaves an
+  append-only decision log, hash-bound human approvals with attribution,
+  versioned delegations of authority, adversarial verification records,
+  and escalation sitreps with recorded human decisions — the evidence
+  EU AI Act Articles 12/14, ISO/IEC 42001 and the NIST AI RMF ask for,
+  produced as a by-product rather than a report. See
+  [Audit trail and human oversight](#audit-trail-and-human-oversight).
 - **Parallel sessions without deploy contention** (v0.3). Each incident
   gets its own git worktree and branch; concurrent incidents hold
   disjoint file territories; merging is a mandatory step of closing (a
@@ -97,6 +104,66 @@ agents quote it; if they ever disagree, doctrine wins.
 DCS ships none of its authors' project facts: project-specific behavior
 (memory systems, intake trackers, deploy commands) is discovered from
 YOUR project's `CLAUDE.md` at runtime, never assumed.
+
+## Audit trail and human oversight
+
+Most agentic development frameworks produce **plans**. DCS produces
+**provenance** — and it does so as a by-product of how it works, not as a
+reporting feature bolted on afterwards.
+
+This matters beyond tidiness. Three regimes now converge on the same
+demand — that human oversight of AI systems be *demonstrable*, not
+asserted: the **EU AI Act**
+([Article 14, human oversight](https://artificialintelligenceact.eu/article/14/)
+and [Article 12, record-keeping](https://artificialintelligenceact.eu/article/12/)),
+**ISO/IEC 42001** (AI management systems: documented lifecycle processes,
+defined roles and responsibilities, verification and validation, and
+records that survive an audit), and the **NIST AI RMF** (Govern / Map /
+Measure / Manage). Article 12 in particular requires logging that permits
+**post-hoc reconstruction of individual AI-assisted decisions** — which is
+precisely what an agentic coding workflow normally destroys, because its
+reasoning lives in a chat transcript nobody keeps.
+
+**What DCS leaves behind, per incident, without anyone opting in:**
+
+| Artifact | What it evidences |
+|---|---|
+| `214-LOG.md` | Append-only operational log: every phase transition, command decision (with which seat decided), escalation, and verdict — decision reconstruction, in order |
+| `IAP-APPROVED` | Human approval with attribution and timestamp, **hash-bound to the approved plan** — editing the plan voids the approval mechanically, so approvals cannot be silently outgrown |
+| `DELEGATION.md` | Versioned, human-signed grants of authority with explicit machine-checked bounds; every amendment retained — *what was delegated, by whom, when, and under what limits* |
+| `SITREPS/*.md` | Escalations with the options presented and the human's recorded decision |
+| `SAFETY.md` | Independent adversarial verification, verbatim verdicts, binding halts |
+| `AAR.md` | Close-out under a facts-only rule: claims must cite artifacts actually checked |
+| `REGISTER.md` | Portfolio state — what ran, what shipped, what was verified against production |
+
+**Three properties that make this oversight rather than paperwork:**
+
+1. **The gate is preventive, not advisory.** Article 14 asks that overseers
+   be able to *intervene*. DCS inverts the default: a PreToolUse hook
+   denies source edits until an approved plan exists, so human approval is
+   a **precondition of action**, not an interruption of it. Nothing has to
+   be caught in time.
+2. **Oversight is proportionate to risk.** Article 14 requires measures
+   "commensurate with the risks, level of autonomy and context of use."
+   DCS types every unit of work (5 / 3 / 1) and activates ceremony
+   accordingly — trivial work stays cheap, architectural and
+   migration-bearing work is mandatorily human-approved, and delegated
+   authority explicitly excludes the irreversible.
+3. **It is built against automation bias** — the failure mode Article 14
+   names outright. The Safety Officer is chartered to *refute* completion,
+   is forbidden from accepting agent self-reports as evidence, must re-run
+   checks itself, and its halt is binding. The facts-only rule forbids
+   past-tense claims that cite no artifact. Both exist because
+   self-reported success drifts, and both were written after watching it
+   happen.
+
+**What this is not.** DCS does not make an organization compliant with
+anything, is not a certification, and is not legal advice. Compliance is
+achieved by a management system, an assessment, and people — not by a
+package. What DCS does is make the *evidence* a by-product of doing the
+work: if your organization has to demonstrate human oversight of
+AI-assisted software changes, DCS means that evidence already exists, in
+your repository, generated at the moment each decision was actually made.
 
 ## For maintainers of this repo
 
