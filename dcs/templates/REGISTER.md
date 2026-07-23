@@ -46,7 +46,20 @@ a write, not to serialize normal usage.
                   incident is a row and a kept branch, never a directory
                   quietly aging on disk.
      KILLED    -- abandoned; worktree removed, branch deleted, reason
-                  recorded in Notes. -->
+                  recorded in Notes.
+
+     FACTS-ONLY (v0.4.1, same rule as close.md's AAR): a row states what
+     was VERIFIED, never what was intended or attempted. "branch deleted"
+     only after `git branch --list` shows it gone; "worktree removed"
+     only after it is off disk (removal refused for modified/untracked
+     files is a NOT-removed, and never force it); DEPLOYED only after the
+     project's deployed marker was read and the merge commit confirmed an
+     ancestor of it. A row may reach DEPLOYED because someone ELSE's
+     deploy carried it (DCS is not the only shipper) -- record that as
+     out-of-band, naming the deployed sha, rather than implying DCS
+     shipped it. Field lesson 2026-07-23: rows claimed a deleted branch
+     that was still on disk and a pending deploy that was already live. -->
+
 
 | ID | Title | Type | Priority | State | Worktree | Branch | Territory | Intake source | Opened | Closed | Outcome |
 |---|---|---|---|---|---|---|---|---|---|---|---|

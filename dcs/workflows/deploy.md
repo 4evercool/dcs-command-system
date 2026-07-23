@@ -74,10 +74,38 @@ runs its own preflight; this step is DCS's own tree-cleanliness check,
 scoped to what DCS added (the worktree/merge model), not a substitute for
 project-specific gates.
 
-## 4. List what's about to ship
+## 4. List what's about to ship — reconcile against prod FIRST (v0.4.1)
 
-Read `REGISTER.md`. List every `MERGED` row (deploy pending) — these are
-what this deploy will ship. Separately warn about any `dcs/*` branch from
+**DCS is not the only thing that ships.** Other sessions, other people,
+and CI can deploy the integration branch at any time, and any such deploy
+carries every merged incident underneath it — so a `MERGED` row may
+already be live without DCS ever having shipped it (field lesson
+2026-07-23: an unrelated hotfix deploy transitively shipped a whole
+incident; the register still claimed it pending).
+
+Before listing anything, read the project's deployed-version marker
+(step 7's mechanism — e.g. `.deployed_sha` over SSH) and, for **every**
+`MERGED` row, check whether its merge commit is already an ancestor of
+what's deployed:
+
+```bash
+git merge-base --is-ancestor <row merge commit> <deployed marker sha>
+```
+
+- **Ancestor (already live):** move the row to `DEPLOYED` with a note
+  saying it shipped **out-of-band** (naming the deployed sha that carried
+  it), delete its `dcs/*` branch, and EXCLUDE it from this train. Never
+  re-ship what is already deployed, and never record it as if DCS shipped
+  it — that is the facts-only rule applied to the register.
+- **Not an ancestor:** it genuinely needs shipping; include it.
+- **Marker unreadable** (no SSH, no documented marker): skip the
+  reconciliation, say so plainly, and treat every `MERGED` row as
+  unshipped — but flag that this train may re-ship already-live work.
+- **Every row reconciles away:** report "nothing to ship — all merged
+  rows already live (shipped out-of-band)", release the lock, and stop.
+
+Then list the remaining `MERGED` rows — these are what this deploy will
+ship. Separately warn about any `dcs/*` branch from
 `git branch --list 'dcs/*' --no-merged main` that ISN'T backed by a
 `MERGED` row (a dangling branch from the audit, step 2) — these will
 **not** ship (they were never merged) and the warning exists so the Owner
@@ -115,6 +143,31 @@ If the project's `CLAUDE.md` documents no deploy command at all: **stop**
 here and tell the Owner — DCS orchestrates the train, it does not invent
 a way to ship code a project has never described (doctrine: "Relationship
 to project-specific protocols").
+
+**If the harness refuses to run the deploy command** (a permission
+prompt denied, a safety classifier blocking the call — a deploy script
+that pushes to prod and restarts services is exactly the kind of action
+a harness may gate independently of DCS): this is a **first-class path,
+not a failure**, and it is emphatically **not** an invitation to get the
+same effect another way. **Never** substitute an equivalent script, split
+the command into pieces, wrap it in another shell, or run its steps by
+hand — the block is a deliberate boundary, and routing around it would
+be exactly the kind of silent judgment call this whole system exists to
+prevent (field lesson 2026-07-23: a session hit this and correctly
+refused; that refusal is the standard). Instead:
+
+1. Print the **exact** command, in its own shell-tagged block, for the
+   Owner to run in their own terminal.
+2. Record in the register/notes that the train stopped here awaiting an
+   Owner-run deploy — the rows stay `MERGED (deploy pending)`, and are
+   NOT marked deployed on the strength of a command nobody ran.
+3. Release the lock (step 9) so the tree isn't left locked while the
+   Owner works, and tell them to re-run `/dcs-deploy` afterwards: step
+   4's reconciliation will detect the now-shipped rows by ancestry and
+   close them out correctly, including deleting their branches.
+
+That turns a hard block into a loop the Owner closes, with DCS still
+doing every part it is allowed to do.
 
 ## 7. Verify the deployed-version marker actually advanced
 
