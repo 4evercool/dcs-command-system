@@ -52,10 +52,21 @@ a deviation (see step 6 of `execute.md`), fold the deviation's `proposal`
 into the goal/criteria explicitly rather than pretending it's a fresh
 period with no history.
 
-Present the draft to the Owner via `AskUserQuestion` for a quick
-confirm/edit — this is a lightweight check (forms.md: 202 is authored by
-IC **+ Owner**), not the full IAP approval gate that comes later. Write the
-confirmed version to `202-OBJECTIVES.md` in the incident directory.
+**Delegation-aware confirm (v0.5):** if the incident is Type 3 (from
+`.dcs/ACTIVE`, step 1) AND `<project>/.dcs/esg/DELEGATION.md`'s latest
+(highest `version`) `delegation-bounds` block has `auto_approve_type3:
+true`, skip the `AskUserQuestion` below — write the draft straight to
+`202-OBJECTIVES.md` and append to `214-LOG.md`: `202 confirm deferred to
+IAP approval (Delegation v<N>)`. The Owner's first look at these
+objectives is then the single delegated prompt at step 6b, if that step's
+bound check fails; if it doesn't fail, the IAP auto-approves and the
+objectives never need a separate look — that is the point of the
+Delegation. Otherwise (Type 1, no Delegation, `auto_approve_type3` absent
+or `false`) present the draft to the Owner via `AskUserQuestion` for a
+quick confirm/edit as before — a lightweight check (forms.md: 202 is
+authored by IC **+ Owner**), not the full IAP approval gate that comes
+later. Either way, write the confirmed (or auto-passed) version to
+`202-OBJECTIVES.md` in the incident directory.
 
 ## 3. Spawn the Planning Chief (and Logistics Chief for Type 1)
 
@@ -103,12 +114,22 @@ and note why.
 ## 5. Write the planning artifacts
 
 - `203-ORG.md` — activated positions this period, from
-  `$HOME/.claude/dcs/templates/203-ORG.md`.
+  `$HOME/.claude/dcs/templates/203-ORG.md`. **Type 1:** always write it.
+  **Type 3 (v0.5):** write it only if activation differs from the default
+  (IC + Planning Chief + specialists matching the 204 tasking count,
+  executed in plain parallel) — i.e. a Logistics Chief was activated, the
+  specialist count doesn't match the 204 tasking count, or the execution
+  mode is sequential/worktree-isolated rather than plain parallel.
+  Otherwise skip it and append to `214-LOG.md`: `203 skipped (default
+  Type 3 activation)` — the IAP's partition table already carries the
+  same activation information for the default case.
 - `204-TASKING/S1.md`, `S2.md`, ... — one per tasking, transcribed from the
   chief's `taskings[]`, using `$HOME/.claude/dcs/templates/204-TASKING.md`.
 - `IAP.md` — integrated from `$HOME/.claude/dcs/templates/IAP.md`: links
-  202+203+204, the partition table (with disjoint/overlap-justified
-  status), risks, verification plan, and (Type 1) the Logistics Chief's
+  202+203+204 (or just 202+204 if 203 was skipped per the rule above —
+  say so in the link line rather than linking a file that doesn't
+  exist), the partition table (with disjoint/overlap-justified status),
+  risks, verification plan, and (Type 1) the Logistics Chief's
   deploy/env/migration/rollback plan.
 
 ## 5a. Refine the register's territory (v0.3)
@@ -173,9 +194,12 @@ this one isn't.
 Use `AskUserQuestion` — **not** plan mode. This is deliberate: DCS's own
 approval gate is a distinct mechanism from the global ExitPlanMode
 handoff hook, and routing IAP approval through plan mode would collide
-with it. Summarize the IAP (goal, tactics, partition, risks) — and, if a
-delegation check ran and failed, the named failed bound(s) — then ask:
-approve / request changes / reject.
+with it. Summarize the **202 objectives (goal + acceptance criteria) in
+full together with the IAP** (tactics, partition, risks) — if step 2's
+confirm was deferred under the delegation-aware skip, this is the Owner's
+first look at the objectives, so include them in full, not just
+cross-referenced — and, if a delegation check ran and failed, the named
+failed bound(s) — then ask: approve / request changes / reject.
 
 - **Request changes:** revise the relevant artifact(s) (202, taskings, or
   IAP integration) and re-present. Loop until approved or rejected.

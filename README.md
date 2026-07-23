@@ -176,7 +176,9 @@ installed copy in place. Version-sync rule: `package.json` and
 `python tests/test_dcs_gate.py`. Design history:
 [docs/design-v0.1.md](docs/design-v0.1.md) ·
 [docs/spec-v0.2-esg.md](docs/spec-v0.2-esg.md) ·
-[docs/spec-v0.3-parallel.md](docs/spec-v0.3-parallel.md).
+[docs/spec-v0.3-parallel.md](docs/spec-v0.3-parallel.md) ·
+[dcs/references/doctrine-appendix.md](dcs/references/doctrine-appendix.md)
+(provenance and field lessons for the doctrine core).
 
 ## License
 
