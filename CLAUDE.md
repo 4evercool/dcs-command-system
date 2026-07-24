@@ -60,18 +60,45 @@ python tests/test_doctrine_integrity.py # 12 checks — package structure
 
 `npm test` runs the first two. Run all three before any close.
 
-## Where lessons go
+## Where lessons go — three stores, one rule each
 
-DCS's memory is its own doctrine. On `/dcs-close`, route lessons to:
+DCS's memory is layered, and putting a lesson in the wrong layer is how
+knowledge bases rot. On `/dcs-close`, route by **who needs it**:
 
-- **`dcs/references/doctrine-appendix.md`** — provenance, field lessons,
-  the story behind a rule. Never `@`-included, so it costs no latency.
-- **`dcs/references/doctrine.md`** — only if the lesson changes a *rule*.
-  The core is hot-path; every line there is read on every invocation and
-  every command-point spawn.
+| Store | Takes | Ships? |
+|---|---|---|
+| `dcs/references/doctrine.md` | a change to a **rule** — how DCS behaves | yes, **hot path** |
+| `dcs/references/doctrine-appendix.md` | the **provenance** of a rule: the field lesson, the story | yes, never `@`-included |
+| **`vault/`** (Obsidian) | what only a **maintainer of DCS** needs: cross-incident analysis, metrics over time, decisions that did not become doctrine, meta-lessons about building DCS, the backlog | **no** |
 
-Keep the rule in the core and the story in the appendix. That split is
-the whole point of the v0.5.0 diet.
+**Test:** if it changes how DCS *behaves* → doctrine. If it explains why
+a rule exists → appendix. If it would only ever be read while improving
+DCS itself → vault.
+
+Keep the rule in the core and the story in the appendix — that split is
+the whole point of the v0.5.0 diet, and the core is read on every
+invocation and every command-point spawn.
+
+## The vault (`vault/`)
+
+An Obsidian vault, **repo-local and never shipped** (absent from
+`package.json`'s `files` whitelist, so `npm pack` excludes it). Entry
+point: `vault/00-Navigation.md`.
+
+- `Post-mortems/` — cross-incident analysis with citations to the
+  incident artifacts, not to memory
+- `Metrics/` — numbers **plus the command that regenerates them**
+  (principle 15 applied to the vault itself; `vault/_scripts/`)
+- `Decisions/` — choices deliberately kept out of doctrine, so they are
+  not silently relitigated
+- `Meta/` — patterns in *building* DCS, distinct from the rules DCS enforces
+- `Backlog.md` — known gaps with evidence; candidates for `/dcs-esg` to
+  queue, **not** a register
+
+Read it before non-trivial DCS work; write to it after. It is unguarded
+by the gate (like `docs/`) so a close can write lessons without holding
+territory, and it costs zero runtime latency because nothing
+`@`-includes it.
 
 ## Coding rules
 

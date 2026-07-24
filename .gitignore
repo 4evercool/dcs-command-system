@@ -8,3 +8,8 @@ __pycache__/
 .dcs/ACTIVE
 .dcs/CLOSED
 .dcs/esg/
+
+# Obsidian per-user UI state (the vault's notes ARE tracked; this is not)
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.obsidian/cache

@@ -14,6 +14,7 @@
     ".dcs/**",
     ".claude/**",
     "docs/**",
+    "vault/**",
     "README.md",
     "LICENSE",
     "CLAUDE.md",
