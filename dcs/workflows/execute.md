@@ -100,6 +100,16 @@ specialist's tasking.
   spawning it, and merge/reconcile after it returns, per what the IAP
   specified.
 
+**Re-tasking a specialist is a fresh spawn (v0.5.8, doctrine principle
+9b).** Whenever a specialist must go again — a fix-tasking after a Safety
+halt, an amended 204 after a deviation, a correction of any kind — spawn
+a **new** `dcs-ops-specialist` with the amended tasking file's full
+content. Never resume the previous agent: it still holds the OLD
+tasking, so an amended territory gets edited against the stale one, and
+every individual edit looks in-bounds to the gate for the tasking that
+agent remembers. `dcs_gate.py` denies `SendMessage` while an incident is
+active precisely to make this impossible rather than merely forbidden.
+
 ## 5. Collect and validate structured returns
 
 Each specialist returns the schema in `references/schemas.md` #4. Check

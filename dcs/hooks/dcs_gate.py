@@ -217,6 +217,47 @@ def main():
 
     try:
         tool_input = payload.get("tool_input") or {}
+        tool_name = payload.get("tool_name") or ""
+
+        if tool_name == "SendMessage":
+            # Single-shot agents (v0.5.8). Every DCS agent -- chief,
+            # specialist, Safety Officer, commander, analyst -- is spawned
+            # with its inputs, returns once, and is done; nothing in the
+            # architecture continues an agent conversationally. Resuming
+            # one instead of re-spawning is harmful twice over: the
+            # agent's reasoning lives in a transcript no incident artifact
+            # records (principle 5 -- the incident directory is the only
+            # channel that survives a reset), and a resumed SPECIALIST
+            # still carries its OLD tasking, so an amended territory can
+            # be edited against the stale one -- a partition violation
+            # this hook cannot see because each individual edit looks
+            # in-bounds for the tasking the agent remembers.
+            #
+            # Prose said this twice (plan.md step 3, v0.5.5) and did not
+            # hold in the field, which is the whole argument for putting
+            # it here instead.
+            # NB: a relative target deliberately takes find_project_root's
+            # env/cwd branch, which walks from cwd INCLUSIVE. Passing an
+            # absolute cwd instead would start at cwd's PARENT and miss a
+            # project root that is cwd itself.
+            root = find_project_root(".", os.getcwd())
+            if root is None:
+                sys.exit(0)
+            active = root / ".dcs" / "ACTIVE"
+            if not active.is_file():
+                sys.exit(0)  # no active incident -- not our business
+            deny(
+                "DCS: agents are single-shot -- resuming one instead of "
+                "re-spawning is a doctrine violation while an incident is "
+                "active. Spawn a NEW agent (Task) carrying its inputs plus "
+                "the corrections verbatim: 201+202 for a chief, the amended "
+                "204 for a specialist. A resumed agent's reasoning is in a "
+                "transcript no artifact records, and a resumed specialist "
+                "still holds its OLD tasking. If this SendMessage is "
+                "genuinely unrelated to the incident, the Owner can release "
+                "the gate by deleting .dcs/ACTIVE."
+            )
+
         target = tool_input.get("file_path") or tool_input.get("notebook_path")
         if not target:
             sys.exit(0)

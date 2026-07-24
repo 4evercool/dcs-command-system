@@ -186,6 +186,36 @@ try:
         run_gate(projC, projC / "src" / "app.py"), "deny",
     )
 
+    # --- v0.5.8: SendMessage (agent resume) denied while an incident is
+    # active. Every DCS agent is single-shot; a resumed specialist still
+    # carries its OLD tasking, so an amended territory can be edited
+    # against the stale one -- invisible to the per-edit check above.
+    def run_sendmessage(project, cwd):
+        payload = json.dumps({"tool_name": "SendMessage",
+                              "tool_input": {"to": "abc123", "message": "revise"}})
+        env = dict(os.environ, CLAUDE_PROJECT_DIR=str(project))
+        p = subprocess.run([sys.executable, HOOK], input=payload, capture_output=True,
+                           text=True, cwd=str(cwd), env=env, timeout=30)
+        out = p.stdout.strip()
+        if not out:
+            return "allow"
+        try:
+            return json.loads(out)["hookSpecificOutput"]["permissionDecision"]
+        except Exception:
+            return f"unparseable: {out[:120]}"
+
+    active.write_text("2026-07-22-test-incident|3|execution")
+    check("v0.5.8(a): SendMessage during active incident -> deny",
+          run_sendmessage(proj, proj), "deny")
+    check("v0.5.8(b): SendMessage in a planning-phase incident -> deny",
+          run_sendmessage(proj, proj), "deny")
+    active.unlink()
+    check("v0.5.8(c): SendMessage with no active incident -> allow",
+          run_sendmessage(proj, proj), "allow")
+    check("v0.5.8(d): SendMessage outside any DCS project -> allow",
+          run_sendmessage(bare, bare), "allow")
+    active.write_text("2026-07-22-test-incident|3|execution")
+
     failed = [r for r in results if not r[0]]
     print(f"\n{len(results) - len(failed)}/{len(results)} passed")
     sys.exit(1 if failed else 0)

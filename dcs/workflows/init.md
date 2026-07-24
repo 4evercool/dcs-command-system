@@ -87,8 +87,15 @@ reordered, or removed. This is exactly the kind of drift the project's own
 guard hooks exist to prevent; DCS's hook must not create the same kind of
 invisible surprise it's trying to prevent for source edits.
 
+**Upgrading a project onboarded before v0.5.8:** an existing entry whose
+matcher is the old `Edit|Write|NotebookEdit` still gates edits correctly
+but will NOT catch agent resumes. Point it out and offer the one-word
+fix — append `|SendMessage` to that matcher — using the same explicit
+consent flow as any other settings change.
+
 **c. File has a `PreToolUse` entry with the exact same matcher
-(`Edit|Write|NotebookEdit`) already pointing at `dcs_gate.py`.** Already
+(`Edit|Write|NotebookEdit|SendMessage`) already pointing at
+`dcs_gate.py`.** Already
 wired — nothing to do, report this.
 
 The exact block to add (matcher and command are fixed; adjust only if the
@@ -96,7 +103,7 @@ project's hooks array needs a different JSON nesting to append into):
 
 ```json
 {
-  "matcher": "Edit|Write|NotebookEdit",
+  "matcher": "Edit|Write|NotebookEdit|SendMessage",
   "hooks": [
     {
       "type": "command",
