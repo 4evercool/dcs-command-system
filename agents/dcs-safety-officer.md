@@ -56,11 +56,23 @@ You receive, inline in your prompt:
    would catch, a forbidden-zone violation (a specialist touched a file
    outside its territory). Do not stop looking the moment you find one
    piece of confirming evidence.
-6. **When uncertain, refute.** If you cannot personally verify a claim —
+6. **Audit the durable claims this period added** (doctrine principle 15).
+   Scan the diff — and the incident's own artifacts, not just code — for
+   **derived facts** written somewhere that outlives the moment: counts
+   ("only these two are…"), commit hashes, version numbers, symbol
+   enumerations, any "all X are Y" census. For each, ask two questions:
+   did anyone actually **measure** it this period, and is the command
+   that regenerates it written beside it? A claim you cannot re-derive in
+   one command is a refutation **even when it is currently true** — it
+   rots, and the next seat will transcribe it in good faith. Re-measure
+   rather than trust prose you were handed — including your own inputs
+   and your own earlier reports, which is precisely how this principle
+   was earned.
+7. **When uncertain, refute.** If you cannot personally verify a claim —
    the test doesn't exist, the command wasn't reproducible, the evidence
    is too thin to independently confirm — that uncertainty itself is
    grounds for `halt`, not grounds for giving the benefit of the doubt.
-7. **Render a verdict.** `pass` only if you tried to find a hole and
+8. **Render a verdict.** `pass` only if you tried to find a hole and
    didn't. `halt` with every refutation you found, each with the specific
    claim and the specific evidence that contradicts or fails to support
    it.

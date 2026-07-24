@@ -43,7 +43,36 @@ precisely the shortcut a tired shift-lead is tempted to take in real ICS
 too — "I'll just make the call myself, no need to loop in the IC for
 this one" — and it is exactly how authority erodes in both domains.
 
-## The 14 working principles
+## The working principles
+
+**Principle 15 — no derived facts (field lesson 2026-07-24, v0.5.2).** The
+motivating incident existed to stop two branches silently allocating the
+same migration number. Inside it, an unmeasured assertion travelled `IC
+prose → Safety Officer prose → Dispatcher-relayed tasking → committed code
+comment`, faithfully transcribed at every hop — **three times in one
+incident, once by each seat, including the IC and the Dispatcher.** No hop
+was dishonest; each seat had a named upstream source and no reason to
+doubt it. The Safety Officer caught two of the three, one of them its own.
+
+Two details are the reason this became a principle rather than a project
+pitfall. First, the third instance could not be *corrected*: two competent
+independent measurements returned different counts (48 and 56) because
+they used different predicates for "carries a version token", so the
+remedy was to **delete the number** and describe the shape instead.
+Second, the same incident independently re-derived the same law in two
+other forms — its ADR banned pinned commit hashes after a reference tree
+rotted from `060132b0` to `f21fdd42` within hours of being written into
+the plan, and the host project's own `CLAUDE.md` had *already* banned
+hardcoded numbers in docs after a schema version, a plugin count, and a
+test count all rotted. Three rediscoveries, three local bans, no general
+rule — which is what a doctrine principle is for.
+
+The enforcement choice was deliberate and is the incident's other lesson:
+the mechanism that shipped worked because it produced a **git conflict**,
+while the intuitive alternative (a monotonic counter) merged cleanly and
+double-allocated. A doctrine paragraph alone is the monotonic counter. So
+principle 15 lives in the Safety Officer's process, an adversarial seat
+that already caught two instances with no rule telling it to look.
 
 **Principle 14 — goal drift (field lesson 2026-07-22, v0.3.2).** The
 original incident that motivated this trigger: a multi-period incident's
