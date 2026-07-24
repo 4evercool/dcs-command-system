@@ -62,7 +62,13 @@ premise change — still voids the IAP hash, which is correct), or
 On `halt`: choose `"fix_taskings"` (refutation is narrow — supply the
 fix-tasking directives) or `"replan"` (refutation reveals a planning
 defect). On `pass`: choose `"close"` (goal fully met) or `"next_period"`
-(state what remains). Return:
+(state what remains). **`close` is the default on a pass, including when
+the 201's goal is only partly met (v0.5.12)** — a passed period holds
+proven work, and `next_period` keeps it unmerged and unshipped until the
+rest catches up. Rule `next_period` only when the delivered part
+genuinely cannot ship on its own (a schema change whose readers are not
+yet updated, a half-migrated contract); otherwise rule `close` and put
+the remainder in `directives` as a follow-up incident to register. Return:
 
 ```json
 {"command_point": "verdict_disposition", "disposition": "fix_taskings", "rationale": "...", "directives": ["focused fix-tasking content, one per refutation"]}

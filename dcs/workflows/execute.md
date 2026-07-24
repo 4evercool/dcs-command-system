@@ -68,10 +68,18 @@ skip the deviation/Safety Officer gates below.
 
 Before spawning any specialist this period, check trigger (c): read
 `esg.max_periods_before_review` from `<project>/.dcs/config.json`'s `esg`
-key (default `3` if unset or the key is absent). If the operational
-period number about to run exceeds that threshold, this period **is** the
-mandatory escalation — do not fan out. Skip to "On any escalation
-trigger" below instead of step 4.
+key (default `3` if unset or the key is absent).
+
+**Count ATTEMPTS, not periods (v0.5.12).** An attempt is any stamped IAP
+this incident has executed — so period 2 attempt 1 and period 1 revision
+3 both count, and the tally is simply the number of `IAP APPROVED` /
+`pre-stamp checklist PASSED` entries in `214-LOG.md`. If the attempt
+about to run exceeds the threshold, this attempt **is** the mandatory
+escalation — do not fan out; skip to "On any escalation trigger" below
+instead of step 4. Counting periods alone let a real incident run four
+revisions of period 1 without ever tripping the cap (v0.5.12 field
+lesson) — a re-plan is exactly as much evidence of trouble as a new
+period, and usually more.
 
 Also check trigger (d) preemptively if `<esg_root>/.dcs/esg/DELEGATION.md`
 (v0.3: ESG state lives in the main checkout only — resolve `esg_root` per
@@ -299,9 +307,25 @@ Now — and only now — the IC assembles the single integration commit:
 Then assess against `202-OBJECTIVES.md`:
 - **Goal fully met:** tell the Owner to run `/dcs-close` (which verifies
   this commit mechanically).
-- **Partially met / more work identified:** offer the next operational
-  period — loop back to `/dcs-plan`'s step 2 (fresh 202 for period N+1),
-  noting what remains.
+- **Partially met / more work identified: CLOSE AND REQUEUE is the
+  default (v0.5.12); another period is the exception that must be
+  argued.** A Safety-passed period holds *proven* work. Keeping the
+  incident open keeps that work in a branch — unmerged, unshipped, and
+  fixing nothing — for as long as the remaining scope takes. Field
+  lesson 2026-07-24, in the incident's own AAR: period 1 produced a
+  Safety-passed fix for a bug that was actively corrupting production
+  data, and *"that fix then sat in a branch. A fix that is not shipped
+  fixes nothing, and the defect kept corrupting production data the whole
+  time"* — a second period existed only to make the first one shippable.
+
+  So: **close the incident, merge, ship, and register the remainder as a
+  follow-up incident** whose 201 evidence is this incident's AAR (a cheap
+  stem — the investigation is already done). Only keep the incident open
+  for another period when the remaining work is genuinely inseparable —
+  the delivered part **cannot** be merged or shipped on its own (a schema
+  change whose readers are not yet updated, a contract half-migrated).
+  State which of those it is in `214-LOG.md`; "there is more to do" is
+  not by itself a reason, because that is what the register is for.
 
 ## 10. Report
 

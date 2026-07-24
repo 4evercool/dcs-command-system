@@ -70,6 +70,43 @@ Use `$HOME/.claude/dcs/templates/201-BRIEF.md`. Fill in Symptom, Evidence
 (one bullet per finding, citation intact), Reproduction path, Blast radius,
 Prior art, and Intake source. Leave Type + rationale for the next step.
 
+## 4a. Decomposition check — ONE incident, ONE defect (v0.5.12)
+
+**This is the cheapest place in the whole system to prevent a runaway
+incident, and the only place that is free.** Read the Symptom you just
+wrote and count the *independent* defects in it. Independent means: it
+has its own root cause, and fixing it could ship on its own.
+
+- **More than one → decompose now.** Register every defect as its own
+  row in `<esg_root>/.dcs/esg/REGISTER.md` (`QUEUED`), then open **one**
+  of them as this incident — the one on the critical path, usually the
+  one actively causing harm. The others are follow-ups with the same
+  evidence already gathered; nothing is lost, and each can then ship the
+  day it is fixed.
+- **A "rework" / "rethink" / "redesign" goal is a program, not an
+  incident.** If the goal names a *model* rather than a *defect*
+  ("rethink how X is accounted"), the incident to open is the first
+  concrete defect that model causes; the redesign is a STRATEGY item for
+  `/dcs-esg`.
+- Say plainly in the report which defects were split out and where they
+  went — the Owner should see the decomposition, not discover it.
+
+**Field lesson 2026-07-23/24 (the incident this rule exists for):** a
+201 opened with "the energy model is wrong" **and** noted three
+accompanying defects, one of them actively corrupting production data.
+All four were absorbed into a single Type 1. It ran **31 hours, 3
+periods, 4 revisions of period 1, 10 Safety halts, 3 escalations, a
+285 KB log, 54 files and 11,000 lines**, and spawned its own blocker
+incident mid-flight. Every *individual* mechanism behaved correctly
+throughout — the halts were right, the rejects were right, the blocker
+was real. The cost came from scope that was admitted at intake and never
+bounded afterwards. Nothing downstream can undo an over-scoped 201;
+typing sets *ceremony*, it has never set *size*.
+
+**Sanity check (a smell, not a gate):** DCS briefs for well-scoped
+incidents run ~7–11 KB. If yours is two or three times that, it is
+probably describing more than one incident — reread it before typing.
+
 ## 5. Propose a Type — COMMAND POINT 1 (typing)
 
 This is a command point (doctrine: "Transfer of command"). **If this
