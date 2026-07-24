@@ -115,6 +115,23 @@ was that both were *Dispatcher transcription errors, not the chief's*.
 5. **Evidence executability** — each `evidence_required` command must be
    runnable in the specialist's harness (no browser/UI observation from a
    browserless agent; see the 202 staging rule).
+6. **Criterion coverage, both directions (v0.5.4)** — every 202 acceptance
+   criterion must map to at least one tasking, **or** be explicitly marked
+   in the 202 as *IC work* (artifacts under `.dcs/**`: re-issuing a gate,
+   amending the IAP, register updates — specialists are barred from that
+   tree), *Owner work* (UAT, sign-off), or *deploy-period work*. A
+   criterion in none of those buckets is unsatisfiable-as-written and will
+   surface as a false Safety halt at the end of the period, after all the
+   execution cost has been spent. Field lesson 2026-07-24: a period was
+   planned with a criterion requiring an edit to `IAP.md` — a file no
+   tasking may touch by construction.
+7. **Criterion satisfiability against the repo's own tests (v0.5.4)** — if
+   a criterion requires changing behaviour that an existing committed test
+   asserts, name that test in the tasking that owns the change. A
+   criterion whose fulfilment turns a green test red is not wrong, but the
+   test update must be *owned by someone*, not discovered mid-execution.
+   (See principle 15's test clause: a test pinning a moving ref makes this
+   collision routine rather than rare.)
 
 Log the lint result in `214-LOG.md` in one line (`tasking lint: pass` or
 `tasking lint: N defects fixed pre-review — <one-line each>`). Only a

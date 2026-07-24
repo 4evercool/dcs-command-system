@@ -32,10 +32,21 @@ file itself.
      the integration commit happens AFTER its pass (execute.md 9b), deploy
      after close. Such criteria guarantee a first halt (field lesson,
      2026-07-22). Also: only criteria agents can verify in THEIR harness --
-     browser/UI observations belong in an Owner-UAT section, not here. -->
+     browser/UI observations belong in an Owner-UAT section, not here.
+
+     OWNERSHIP TAG (v0.5.4): every criterion is satisfiable by SOMEBODY.
+     Tag any criterion no specialist can own -- specialists are barred
+     from `.dcs/**`, so re-issuing a gate, amending the IAP, or updating
+     the register is [IC]; UAT and sign-off are [Owner]; shipping is
+     [deploy period]. Untagged criteria are assumed specialist work and
+     MUST map to a tasking (plan.md lint 4a check 6). An untagged
+     criterion nobody can execute surfaces as a false Safety halt at the
+     END of the period, after all the execution cost is spent (field
+     lesson 2026-07-24: a criterion required editing IAP.md, a file no
+     tasking may touch by construction). -->
 
 1. {{criterion 1 -- verifiable}}
-2. {{criterion 2 -- verifiable}}
+2. {{criterion 2 -- verifiable}} {{[IC] | [Owner] | [deploy period] -- omit if specialist work}}
 
 ## Out of scope this period
 
