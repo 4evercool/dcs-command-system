@@ -203,6 +203,35 @@ which fits:
   wrong (not just incompletely executed), treat it like a deviation —
   route to `/dcs-plan` for this period's re-plan.
 
+**Convergence read — MANDATORY from the second halt on one objective
+(v0.5.9).** Trigger (b) already pauses here; what it lacked was a
+*diagnosis*, so the same "continue" answer could be given four times.
+Before presenting options, the IC must classify the new refutations
+against the previous halt's and record the verdict in the 209 and
+`214-LOG.md`:
+
+- **Same class** — the fix closed the named instances and the officer
+  found another of the same kind (a defect of **form**, not of site).
+  This is whack-a-mole against an unbounded population, and each further
+  pass costs a full execute+verify cycle to remove one instance. The
+  options presented to the Owner must therefore **lead with raising the
+  altitude of the fix** — an instrumental or general guard that makes the
+  whole class unrepresentable (a lint, a test over the enumeration, a
+  type, an invariant) — and must say plainly that continuing site-by-site
+  has no bounded end. "Continue with fix-taskings" is still offered, but
+  never first and never unqualified.
+- **Different class** — genuinely new ground each time; the incident is
+  complex but converging. Say so, and continuing is the reasonable
+  default.
+
+State the read in one sentence the Owner can act on: *"halt N is the same
+class as halt N-1 — the population is unenumerated, so the fix belongs at
+the guard level, not the site level."* Field lesson 2026-07-24: an IC
+produced exactly this read — unprompted and correctly — only at the
+**fourth** halt, and the Owner's pivot to a general guard ended the
+incident's rotation immediately. The read was right; it was late because
+nothing asked for it.
+
 **`pass`:** write/append `SAFETY.md` with the verdict **verbatim** (not
 summarized or softened). Append to `214-LOG.md`:
 `SAFETY: pass -- period <N> complete`.

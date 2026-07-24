@@ -134,6 +134,22 @@ was that both were *Dispatcher transcription errors, not the chief's*.
    tasking's `territory`. Occurrences in no territory are unowned work;
    occurrences in two are a partition break the `partition_ok` flag
    won't catch.
+3a. **Sweeps must be enumeration-shaped (v0.5.9).** A criterion whose
+   scope is a *population* rather than a named site — it says "all",
+   "every", "no remaining", "the rest of", or names a pattern instead of
+   a file — must satisfy three things, or it is a lint defect:
+   **(i)** the 202 names the **command that enumerates the population**
+   (a `grep`/`ast-grep`/query), not a hand-written list of sites;
+   **(ii)** the acceptance criterion is phrased as *that command returning
+   empty*, never as "these N sites are fixed"; **(iii)** you run the
+   command yourself now and record its current output in `214-LOG.md`.
+   A hand-listed population is a census, and a census is exactly the
+   derived fact principle 15 forbids — it is stale the moment the tree
+   moves, and its incompleteness only surfaces when the Safety Officer
+   finds instance N+1. Field lesson 2026-07-24: an incident took **four
+   Safety halts** on one objective, each closing the named instances and
+   revealing another of the same class, because the criterion enumerated
+   sites instead of asserting an invariant.
 4. **Territory disjointness** — verify the globs actually don't intersect
    rather than trusting `partition_ok: true` (it is a claim, not a fact).
 5. **Evidence executability** — each `evidence_required` command must be
