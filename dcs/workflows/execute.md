@@ -110,6 +110,14 @@ every individual edit looks in-bounds to the gate for the tasking that
 agent remembers. `dcs_gate.py` denies `SendMessage` while an incident is
 active precisely to make this impossible rather than merely forbidden.
 
+**Command-point spawns at steps 6 and 9 follow doctrine's "never a silent
+wait" rule (v0.5.10):** announce the spawn before making it (no file
+changes until it returns — a command-point agent writes nothing by
+design), and treat a return with no decision block as a **failed spawn**,
+not a slow one — re-spawn on the next tier immediately and log both
+attempts. The same applies to a specialist or Safety Officer that returns
+without its structured block: re-spawn, never wait, never resume.
+
 ## 5. Collect and validate structured returns
 
 Each specialist returns the schema in `references/schemas.md` #4. Check

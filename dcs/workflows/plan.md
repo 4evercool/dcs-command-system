@@ -189,12 +189,16 @@ continue / re-scope the 202 / decompose into separate incidents to the
 Owner. Do not spend a fourth review cycle to find out.
 
 This is a command point (doctrine: "Transfer of command"). **If this
-session is not running Fable**: spawn `dcs-commander` via Task (model
+session is not running Fable**: announce the spawn first (doctrine, "A
+command point is never a silent wait" — say that no file changes until
+the decision returns), then spawn `dcs-commander` via Task (model
 `fable`) with the full 201 + 202 text and the chiefs' complete structured
 returns; its `iap_review` decision (schemas.md #6) governs — on
 `"reject"`, use its `required_changes` verbatim as the re-spawn
 instruction to the Planning Chief and repeat this step; on `"accept"`,
-proceed. Record the decision in `214-LOG.md`
+proceed. **If the spawn returns no decision block** (quota exhausted, API
+error, early termination): that is a failed spawn — re-spawn on the next
+tier at once, log both attempts, and never sit waiting on it. Record the decision in `214-LOG.md`
 (`command: iap_review <verdict> (IC=dcs-commander)`). **If this session is
 Fable**, apply the checks below yourself.
 

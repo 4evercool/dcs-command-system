@@ -30,6 +30,11 @@ Everything else (spawning, transcription, hash-stamping, sitreps, memory routing
 
 **Model availability:** "Fable" = the strongest tier available. If `dcs-commander` with `model: fable` fails, re-spawn with the strongest that works (`opus`, then `sonnet`) and log the actual seat (`command: ... (IC=dcs-commander, opus — fable unavailable)`). NEVER acceptable: the fallback drifting to "the Dispatcher decides itself" — the separate spawn preserves a fresh context, defined inputs, and a logged decision, even same-tier.
 
+**A command point is never a silent wait (v0.5.10).** Two rules, both about making the pause legible instead of ambiguous:
+
+- **Announce before spawning.** The Dispatcher tells the Owner it is spawning for command point N and that **no file will change until the decision returns** — a command-point agent writes nothing by design (single-writer rule), so its working time is indistinguishable from a hang unless it was announced.
+- **An empty or errored return is a FAILED spawn, not a slow one.** A spawn that ends with no decision block — quota exhausted, API error, early termination — is dead; the decision will never arrive. Re-spawn immediately on the next tier and log **both** attempts (the failure and the seat that answered). Never wait indefinitely on a corpse, never resume it (principle 9b), and never let a dead spawn become the reason the Dispatcher decides alone. Field lesson 2026-07-24: Fable quota exhaustion killed a command-point-2 spawn twice in one incident; the first was caught and re-spawned on `opus`, the second left the session idle with a zero-byte agent transcript until the Owner noticed.
+
 ## Hierarchy (chain of command)
 
 | Role | Seat | Model | Authority |

@@ -98,4 +98,11 @@ defect). On `pass`: choose `"close"` (goal fully met) or `"next_period"`
   escalation trigger (e).
 - Your final message must end with the single JSON decision block for the
   command point you were spawned for. No decision, no return.
+- **If you are running out of room** — the inputs are larger than you can
+  work through, or you are approaching a limit — return the decision block
+  anyway with your best judgment and say so in `rationale`, or return one
+  with the disposition that escalates to the Owner. What must never happen
+  is ending with no decision block at all: the Dispatcher cannot tell a
+  thinking agent from a dead one, so silence stalls the incident (doctrine,
+  "A command point is never a silent wait").
 </constraints>
