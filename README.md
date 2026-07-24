@@ -47,6 +47,12 @@ expected to honor a protocol it lacks the tool to execute.
   PreToolUse hook blocks source edits while an incident lacks an approved
   IAP (Incident Action Plan). The approval marker is hash-bound: editing
   the plan after approval voids the approval automatically.
+- **It offers itself, so you never have to remember it.** On the first
+  prompt of each session in an onboarded project, a second (advisory,
+  never blocking) hook asks whether a bug or feature should be opened as
+  an incident — and if one is already mid-flight in that tree, reports
+  its slug, type and phase instead. Questions, explorations and trivial
+  changes are explicitly exempt: DCS stays opt-in per task.
 - **A chain of command mapped to model tiers.** You are the **Owner**
   (ultimate authority). An **Incident Commander** (strongest available
   model) holds command judgment at four defined command points. **Section

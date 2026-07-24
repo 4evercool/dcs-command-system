@@ -59,14 +59,23 @@ every branch instead of staying the single portfolio source of truth.
 `.dcs/config.json` and `.dcs/incidents/` stay tracked as before —
 unaffected by this step.
 
-## 4. Copy the gate hook
+## 4. Copy the hooks
 
-Copy `$HOME/.claude/dcs/hooks/dcs_gate.py` to
-`<project>/.claude/hooks/dcs_gate.py`, creating `<project>/.claude/hooks/`
-if it doesn't exist. This is a new file under the project's own
-`.claude/`, not a shared reference — the hook must be self-contained
-(stdlib only) since it will run from the project's own hook invocation, not
-from `~/.claude/`.
+Copy **both** hooks to `<project>/.claude/hooks/`, creating the directory
+if it doesn't exist — `$HOME/.claude/dcs/hooks/dcs_gate.py` and
+`$HOME/.claude/dcs/hooks/dcs_intake.py`. These are new files under the
+project's own `.claude/`, not shared references: each hook must be
+self-contained (stdlib only) since it runs from the project's own hook
+invocation, not from `~/.claude/`.
+
+- **`dcs_gate.py`** (PreToolUse) — the approval gate. Blocking.
+- **`dcs_intake.py`** (UserPromptSubmit, v0.6.0) — one short note on the
+  first prompt of each session: offer `/dcs-run` if the request is a bug
+  or feature, or report an active incident's slug/type/phase if one is
+  mid-flight in this tree. **Advisory, never blocking**, once per session.
+  It exists because the gate is deliberately silent when no incident is
+  active, so nothing otherwise mentions that an incident was an option —
+  DCS would apply exactly when someone remembered it.
 
 ## 5. Inspect the project's existing `.claude/settings.json`
 
@@ -114,6 +123,30 @@ project's hooks array needs a different JSON nesting to append into):
   ]
 }
 ```
+
+**And the intake nudge (v0.6.0)** — a sibling of `hooks.PreToolUse`, not
+an entry inside it. `UserPromptSubmit` takes no `matcher` (it is not
+tool-specific), so the block is:
+
+```json
+"UserPromptSubmit": [
+  {
+    "hooks": [
+      {
+        "type": "command",
+        "command": "python \"$CLAUDE_PROJECT_DIR/.claude/hooks/dcs_intake.py\"",
+        "timeout": 10
+      }
+    ]
+  }
+]
+```
+
+Present both blocks together in step 6's permission request, and say
+plainly what each does: the first can **deny** a tool call, the second
+only adds one line of context on the first prompt of a session and can
+never block anything. An Owner may reasonably want one and not the
+other — take that answer as given rather than arguing for the pair.
 
 **Print this exact block to the Owner** before touching the file, along
 with which of the three cases applies and exactly where it would be
