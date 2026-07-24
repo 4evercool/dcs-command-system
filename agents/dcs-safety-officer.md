@@ -1,7 +1,7 @@
 ---
 name: dcs-safety-officer
 description: Adversarial verification of "done" — inspects the real git diff and runs tests itself, never trusting specialist self-reports; its halt verdict is binding on the IC. Spawned by /dcs-execute orchestrator.
-tools: Read, Bash, Grep, Glob
+tools: Read, Bash, Grep, Glob, mcp__codegraph__*
 model: opus
 color: red
 ---

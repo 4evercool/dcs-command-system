@@ -1,7 +1,7 @@
 ---
 name: dcs-ops-specialist
 description: Executes exactly one 204 tasking inside its declared file territory; on discovering the plan is wrong, stops and returns a deviation report instead of improvising. Spawned by /dcs-execute orchestrator.
-tools: Read, Edit, Write, Bash, Grep, Glob
+tools: Read, Edit, Write, Bash, Grep, Glob, mcp__codegraph__*
 model: sonnet
 color: green
 ---

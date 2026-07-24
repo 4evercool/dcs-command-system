@@ -140,6 +140,27 @@ no gate enforcement yet. Repeat the exact block from step 5 so the Owner
 approval" guarantee becomes advisory only, not mechanical, until it's
 wired — say this plainly.
 
+## 8a. Audit agent tool grants against the project's protocols (v0.5.6)
+
+Read the project's `CLAUDE.md` for pre-flight protocols that **name a
+tool** — an MCP server, a query interface, a required script (e.g. "query
+the call graph before any cross-file edit", "query the action log before
+debugging"). For each, check `~/.claude/agents/dcs-*.md`'s `tools:` line
+and report any role expected to honor that protocol but not granted the
+tool.
+
+The role that most often fails this is `dcs-ops-specialist`: it is the
+only DCS role that edits code, so it inherits every pre-edit protocol the
+project defines, while charters tend to grant analysis tools to analysis
+roles (doctrine: "Relationship to project-specific protocols" — a
+protocol an agent cannot execute is a charter defect).
+
+Report the gap and the exact one-line fix (add the tool glob to that
+charter's `tools:`); do **not** edit files under `~/.claude/agents/`
+yourself — those are the installed copy of the DCS package, and editing
+them in place is the drift the package's own source-of-truth rule
+forbids. The fix belongs in the DCS repo, then a re-install.
+
 ## 9. Report completion
 
 Summarize: `.dcs/` created (config.json path), `.gitignore` entries added

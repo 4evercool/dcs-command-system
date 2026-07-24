@@ -109,6 +109,8 @@ One operational period = one pass through the P-loop; an incident may run severa
 
 DCS is a scaffold, not a replacement for a project's own rules. When a project's `CLAUDE.md` documents pre-flight protocols (e.g. "query the vault before a non-trivial fix"), DCS agents honor them *inside* their DCS role, discovered by reading the target project's `CLAUDE.md` — DCS has no built-in knowledge of them.
 
+**A protocol an agent cannot execute is a charter defect, not an agent failure (v0.5.6).** If a project's protocol names a tool (an MCP server, a query interface, a script), every DCS role expected to honor that protocol must be *granted* it in `agents/dcs-*.md`. Field lesson 2026-07-24: a project made call-graph queries mandatory before cross-file edits, and `dcs-ops-specialist` — the only role that edits code — had no such tool, so it correctly fell back to `grep` and flagged the gap rather than silently claiming the step. **The correct response is to widen the charter, never to let the substitution stand unremarked.** An agent that reports "the protocol's tool isn't in my toolset, here is what I used instead" is behaving exactly right; the defect is upstream, in whoever granted the tools. `/dcs-init` surfaces this at onboarding, but any session may discover it mid-incident and should say so plainly. Missing tools are also environment-dependent — a tool absent for one installer may exist for another, so the charter grants it and the agent notes it when unavailable.
+
 ## Automation layers (v0.2)
 
 Two optional commands sequence the P-loop without eliminating its gates — neither changes who holds command judgment or what counts as approval, they only remove the Owner's need to type each phase command by hand.
