@@ -81,6 +81,30 @@ If this is a re-plan triggered by a deviation, also include the
 triggering specialist's `found` / `why_plan_wrong` / `proposal` fields in
 the Planning Chief's prompt.
 
+**Every revision is a FRESH spawn, never a resumed agent (v0.5.5).** When
+a chief's return is sent back — for lint defects (4a), for an IC
+`reject`'s `required_changes`, or for any revision — spawn a **new**
+chief and put everything it needs in the new prompt: the 201 + 202 text
+as always, plus the specific defects or required changes verbatim, plus
+any earlier revision's decisions that must survive. Do **not** continue
+the previous chief agent through a message-resume, however economical it
+looks on revision 3.
+
+The reason is principle 5, not tidiness: a resumed agent's reasoning
+lives in its own transcript, which **no incident artifact records**.
+Resume it and the chief's information diet stops being "exactly 201 +
+202 + these named corrections" and becomes "those, plus an unarchived
+conversation" — so a later session reading the incident directory cannot
+reconstruct why revision 3 said what it said, and the IC reviewing at
+command point 2 can no longer state what the chief was actually working
+from. The paper trail is the only channel that survives a context reset;
+an agent transcript is not part of it. A fresh spawn also costs less
+wall-clock than it appears — resumed agents run asynchronously in the
+background, which is why a resume reads as a hang.
+
+If carrying a revision forward needs more than a few lines of context,
+that is a signal the 202 is unstable — see 4b's repeated-reject trigger.
+
 ## 4. Validate the returns — COMMAND POINT 2 (IAP acceptance)
 
 From the Planning Chief: `objectives_feedback`, `tactics[]`, `taskings[]`,
