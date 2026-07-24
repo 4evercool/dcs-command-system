@@ -31,6 +31,16 @@ approval-gate hook. `dcs doctor` checks both. The auto-install skips
 politely in CI or when `~/.claude` doesn't exist
 (`DCS_SKIP_POSTINSTALL=1` opts out).
 
+**Optional tools.** The agent charters grant `mcp__codegraph__*` (a
+call-graph MCP) to the roles that plan, edit, and verify code. **It is
+entirely optional** — an MCP pattern that matches no installed server
+grants nothing and errors nothing, so DCS works unchanged without it and
+those agents simply use `grep`/`Read` for impact analysis. Grant more if
+your project needs it: if your `CLAUDE.md` makes some tool mandatory
+before an edit, add its glob to the relevant charter's `tools:` line —
+`/dcs-init` audits this at onboarding and reports any role that is
+expected to honor a protocol it lacks the tool to execute.
+
 ## What you get
 
 - **No code before an approved plan — enforced, not promised.** A
