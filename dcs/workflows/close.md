@@ -148,6 +148,34 @@ the main checkout) — go straight to step 6.
    in the field routed vault lessons into the main checkout's copies by
    reflex and had to revert; the worktree is the incident's whole world
    until the merge).
+1a. **Run the project's merge-time guards, if it documents any (v0.5.3).**
+   Some defect classes are **structurally invisible before the merge**: a
+   check that passes on each branch in isolation says nothing about the
+   merged tree, and `git merge-tree` can report **zero conflicts** while
+   producing a file that is silently broken (field lesson 2026-07-24: two
+   branches independently allocated the same DB migration number; the
+   merge was conflict-free and would have landed two functions with one
+   registry key, so one migration would never have run — against a
+   schema-versioned production database).
+
+   If the project's `CLAUDE.md` (or its own docs) names a **merge-time
+   guard** — a test or script whose job is to inspect the *merge result*
+   rather than either branch — run it now, before step 2's merge, and
+   include its real output in the close record. A guard that reports a
+   defect is **escalation trigger (a)**: stop, file a 209, and put it to
+   the Owner. Never merge past a red merge-time guard, and never resolve
+   what it found silently — that is precisely the silent judgment call
+   the trigger machinery exists to catch.
+
+   If the project documents no such guard, skip this step and say so —
+   DCS does not invent guards a project has never described (doctrine:
+   "Relationship to project-specific protocols"). **Prefer git-native
+   allocation over checkers where a project can arrange it:** an
+   append-only registry file where each claim is its own line makes two
+   branches claiming the same identifier produce a *real merge conflict*
+   with no tooling to remember — the check that cannot be skipped is the
+   one git performs itself.
+
 2. **Merge into the integration branch.** The merge target is **whatever
    branch the primary checkout (`esg_root`) currently has checked out** —
    its name is irrelevant, and it is frequently NOT `main` (v0.3.3, field
