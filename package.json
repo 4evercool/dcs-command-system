@@ -1,7 +1,7 @@
 {
   "name": "dcs-command-system",
-  "version": "0.5.0",
-  "description": "DCS Р Р†Р вЂљРІР‚Сњ Development Command System. An installable Claude Code skill package that adapts the ICS Planning P to the software development cycle: typed incidents, hook-enforced IAP approval gate, Opus chiefs, Sonnet specialists, adversarial Safety Officer, per-incident git worktrees with a clean-main deploy train, and an ESG strategic layer with a Delegation of Authority for routine auto-approval.",
+  "version": "0.5.1",
+  "description": "DCS Р В Р вЂ Р В РІР‚С™Р Р†Р вЂљРЎСљ Development Command System. An installable Claude Code skill package that adapts the ICS Planning P to the software development cycle: typed incidents, hook-enforced IAP approval gate, Opus chiefs, Sonnet specialists, adversarial Safety Officer, per-incident git worktrees with a clean-main deploy train, and an ESG strategic layer with a Delegation of Authority for routine auto-approval.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/4evercool/dcs-command-system.git"

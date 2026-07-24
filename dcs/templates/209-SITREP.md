@@ -11,7 +11,7 @@ cases a routine delegation bound does NOT cover.
 **Incident:** {{slug}}
 **Operational period:** {{N}}
 **Filed:** {{ISO8601 timestamp}}
-**Trigger:** {{a: blast radius exceeded the approved IAP | b: second Safety halt on the same objective | c: entering period N+1 beyond esg.max_periods_before_review | d: a Delegation bound would be crossed}}
+**Trigger:** {{a: blast radius exceeded the approved IAP | b: second Safety halt on the same objective | c: entering period N+1 beyond esg.max_periods_before_review | d: a Delegation bound would be crossed | e: IC-requested ESG activation (principle 14) | f: third IAP reject in one period -- objectives, chief information diet, or incident size is wrong}}
 
 ## Status summary
 

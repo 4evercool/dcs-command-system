@@ -164,7 +164,12 @@ attempt to refute completion using its own independent checks.
 This is a command point (doctrine: "Transfer of command"). **If this
 session is not running Fable**: spawn `dcs-commander` via Task (model
 `fable`) with: the Safety Officer's verdict verbatim, the 202 acceptance
-criteria, the period history from `214-LOG.md`, **the ORIGINAL goal from
+criteria, the period history from `214-LOG.md` (**scoped, v0.5.1: entries
+for the CURRENT period plus the last ~20 lines — never the whole file. A
+long-running Type 1's log passes 100 KB, and pasting it into every
+command-point spawn buys latency, not judgment. If an earlier period is
+genuinely load-bearing, quote the specific entries rather than the
+file**), **the ORIGINAL goal from
 `201-BRIEF.md`** (v0.3.2 — so goal drift across periods is visible to a
 stateless judge: a `next_period` proposing objectives the 201 never asked
 for is accretion, not convergence), and **one ESG-state line** (v0.3.2 —
@@ -205,7 +210,8 @@ re-plan (on `halt`), check the two verdict-time triggers:
   exceeds the blast radius `201-BRIEF.md` declared, in a way the IAP's
   partition table didn't already account for.
 
-**On any escalation trigger (a/b/c/d/e — c and d are checked at the period
+**On any escalation trigger (a/b/c/d/e/f — f is raised in `plan.md` step
+4b, not here; c and d are checked at the period
 boundary above, before fan-out; **(e)** is an IC-requested ESG activation,
 raised via the `esg_activation` field on any command decision — doctrine
 principle 14):** write
@@ -223,7 +229,7 @@ IC-requested activations first; the Owner may still decide inline, in
 which case record in the sitrep why a session wasn't needed. Record the
 decision in
 the sitrep's `decision`/`decided_by` fields and append to `214-LOG.md`:
-`ESCALATION: trigger <a|b|c|d|e> -- <one-line reason> -- Owner: <decision>`.
+`ESCALATION: trigger <a|b|c|d|e|f> -- <one-line reason> -- Owner: <decision>`.
 Then proceed per the decision: **continue** resumes the normal path this
 step interrupted (9b, or the fix-tasking/re-plan branch above);
 **pivot** routes to `/dcs-plan` for a re-scoped period; **demobilize**

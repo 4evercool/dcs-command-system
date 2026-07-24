@@ -87,6 +87,50 @@ From the Planning Chief: `objectives_feedback`, `tactics[]`, `taskings[]`,
 `partition_ok`, `risks[]`, `verification_plan` (schema in
 `references/schemas.md` #2).
 
+### 4a. Tasking lint — mechanical, run BEFORE the command point (v0.5.1)
+
+These five checks are arithmetic on the chief's structured return, not
+judgment. Run them yourself; a failure is **yours to fix or re-spawn the
+chief over — never a reason to spend a command point.** Field lesson
+2026-07-23: an entire IAP review cycle (the IC's second REJECT on one
+incident) was consumed by defects in this list, and the IC's own verdict
+was that both were *Dispatcher transcription errors, not the chief's*.
+
+1. **Self-contradiction** — for every tasking, `territory ∩ forbidden`
+   must be empty. A tasking naming a file in both directs a specialist to
+   edit what it is forbidden to touch, forcing either a partition
+   violation or a mid-execution deviation.
+2. **Orphaned deliverables** — every deliverable named anywhere in
+   `tactics[]`, `verification_plan`, or a Logistics-chief plan must map to
+   an existing tasking `id`. A deliverable assigned to a tasking that
+   doesn't exist in *this* revision (e.g. carried over from a superseded
+   plan) has no owner and will silently not happen.
+3. **Unassigned occurrences** — when the plan says "replace/remove X",
+   `grep` for X yourself: every occurrence must fall inside exactly one
+   tasking's `territory`. Occurrences in no territory are unowned work;
+   occurrences in two are a partition break the `partition_ok` flag
+   won't catch.
+4. **Territory disjointness** — verify the globs actually don't intersect
+   rather than trusting `partition_ok: true` (it is a claim, not a fact).
+5. **Evidence executability** — each `evidence_required` command must be
+   runnable in the specialist's harness (no browser/UI observation from a
+   browserless agent; see the 202 staging rule).
+
+Log the lint result in `214-LOG.md` in one line (`tasking lint: pass` or
+`tasking lint: N defects fixed pre-review — <one-line each>`). Only a
+clean lint proceeds to the command point below.
+
+### 4b. Repeated-reject trigger (v0.5.1)
+
+Count `command: iap_review REJECT` entries for the **current period** in
+`214-LOG.md`. On the **third** reject in one period: stop iterating and
+treat it as **escalation trigger (f)** (doctrine principle 13). Three
+rejects is not a plan being polished — it is a signal that the objectives
+are wrong, the chief's information diet is too narrow, or the incident is
+too large to plan as one unit. File a 209 sitrep, pause, and put
+continue / re-scope the 202 / decompose into separate incidents to the
+Owner. Do not spend a fourth review cycle to find out.
+
 This is a command point (doctrine: "Transfer of command"). **If this
 session is not running Fable**: spawn `dcs-commander` via Task (model
 `fable`) with the full 201 + 202 text and the chiefs' complete structured
