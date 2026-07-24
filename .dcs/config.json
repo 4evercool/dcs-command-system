@@ -1,0 +1,28 @@
+{
+  "incidents_dir": ".dcs/incidents",
+  "guarded_paths": [
+    "dcs/**",
+    "agents/**",
+    "skills/**",
+    "tests/**",
+    "bin/**",
+    "install.ps1",
+    "install.sh",
+    "package.json"
+  ],
+  "unguarded_paths": [
+    ".dcs/**",
+    ".claude/**",
+    "docs/**",
+    "README.md",
+    "LICENSE",
+    "CLAUDE.md",
+    ".gitignore"
+  ],
+  "auto_approve_type3": false,
+  "language": "auto",
+  "esg": {
+    "max_periods_before_review": 3,
+    "max_incident_age_days": 7
+  }
+}

@@ -189,7 +189,10 @@ commit, then install — `install.ps1` (Windows) / `install.sh` (POSIX) /
 installed copy in place. Version-sync rule: `package.json` and
 `dcs/VERSION` bump together (see
 [docs/publishing.md](docs/publishing.md)). Tests:
-`python tests/test_dcs_gate.py`. Design history:
+`npm test` (gate + intake) plus `python tests/test_doctrine_integrity.py`
+(package structure — also the merge-time guard, see
+[CLAUDE.md](CLAUDE.md)). DCS is self-hosted: changes to it are made as
+DCS incidents from a session rooted in this repo. Design history:
 [docs/design-v0.1.md](docs/design-v0.1.md) ·
 [docs/spec-v0.2-esg.md](docs/spec-v0.2-esg.md) ·
 [docs/spec-v0.3-parallel.md](docs/spec-v0.3-parallel.md) ·

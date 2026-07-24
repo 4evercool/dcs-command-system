@@ -1,2 +1,10 @@
 __pycache__/
 *.pyc
+
+# DCS self-hosting: per-worktree and main-checkout-only state.
+# A tracked ACTIVE would ride an incident's merge into main and wedge the
+# gate for every future incident; a tracked esg/ would diverge across
+# every branch instead of staying the single portfolio source of truth.
+.dcs/ACTIVE
+.dcs/CLOSED
+.dcs/esg/
