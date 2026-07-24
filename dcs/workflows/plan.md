@@ -172,6 +172,19 @@ was that both were *Dispatcher transcription errors, not the chief's*.
    test update must be *owned by someone*, not discovered mid-execution.
    (See principle 15's test clause: a test pinning a moving ref makes this
    collision routine rather than rare.)
+8. **Territory stays inside this project (v0.6.2)** — resolve every
+   `territory` and `forbidden` glob against the incident's own project
+   root (the tree holding the `.dcs/` this incident lives in). Any path
+   that escapes it — an absolute path into another repo, a `../` climb —
+   is a lint defect, not a plan. An incident belongs to **the repository
+   whose files it changes**; work in another repo is that repo's own
+   incident, opened from a session rooted there. Nothing else catches
+   this: the gate deliberately allows targets outside the project (it
+   cannot judge a tree it has no `.dcs/` for), so a cross-project
+   territory would be silently ungated — every edit permitted, the
+   incident archive landing in the wrong repo's history, and the other
+   project's register, delegation and worktree conventions never
+   consulted. **One session, one project.**
 
 Log the lint result in `214-LOG.md` in one line (`tasking lint: pass` or
 `tasking lint: N defects fixed pre-review — <one-line each>`). Only a
