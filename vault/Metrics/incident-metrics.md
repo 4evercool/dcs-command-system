@@ -53,12 +53,62 @@ about when the convention took hold.
 `doctrine.md` + `schemas.md` are read on **every** workflow invocation and
 **every** command-point spawn, so their size is a continuously-paid tax.
 
-| when | size | note |
-|---|---|---|
-| before the v0.5.0 diet | 42.2 kB | war stories inline with every rule |
-| after the diet | 31.7 kB | provenance moved to `doctrine-appendix.md` |
-| 2026-07-25 (v0.6.3) | 40.5 kB | twelve versions of additions since |
+**All sizes below are in the guard's own units — bytes, and kB at 1024.**
+An earlier version of this table mixed bases (1000-based "42.2 kB" and
+"31.7 kB" beside a 1024-based "40.5 kB"), which made the diet look like it
+recovered more than it did. Corrected 2026-07-25 during
+`doctrine-hot-path-trim`.
 
-Budget enforced at 42 kB by `tests/test_doctrine_integrity.py` — set as a
-ratchet just above current usage, not a comfortable ceiling. See
-[[Backlog]].
+Historical rows are **git-blob bytes (LF)**, the only thing recoverable from
+history; the current row is **on-disk bytes**, which is what the guard actually
+reads. On a Windows checkout with `core.autocrlf=true` those differ by one byte
+per line — see the `hot-path-budget-eol-sensitivity` row in [[Backlog]].
+
+| when | bytes | kB (÷1024) | note |
+|---|---|---|---|
+| before the v0.5.0 diet | 42,219 | 41.2 | war stories inline with every rule |
+| after the diet (`d5d8106`) | 31,723 | 31.0 | provenance moved to `doctrine-appendix.md` |
+| 2026-07-25, v0.6.4 (`51dd073`) | 41,444 | 40.5 | twelve versions of additions since |
+| 2026-07-25, v0.6.6 (`0428ac4`) | 42,623 | 41.6 | `schemas.md` +1,189 B in `6a57b97`; 385 B under the 42 kB budget |
+| **2026-07-25, v0.6.7** | **37,734** | **36.9** | after `doctrine-hot-path-trim` merged; **−4,889 B** |
+
+Regenerate the historical rows:
+
+```bash
+for ref in 4ea5026 d5d8106 51dd073; do
+  d=$(git show $ref:dcs/references/doctrine.md | wc -c)
+  s=$(git show $ref:dcs/references/schemas.md | wc -c)
+  echo "$ref $d $s $((d+s))"
+done
+```
+
+Regenerate the current row (from a checkout, matching what the guard reads):
+
+```bash
+python -c "import os; d=os.path.getsize('dcs/references/doctrine.md'); s=os.path.getsize('dcs/references/schemas.md'); print(d, s, d+s)"
+```
+
+The trim recovered roughly half the regrowth: **42,623 → 37,734 B**, against a
+post-diet 31,723 B. The remainder is a queued follow-up, not an oversight —
+see [[Backlog]] items 7 and 8.
+
+**The two middle rows are the lesson, not just bookkeeping.** The incident
+measured its result at **36,717 B** and derived a 37 kB ratchet from it. That
+number was correct when taken and wrong when merged: `6a57b97` added 1,189 B to
+`schemas.md` while the incident was open, so the merged pair came out **above**
+the budget the incident had just set — the guard would have landed red on main
+by 18 B. `close.md` step 1a caught it before the merge, which is the entire
+argument for running a merge-time guard on the *merge result* rather than
+trusting two green branches. Budget re-derived from the merge:
+`ceil(37906/1024) + 1 = 38`.
+
+Budget enforced by `HOT_PATH_BUDGET_KB` in `tests/test_doctrine_integrity.py`,
+re-seated **42 → 38 kB**. Still a ratchet — it bites ~1.2 kB sooner than the
+budget it replaced — with **1,178 B** of headroom as merged. Candidate re-seat
+to 37 or 36 kB after a period of stability.
+
+**A caveat on all of these numbers.** The merged tree holds `doctrine.md` with
+CRLF and `schemas.md` with LF at the same time, because git rewrote one and not
+the other. On-disk size therefore depends on which files were last touched,
+which means this metric currently has no stable definition — see [[Backlog]]
+item 8.

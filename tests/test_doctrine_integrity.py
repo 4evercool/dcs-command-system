@@ -33,11 +33,27 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parent.parent
 # doctrine.md + schemas.md are read on EVERY workflow invocation and every
 # command-point spawn, so their size is a latency tax paid continuously.
-# The v0.5.0 "doctrine diet" cut the pair to 31.7 kB; twelve versions of
-# additions have since carried it back over 40 kB. The budget sits just
-# above current usage deliberately: it is a ratchet meant to bite on the
-# next few additions, not a comfortable ceiling.
-HOT_PATH_BUDGET_KB = 42
+# The v0.5.0 "doctrine diet" cut the pair to 31.0 kB (31,723 B); versions
+# since carried it back over 41 kB. Incident doctrine-hot-path-trim
+# (2026-07-25) relocated the provenance and field lessons accumulated since
+# the diet into doctrine-appendix.md (never @-included), taking doctrine.md
+# from 27,167 to 22,121 B.
+#
+# The budget is set on the MERGE RESULT, not on either branch: that incident
+# measured 36,717 B and derived 37, but schemas.md grew 1,189 B on main
+# (6a57b97) while the incident was open, so the merged pair is 37,906 B and
+# a 37 kB budget would have landed red. That is the whole reason this is
+# re-derived here rather than carried across -- a size is a derived fact
+# with a lifetime (doctrine principle 15), and this one expired between
+# being measured and being merged.
+#
+#   budget = math.ceil(37906/1024) + 1 = 38
+#
+# Still a ratchet: it bites ~1.2 kB sooner than the 42 kB it replaces.
+# Sizes are on-disk bytes, so a CRLF checkout measures one byte per line
+# more than an LF one -- see vault/Backlog.md item 8. Regenerate with:
+#   python -c "import os; d=os.path.getsize('dcs/references/doctrine.md'); s=os.path.getsize('dcs/references/schemas.md'); print(d, s, d+s)"
+HOT_PATH_BUDGET_KB = 38
 
 failures = []
 checks = 0
