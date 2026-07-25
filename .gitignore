@@ -9,7 +9,9 @@ __pycache__/
 .dcs/CLOSED
 .dcs/esg/
 
-# Obsidian per-user UI state (the vault's notes ARE tracked; this is not)
-.obsidian/workspace.json
-.obsidian/workspace-mobile.json
-.obsidian/cache
+# Obsidian per-user UI state (the vault's notes ARE tracked; this is not).
+# Leading-path patterns anchor to the repo root, so these need **/ to
+# reach vault/.obsidian/ -- learned by watching workspace.json commit itself.
+**/.obsidian/workspace*.json
+**/.obsidian/cache
+**/.obsidian/app.json
