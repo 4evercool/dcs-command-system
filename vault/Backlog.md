@@ -123,34 +123,55 @@ become the stronger one:
 - A ratchet re-seat to 37 or 36 kB after a period of stability, which would
   also narrow the guard-blind band described in item 8.
 
-## 8. Hot-path budget check is line-ending-sensitive — QUEUED (rank 1)
+## 8. Hot-path budget check is line-ending-sensitive ✅ DONE
 
-`core.autocrlf=true` with no `.gitattributes`, and
-`tests/test_doctrine_integrity.py`'s hot-path check reads raw
-`os.path.getsize`. So a fresh worktree checks out CRLF while a long-lived
-main checkout may hold LF, and the *same commit* measures differently in the
-two trees. Measured 2026-07-25 at `51dd073`: main 41,444 B, fresh worktree
-41,763 B — a 319 B spread against a 43,008 B ceiling.
+**Closed 2026-07-25** by incident `hot-path-budget-eol-sensitivity`,
+integration commit `bbb17ac`. Typed **1**, one operational period, four
+specialists, **no deviations and no Safety halts** — the first self-hosted
+incident to run clean.
 
-Regenerate: `wc -c dcs/references/doctrine.md dcs/references/schemas.md`
-in each tree.
+It turned out to be bigger than this item described. The item framed a
+*measurement* defect; the real find was that `dcs/hooks/dcs_gate.py`'s
+approval marker had the **same** defect and was **already broken** for the
+incident that closed hours earlier — its stamp verified against the git blob
+and failed against the on-disk file. That is the enforcement mechanism, and
+unlike the size check it **ships**, so the fix had to live in the mechanism
+and not only in the tree. Hence Type 1 rather than the Type 3 assumed here.
 
-Candidate remedies: a `.gitattributes` normalising these files, or
-normalising line endings inside the check itself. Registered as
-`hot-path-budget-eol-sensitivity`.
+Delivered: `.gitattributes` = `* text=auto eol=lf`; the gate accepts a
+digest **set** (raw / LF-normalised / CRLF-normalised) instead of one hash;
+the hot-path measurement normalises before counting; a new shipped check
+forbids CRLF in the packaged set; and the three other readers of the marker
+contract (`execute.md`, `status.md`, `forms.md`) were migrated with it.
+`plan.md` was deliberately left alone — it stamps a raw digest, which the
+widened set contains by construction, so the change is read-side only.
 
-**Related, and worth fixing in the same pass:** the guard's bar is coarser
-than an incident's acceptance bar can be. Item 1's criterion 1 sat at
-36,864 B while the guard would not have turned red until 37,888 B — a band
-in which the incident's own target is breached and nothing complains.
-Inherent to a kB-granularity ratchet; the question is whether the guard
-should take bytes rather than kB.
+Result: `84 i/lf w/lf` with zero `w/crlf`; the hot path measures
+`21966 15613 37579` in *any* checkout; and the previous incident's archived
+stamp verifies again.
 
-**A third, sharper reason to fix this:** the incident measured in a CRLF
-worktree and merged into a checkout holding LF, so the merged tree now has
-`doctrine.md` at CRLF and `schemas.md` at LF *simultaneously*. The budget
-number therefore depends on which files git happened to rewrite last. That
-is not a rounding concern, it is a measurement with no stable definition.
+**The guard-blind band this item also raised is now moot for the reason it
+was raised** — the metric has a stable definition, so an acceptance bar and
+the guard's bar no longer disagree because of representation. Whether the
+budget should take bytes rather than kB is a live question, but it belongs
+with `schemas-md-trim` (item 7), which owns the ratchet value.
+
+### Three follow-ups registered from this incident
+
+- **`.gitattributes` matches neither `guarded_paths` nor `unguarded_paths`**
+  in `.dcs/config.json`, so the repo's own line-ending policy file is
+  ungated. Harmless today; wrong in principle.
+- **`plan.md:348-349` still describes the gate as computing "a plain sha256
+  of the file's bytes".** The *instruction* remains correct and safe — the IC
+  stamps a raw digest, a member by construction — but the parenthetical is
+  stale. Deferred deliberately: `plan.md` was forbidden territory precisely
+  because touching the stamper is how you break the asymmetry that makes the
+  widening safe.
+- **`close.md` should codify the post-merge re-materialisation.** Merging an
+  EOL policy leaves the *consuming* checkout stale, and no workflow knows to
+  refresh it — the merge-time guard cannot see the omission either, since
+  both the stale and the fresh measurement pass. Its own incident: `close.md`
+  is guarded territory.
 
 ## 9. `package.json` ships a corrupted description ✅ FIXED OUT-OF-BAND
 
