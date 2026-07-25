@@ -70,14 +70,63 @@ it. Nothing in the design was speculative and survived; the parts that
 lasted came from watching something break. When adding a mechanism with
 no incident behind it, be suspicious — that is the shape of ceremony.
 
-## 6. The author is not exempt
+## 6. A rule you exempt yourself from is not a rule
 
-Within one day I: shipped a principle that duplicated an existing one in
+`CLAUDE.md` says: *write files with the Write/Edit tools, never
+PowerShell `Set-Content`/`Out-File`* — because that emits a BOM, which
+had already broken a hash comparison twice.
+
+Every version bump for thirteen releases then used
+`Get-Content package.json -Raw` + `WriteAllText`. Not the forbidden verb,
+the same failure: PowerShell 5.1 reads with the system ANSI codepage, so
+each bump decoded the description's em-dash as cp1251 and re-encoded it
+as UTF-8. Three characters became six, six became twelve:
+
+| commit | package.json |
+|---|---|
+| d5d8106 | 1,378 chars |
+| 537177a | 4,356 |
+| 6b72a63 | 139,473 |
+| 6a57b97 | **6,322,630** |
+
+`npm publish` failed at 13.5 MB. Three things made it survivable only by
+luck: the file stayed **valid JSON**, so every parse succeeded; the
+growth was in one field, so diffs looked ordinary; and the existing
+encoding guard checked for BOM and U+FFFD, while double-encoded text is
+**valid UTF-8**. Nothing measured size, so nothing noticed.
+
+The same pass found the damage was not confined to `package.json`:
+`dcs-ops-specialist.md` and `dcs-situation-analyst.md` carried mangled
+em-dashes in their `description:` frontmatter — the text that renders in
+the agent registry. It had been visible in session output for a dozen
+versions and nobody, including me, registered it.
+
+**Three transferable pieces:**
+
+1. **A rule stated as a verb is a rule about the verb.** "Never use
+   `Set-Content`" got followed literally while the underlying hazard —
+   *any* PowerShell round-trip through a text file — went unaddressed.
+   State the hazard, then the instances.
+2. **Guards check the failure they were born from.** The encoding guard
+   existed and passed throughout, because it was written after a BOM
+   incident and looked for BOMs. Ask what *neighbouring* corruption the
+   check would miss.
+3. **Cheap invariants catch expensive drift.** "`package.json` < 8 kB"
+   would have failed on the first bump. Any artifact with a stable
+   expected size deserves one.
+
+## 7. The author is not exempt
+
+Within two days I: shipped a principle that duplicated an existing one in
 weaker form; shipped a false field lesson and corrected it four minutes
-later; and instructed a session to fabricate a log entry. Each was caught
-by the system or by the Owner, not by me. **This is why DCS self-hosts** —
-see [[Decisions/distribution-and-scheduling]] for what that does and does
-not cover.
+later; instructed a session to fabricate a log entry; made artifact
+hygiene a binding halt and caused **13 of 17 halts to fire on process
+rather than code**; and the encoding failure above. Each was caught by
+the system, by a session refusing a bad instruction, or by the Owner —
+**none by me**. That is not modesty, it is the design argument: the
+author is the least reliable reviewer of the author, which is why DCS
+self-hosts. See [[Decisions/distribution-and-scheduling]] for what
+self-hosting does and does not cover.
 
 ## Links
 

@@ -54,7 +54,19 @@ evidence for tuning it — and tuning by impression is what principle 15
 warns about. A single line appended to a local (gitignored) log would be
 enough.
 
-## 5. Type 5 express lane is under-used
+## 5. Version bumps still go through PowerShell
+
+The encoding disaster in [[Meta/building-dcs-lessons]] §6 was repaired
+and guarded (no-Cyrillic check, `package.json` < 8 kB), but the *process*
+that caused it is unchanged: version bumps are still typed as PowerShell
+read-modify-write one-liners, now merely watched by a guard.
+
+The durable fix is a tiny `bin/dcs.js bump <version>` that edits
+`dcs/VERSION` and `package.json` in Node — one command, correct
+encoding, both files always in sync, no shell involved. Small, and it
+removes a whole hazard class rather than detecting it.
+
+## 6. Type 5 express lane is under-used
 
 Six of eight incidents ran the full Type 3 loop; several sub-parts would
 have qualified for the express lane (one specialist, IC verifies, no
