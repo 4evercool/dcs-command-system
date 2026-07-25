@@ -17,8 +17,14 @@ away:
   4. every agent named in a workflow exists in agents/
   5. every template named in a workflow exists in dcs/templates/
   6. every doctrine section referenced by name exists as a heading
-  7. hot-path size budget (doctrine + schemas, read on every invocation)
+  7. hot-path size budget (doctrine + schemas, read on every invocation),
+     measured as a normalised (CRLF -> LF) byte count so the check is
+     tree-independent
   8. no BOM and no U+FFFD anywhere in the package
+  9. no Cyrillic anywhere in the shipped package (double-encoding damage)
+  10. no CRLF line endings anywhere in the shipped package (the half of
+      the .gitattributes policy that reaches a user)
+  11. package.json stays small (double-encoding damage grows it silently)
 
 Run standalone, or as the merge-time guard named in CLAUDE.md (doctrine:
 close.md step 1a) so it runs before every incident merge.
@@ -41,18 +47,31 @@ REPO = Path(__file__).resolve().parent.parent
 #
 # The budget is set on the MERGE RESULT, not on either branch: that incident
 # measured 36,717 B and derived 37, but schemas.md grew 1,189 B on main
-# (6a57b97) while the incident was open, so the merged pair is 37,906 B and
-# a 37 kB budget would have landed red. That is the whole reason this is
-# re-derived here rather than carried across -- a size is a derived fact
-# with a lifetime (doctrine principle 15), and this one expired between
-# being measured and being merged.
+# (6a57b97) while the incident was open, so the merged pair came out larger
+# and a 37 kB budget would have landed red. That is the whole reason it was
+# re-derived rather than carried across -- a size is a derived fact with a
+# lifetime (doctrine principle 15), and that one expired between being
+# measured and being merged.
 #
-#   budget = math.ceil(37906/1024) + 1 = 38
+# Incident hot-path-budget-eol-sensitivity (2026-07-25) then made the measure
+# itself tree-independent, and the budget is re-based onto that measure:
 #
-# Still a ratchet: it bites ~1.2 kB sooner than the 42 kB it replaces.
-# Sizes are on-disk bytes, so a CRLF checkout measures one byte per line
-# more than an LF one -- see vault/Backlog.md item 8. Regenerate with:
-#   python -c "import os; d=os.path.getsize('dcs/references/doctrine.md'); s=os.path.getsize('dcs/references/schemas.md'); print(d, s, d+s)"
+#   budget = math.ceil(37579/1024) + 1 = 38
+#
+# Still a ratchet: it bites 4 kB sooner than the 42 kB it replaces.
+#
+# Both the arithmetic and the basis above were corrected as Safety advisories
+# on that incident's pass. The previous line read
+# "budget = math.ceil(37906/1024) + 1 = 38", which was wrong twice: that
+# expression evaluates to 39, and 37,906 was the raw-CRLF basis this incident
+# replaced.
+# The measure is a *normalised* byte count (CRLF collapsed to LF before
+# counting), not raw on-disk size: on-disk bytes make the same commit
+# measure differently in a CRLF checkout than an LF one -- one extra byte
+# per line -- so a byte-exact budget must not depend on which checkout
+# ran it (incident hot-path-budget-eol-sensitivity, 2026-07-25). Regenerate
+# with:
+#   python -c "d=open('dcs/references/doctrine.md','rb').read().replace(b'\r\n', b'\n'); s=open('dcs/references/schemas.md','rb').read().replace(b'\r\n', b'\n'); print(len(d), len(s), len(d)+len(s))"
 HOT_PATH_BUDGET_KB = 38
 
 failures = []
@@ -160,8 +179,13 @@ for f in workflows() + sorted((REPO / "agents").glob("dcs-*.md")):
 check("doctrine sections referenced by name exist", not bad_refs, "; ".join(sorted(bad_refs)))
 
 # --- 7. hot-path size budget ----------------------------------------------
-hot = os.path.getsize(REPO / "dcs" / "references" / "doctrine.md") + \
-      os.path.getsize(REPO / "dcs" / "references" / "schemas.md")
+# Normalised (CRLF -> LF) byte count, not os.path.getsize: raw on-disk size
+# makes the same commit measure differently in a CRLF checkout than an LF
+# one, so a byte-exact budget must be tree-independent. See the budget
+# comment block just above the checks.
+_doctrine_bytes = (REPO / "dcs" / "references" / "doctrine.md").read_bytes().replace(b"\r\n", b"\n")
+_schemas_bytes = (REPO / "dcs" / "references" / "schemas.md").read_bytes().replace(b"\r\n", b"\n")
+hot = len(_doctrine_bytes) + len(_schemas_bytes)
 check(f"hot-path budget: doctrine+schemas <= {HOT_PATH_BUDGET_KB} kB",
       hot <= HOT_PATH_BUDGET_KB * 1024, f"currently {hot/1024:.1f} kB")
 
@@ -211,7 +235,30 @@ for p in candidates:
 check("no Cyrillic anywhere in the shipped package", not mojibake,
       "; ".join(sorted(set(mojibake))))
 
-# --- 10. package.json stays small ------------------------------------------
+# --- 10. no CRLF in the shipped package -------------------------------------
+# The line-ending policy itself lives in .gitattributes (text eol=lf), but
+# .gitattributes is absent from package.json's `files` whitelist and `npm
+# install` performs no git checkout -- so it protects a clone of this repo
+# and nothing downstream. This check is the half of the policy that actually
+# reaches a user: it scans the same shipped set as check 9 above (same
+# SHIPPED_DIRS / SHIPPED_FILES / TEXT_SUFFIXES), so vault/ and .dcs/, which
+# never ship, stay out of its reach.
+crlf_files = []
+for p in candidates:
+    if ".git" in p.parts or "node_modules" in p.parts:
+        continue
+    if p.suffix.lower() not in TEXT_SUFFIXES:
+        continue
+    try:
+        raw = p.read_bytes()
+    except OSError:
+        continue
+    if b"\r\n" in raw:
+        crlf_files.append(str(p.relative_to(REPO)))
+check("no CRLF line endings anywhere in the shipped package", not crlf_files,
+      "; ".join(sorted(crlf_files)))
+
+# --- 11. package.json stays small ------------------------------------------
 pkg_bytes = os.path.getsize(REPO / "package.json")
 check("package.json under 8 kB", pkg_bytes < 8 * 1024,
       f"currently {pkg_bytes:,} bytes — check for a field growing on each edit")

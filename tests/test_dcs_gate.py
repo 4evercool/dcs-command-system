@@ -216,6 +216,68 @@ try:
           run_sendmessage(bare, bare), "allow")
     active.write_text("2026-07-22-test-incident|3|execution")
 
+    # --- EOL sensitivity (202 criterion 4): the gate's verdict must not
+    # depend on line-ending representation -- git may check IAP.md out as
+    # LF or CRLF (core.autocrlf / .gitattributes), and a legacy approval
+    # stamp may have been computed against either representation. Content
+    # built with write_bytes throughout -- write_text would normalize
+    # newlines and make every fixture self-consistent by construction,
+    # which is exactly why no earlier test caught this.
+    eol_base_lf = b"# IAP\nobjectives...\n"
+    eol_base_crlf = eol_base_lf.replace(b"\n", b"\r\n")
+    eol_edited_lf = b"# IAP\nobjectives... EDITED AFTER APPROVAL\n"
+    eol_edited_crlf = eol_edited_lf.replace(b"\n", b"\r\n")
+
+    def make_eol_project(name, stamp_bytes, disk_bytes):
+        proj = root / name
+        inc = proj / ".dcs" / "incidents" / "eol-incident"
+        inc.mkdir(parents=True)
+        (proj / "src").mkdir()
+        (proj / "src" / "app.py").write_bytes(b"x = 1\n")
+        (proj / ".dcs" / "ACTIVE").write_text("eol-incident|3|execution")
+        iap = inc / "IAP.md"
+        iap.write_bytes(disk_bytes)
+        digest = hashlib.sha256(stamp_bytes).hexdigest()
+        (inc / "IAP-APPROVED").write_bytes(f"{digest}\napproved_by: owner\n".encode("ascii"))
+        return proj
+
+    p_lf_lf = make_eol_project("eol_lf_lf", eol_base_lf, eol_base_lf)
+    check("eol: stamp=LF disk=LF -> allow",
+          run_gate(p_lf_lf, p_lf_lf / "src" / "app.py"), "allow")
+
+    p_lf_crlf = make_eol_project("eol_lf_crlf", eol_base_lf, eol_base_crlf)
+    check("eol: stamp=LF disk=CRLF -> allow",
+          run_gate(p_lf_crlf, p_lf_crlf / "src" / "app.py"), "allow")
+
+    p_crlf_lf = make_eol_project("eol_crlf_lf", eol_base_crlf, eol_base_lf)
+    check("eol: stamp=CRLF disk=LF -> allow",
+          run_gate(p_crlf_lf, p_crlf_lf / "src" / "app.py"), "allow")
+
+    p_crlf_crlf = make_eol_project("eol_crlf_crlf", eol_base_crlf, eol_base_crlf)
+    check("eol: stamp=CRLF disk=CRLF -> allow",
+          run_gate(p_crlf_crlf, p_crlf_crlf / "src" / "app.py"), "allow")
+
+    # Negative controls: genuinely edited content post-approval must still
+    # deny, in both disk representations -- without these a gate that
+    # simply always allows would pass the four rows above too.
+    p_neg_lf = make_eol_project("eol_neg_lf", eol_base_lf, eol_edited_lf)
+    check("eol: negative control, LF disk genuinely edited -> deny",
+          run_gate(p_neg_lf, p_neg_lf / "src" / "app.py"), "deny")
+
+    p_neg_crlf = make_eol_project("eol_neg_crlf", eol_base_lf, eol_edited_crlf)
+    check("eol: negative control, CRLF disk genuinely edited -> deny",
+          run_gate(p_neg_crlf, p_neg_crlf / "src" / "app.py"), "deny")
+
+    # --- IC directive: dcs/hooks/dcs_gate.py and .claude/hooks/dcs_gate.py
+    # must be byte-identical -- closes the detection hole (a copy
+    # divergence shipping unnoticed) rather than merely registering it.
+    live_hook = Path(__file__).resolve().parent.parent / ".claude" / "hooks" / "dcs_gate.py"
+    check(
+        "dcs/hooks/dcs_gate.py and .claude/hooks/dcs_gate.py are byte-identical",
+        Path(HOOK).read_bytes() == live_hook.read_bytes(),
+        True,
+    )
+
     failed = [r for r in results if not r[0]]
     print(f"\n{len(results) - len(failed)}/{len(results)} passed")
     sys.exit(1 if failed else 0)
