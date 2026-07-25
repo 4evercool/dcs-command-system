@@ -80,8 +80,17 @@ Deviation shape (`status: "deviation"`), which needs the nested `deviation` obje
 Returned by `dcs-safety-officer`.
 
 ```json
-{"verdict": "pass", "refutations": [], "checked": ["git diff src/db/inventory_repo.py — window check present, matches 202 criterion 1", "pytest tests/test_inventory_repo.py -x — 5 passed (ran independently)", "pytest tests/test_reminder_plugin.py -x — 8 passed", "manual repro of 201 repro_path — no longer flagged"]}
+{"verdict": "pass", "refutations": [], "advisories": [{"finding": "docstring of _check_batch_energy_identity states '16 batches violate the guard' with no regenerating command", "fix": "delete the count or add the query beside it (principle 15)"}], "checked": ["git diff src/db/inventory_repo.py — window check present, matches 202 criterion 1", "pytest tests/test_inventory_repo.py -x — 5 passed (ran independently)", "pytest tests/test_reminder_plugin.py -x — 8 passed", "manual repro of 201 repro_path — no longer flagged"]}
 ```
+
+**`pass` with advisories is the normal healthy verdict (v0.6.5)** — the
+deliverable is sound, the paperwork needs a touch-up. `advisories[]`
+carries artifact-hygiene findings (principle 15 in docstrings, comments,
+logs, AARs): the IC folds them into the integration commit, and they
+**never** block a merge. Only refutations against the acceptance criteria
+or the behaviour of the code are binding. See
+`agents/dcs-safety-officer.md` step 6 for the three bars a
+principle-15 finding must clear to count as a refutation instead.
 
 Halt shape, showing the `refutations` object:
 
@@ -92,7 +101,8 @@ Halt shape, showing the `refutations` object:
 | Field | Type | Notes |
 |---|---|---|
 | `verdict` | `"pass"` \| `"halt"` | Binding on the IC — a `halt` cannot be argued past, only resolved (fix-tasking or re-plan) |
-| `refutations` | object[] | Empty on `pass`. Each has `claim` (what was asserted) and `evidence` (what the Safety Officer independently found) |
+| `refutations` | object[] | Empty on `pass`. Each has `claim` (what was asserted) and `evidence` (what the Safety Officer independently found). **Reserved for the acceptance criteria and the behaviour of the code** — the only findings that justify stopping a merge |
+| `advisories` (v0.6.5) | object[], optional | Artifact-hygiene findings that do **not** block: `finding` + `fix`. Principle-15 issues in docstrings, comments, logs and AARs live here unless they clear one of the three bars in `agents/dcs-safety-officer.md` step 6. The IC folds them into the integration commit |
 | `checked` | string[] | Everything the Safety Officer actually did — diff inspected, tests re-run itself, manual repro. Specialist self-reports are never listed here as the check itself, only as the claim being checked |
 
 **Charter reminder:** the Safety Officer's job is to *attempt to refute* completion. When uncertain, it refutes — a `pass` is earned by failing to find a hole, not by finding no obvious one.
