@@ -41,7 +41,10 @@ it has never set size.**
 → `new.md` step 4a: one incident, one defect; register the rest.
 
 **2. The period cap never fired, and the log explains why in its own
-words:** *"(c) не срабатывает — ревизии не считаются периодами"* —
+words:** *"trigger (c) does not fire — revisions are not counted as
+periods"* (translated from the log, which is written in the project's own
+language; verbatim original in that incident's `214-LOG.md` at
+2026-07-24T14:05) —
 revisions are not counted as periods. Four revisions inside period 1
 walked straight through a cap built for exactly this shape.
 → Trigger (c) counts **attempts** (any stamped-and-executed IAP).

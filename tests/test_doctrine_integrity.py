@@ -158,5 +158,47 @@ for p in REPO.rglob("*"):
             bad_enc.append(str(p.relative_to(REPO)))
 check("no BOM, no U+FFFD anywhere", not bad_enc, "; ".join(bad_enc))
 
+# --- 9. mojibake ------------------------------------------------------------
+# The FFFD check above cannot see double-encoding damage: reading UTF-8 as a
+# legacy codepage and writing it back produces *valid* UTF-8 Cyrillic, which
+# then re-corrupts and grows on every round trip. package.json's description
+# reached 6.3 MB this way, one version bump at a time, before npm refused the
+# publish. The package is English-only (CLAUDE.md), so Cyrillic anywhere in it
+# is by definition damage rather than content.
+# Scope: everything package.json's `files` whitelist ships, so the check
+# covers exactly what a user receives. The pattern uses \u escapes so this
+# file stays pure ASCII and cannot match itself.
+SHIPPED_DIRS = ["dcs", "agents", "skills", "bin", "docs", "tests"]
+SHIPPED_FILES = ["install.ps1", "install.sh", "README.md", "package.json"]
+CYRILLIC = re.compile("[" + chr(0x0400) + "-" + chr(0x052F) + "]")  # ASCII source
+TEXT_SUFFIXES = (".md", ".py", ".json", ".js", ".sh", ".ps1", "")
+
+candidates = []
+for sub in SHIPPED_DIRS:
+    base = REPO / sub
+    if base.is_dir():
+        candidates += [p for p in base.rglob("*") if p.is_file()]
+candidates += [REPO / f for f in SHIPPED_FILES if (REPO / f).is_file()]
+
+mojibake = []
+for p in candidates:
+    if ".git" in p.parts or "node_modules" in p.parts:
+        continue
+    if p.suffix.lower() not in TEXT_SUFFIXES:
+        continue
+    try:
+        text = p.read_text(encoding="utf-8")
+    except (UnicodeDecodeError, OSError):
+        continue
+    if CYRILLIC.search(text):
+        mojibake.append(str(p.relative_to(REPO)))
+check("no Cyrillic anywhere in the shipped package", not mojibake,
+      "; ".join(sorted(set(mojibake))))
+
+# --- 10. package.json stays small ------------------------------------------
+pkg_bytes = os.path.getsize(REPO / "package.json")
+check("package.json under 8 kB", pkg_bytes < 8 * 1024,
+      f"currently {pkg_bytes:,} bytes — check for a field growing on each edit")
+
 print(f"\n{checks - len(failures)}/{checks} passed")
 sys.exit(1 if failures else 0)
