@@ -43,6 +43,35 @@ precisely the shortcut a tired shift-lead is tempted to take in real ICS
 too — "I'll just make the call myself, no need to loop in the IC for
 this one" — and it is exactly how authority erodes in both domains.
 
+**Model availability rationale.** Why re-testing at every command point is
+mandatory rather than a convenience: quota limits are time-windowed and
+restore, and any incident that runs for hours routinely outlives the
+window that produced an earlier failure. "Fable is exhausted" is
+therefore a **derived fact with a lifetime** (principle 15) — true when
+measured, false when read — and once it is written into an append-only
+log it reads as a standing condition to every later command point that
+never re-checks it, silently demoting the seat for the rest of the
+incident. The cost asymmetry behind always trying the preferred tier
+first: a spawn that fails again costs one wasted spawn, which is
+trivially cheaper than running every remaining command point at a lower
+tier than the Owner is paying for. The announce rule has its own small
+rationale too: a command-point agent writes nothing by design (the
+single-writer rule), so its working time is indistinguishable from a
+hang unless the Dispatcher says out loud that it is spawning.
+
+**Field lesson 2026-07-24 (quota vs. transcript).** The rule that
+liveness is measured by the decision, never by a proxy, comes from one
+incident that produced both halves of the failure mode in a single
+sitting. A command-point spawn on Fable was genuinely killed by quota
+exhaustion partway through; that was correctly diagnosed as dead and
+re-spawned on `opus`. Later in the same incident a different spawn was
+misdiagnosed as dead from a zero-byte transcript, when it had in fact
+already returned a complete `reject` verdict — the transcript file
+simply had not flushed yet, a harness artifact, not evidence of death.
+Acting on that second misdiagnosis would have written a fabricated
+failed-attempt entry into the append-only 214 — exactly the derived-fact
+error principle 15 forbids, this time inside a log nothing can retract.
+
 ## The working principles
 
 **Principle 15 — no derived facts (field lesson 2026-07-24, v0.5.2).** The
@@ -88,6 +117,82 @@ period, and the only reliable tripwire for that drift is comparing each
 new 202 against the 201 verbatim, not against the previous period's 202
 (which is exactly the document that's already drifted).
 
+**Principle 4 — the cost of over-scope.** Why Type 1's full-org
+authorization for unbounded scope is a genuine risk and not a formality:
+nothing downstream can undo an over-scoped 201. The halts, rejects, and
+escalations built into the P-loop all still fire correctly against an
+over-scoped incident — but firing correctly costs hours each time, so the
+mistake survives being caught, it just gets caught expensively. The
+"model, not defect" trap this principle guards against: a goal like
+"rethink how X is accounted" names an ongoing condition rather than a
+fixable defect, exactly the shape of goal that keeps growing scope no
+matter how tightly the incident is typed.
+
+**Principle 6 — one session, one project, in full.** The mechanism behind
+"territory never leaves its own project": every DCS artifact — config,
+`ACTIVE`, incidents, register, delegation, worktrees — resolves relative
+to the project root that holds the `.dcs/` directory, so a session rooted
+in repo A can only ever open and act against A's own portfolio; repo B's
+work has to be its own incident, from a session rooted in B. The failure
+mode this closes: the gate cannot judge a tree it has no `.dcs/` for, so
+by default it allows every target outside the project, which makes a
+cross-project territory silently ungated rather than loudly rejected —
+`plan.md` lint check 8 exists specifically to refuse that at plan time,
+before it is ever discovered by a specialist editing outside the gate's
+reach rather than being left for the specialist to discover the hard way.
+The portfolio-wide disjoint-territory rule pays for itself again at merge
+time: it keeps every concurrent incident's `git merge --no-ff` into main
+trivially clean, with no cross-incident conflict to resolve.
+
+**Principle 9b — why single-shot, not resumed.** Two reasons, both
+structural, and both explain why a revision is always a fresh spawn
+rather than a resumed agent. First, a resumed agent's reasoning lives in
+a transcript that no incident artifact records, so its information diet
+stops being auditable and principle 5's guarantee — the directory is the
+only channel that survives a reset — quietly breaks. Second, a resumed
+specialist still holds its OLD tasking, so an amended territory gets
+edited against the stale one: a partition violation invisible to the
+gate, because each individual edit still looks in-bounds for the tasking
+the agent remembers, even though the tasking itself has moved on. This
+rule was prose twice before it became a mechanism (`dcs_gate.py` denying
+`SendMessage` while an incident is active), and prose did not hold either
+time.
+
+**Principle 13 — the four-revisions field lesson.** The loophole the
+"attempt" definition exists to close: counting operational periods alone
+let one incident run four revisions inside a single period 1, correctly
+logging under the old wording that trigger (c) "does not fire — revisions
+are not counted as periods." A 31-hour thrash inside that one period
+never tripped the escalation cap that exists to catch exactly that kind
+of grinding non-convergence. Each further revision pass was cheap to
+justify in isolation — it always looks like one more small fix — but each
+one buys, at most, one instance fixed, at the cost of a full
+execute-plus-verify cycle; trigger (f)'s three-rejects rule closes the
+matching loophole on the plan side: three rejects in one period means the
+objectives, the chief's information diet, or the incident's size is
+wrong, not that the plan needs one more pass.
+
+**Principle 15 — the test-inversion lesson.** A regression test asserting
+that two live branches still collide is green only for as long as the
+defect survives: fixing the defect — the entire purpose of the incident
+the test was written for — turns the test red, so the artifact meant to
+prevent a regression ends up actively punishing the repair. This is why
+the rule pins to immutable evidence and to the invariant rather than the
+instance: a fixture, a frozen blob, or a commit SHA cannot un-collide
+itself out from under the test the way a live branch pair can.
+
+## The lifecycle (Planning P mapped to software)
+
+**Why the default is close/merge/ship, not "keep going until everything's
+done."** A Safety-passed period holds *proven* work — it cleared
+adversarial verification — and holding the incident open past that point
+doesn't protect anything; it just keeps that proven work unmerged and
+unshipped, fixing nothing, until the rest of the scope eventually catches
+up. Registering the remainder as a follow-up incident, with this
+incident's own AAR standing in for its 201 evidence, costs one extra
+document and buys back everything a Safety-passed period earned: it ships
+now instead of waiting on an unrelated part of the scope.
+
 ## Relationship to project-specific protocols
 
 The core rule ("DCS agents honor a project's own pre-flight protocols
@@ -112,6 +217,15 @@ In every case DCS discovers the protocol the same way a new human
 contributor would: by reading the target project's `CLAUDE.md`. DCS never
 ships assumptions about what a given project's memory system, evidence
 trail, or call-graph tooling looks like.
+
+**Field lesson 2026-07-24 (charter defect, not agent failure).** A
+concrete case behind the codegraph example above: a project made
+call-graph queries mandatory before cross-file edits, and
+`dcs-ops-specialist` — the only role that edits code — had no such tool
+granted in its charter. It correctly fell back to `grep` and flagged the
+gap in its return rather than silently claiming the mandated step had
+been done. The corrective was to widen the charter, not to fault the
+agent for a tool nobody had granted it.
 
 ## Automation layers
 

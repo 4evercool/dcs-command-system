@@ -34,10 +34,15 @@ REPO = Path(__file__).resolve().parent.parent
 # doctrine.md + schemas.md are read on EVERY workflow invocation and every
 # command-point spawn, so their size is a latency tax paid continuously.
 # The v0.5.0 "doctrine diet" cut the pair to 31.7 kB; twelve versions of
-# additions have since carried it back over 40 kB. The budget sits just
-# above current usage deliberately: it is a ratchet meant to bite on the
-# next few additions, not a comfortable ceiling.
-HOT_PATH_BUDGET_KB = 42
+# additions since then carried it back over 40 kB. Incident
+# doctrine-hot-path-trim (2026-07-25) relocated the provenance and field
+# lessons accumulated since the diet into doctrine-appendix.md (never
+# @-included), remeasured at 36,717 B in that incident's CRLF worktree --
+# CRLF makes the pair ~319 B larger there than the LF main checkout, so
+# this ratchet is conservative for main. budget = math.ceil(36717/1024)
+# + 1 = 37. Regenerate with:
+#   python -c "import os; d=os.path.getsize('dcs/references/doctrine.md'); s=os.path.getsize('dcs/references/schemas.md'); print(d+s)"
+HOT_PATH_BUDGET_KB = 37
 
 failures = []
 checks = 0
