@@ -190,6 +190,72 @@ Two smaller notes from the same incident, both about *where* things live:
   (conservative), and treat the sensitivity as its own defect rather than folding
   it in.
 
+## 9. Byte representation is a defect family, not four accidents
+
+By 2026-07-25 this project had been bitten four times by the same shape: **the
+bytes on disk are not the bytes you reasoned about.**
+
+| | what drifted | what it broke |
+|---|---|---|
+| `d604b4f` | a BOM from PowerShell `Set-Content` | `dcs_gate.py`'s shebang parse |
+| 2026-07-22 | the same BOM class | the IAP hash comparison — hence `utf-8-sig` |
+| `0428ac4` | ANSI-codepage double-encoding across 13 version bumps | `package.json` at 13.5 MB, `npm publish` E415 |
+| `hot-path-budget-eol-sensitivity` | CRLF vs LF, from `core.autocrlf` with no policy | the approval marker, silently, for a *closed* incident |
+
+Four instances, one question nobody was asking: **which representation is this
+mechanism deciding on?** Every guard added along the way checked the failure it
+was born from — the BOM/U+FFFD check cannot see double-encoding, and neither can
+see line endings — which is §6's lesson arriving again from a new direction.
+
+The general form is worth stating so the fifth instance is recognised early:
+**if a hash, a size, or a comparison decides something, pin the representation
+it decides on.** A repo-level policy (`.gitattributes`) pins the tree; a
+normalisation inside the mechanism pins what ships. They are not substitutes —
+`.gitattributes` is absent from `package.json`'s `files` whitelist and npm
+performs no git checkout, so the policy protects a clone of this repo and
+nothing downstream. **That single fact moved the incident from Type 3 to Type 1.**
+
+### Enumerate a contract's readers before you change it
+
+Four places computed a raw sha256 of `IAP.md`: the gate, `execute.md`,
+`status.md`, and the stamper in `plan.md`. Fixing only the gate would have made
+the two workflows **stricter than the mechanism they describe** — a hard stop on
+a validly approved plan, on exactly the drift the gate had just been taught to
+tolerate. The stamper was correctly left alone, because it writes a raw digest
+which the widened set contains by construction; that asymmetry is what made the
+change safe to land on a live gate mid-incident.
+
+The tasking that migrated the readers ended with *"if you find a fourth reader
+this tasking does not name, that is a deviation"* — because the population had
+already been under-enumerated once.
+
+### Measure the hazard before you design around it
+
+That incident's 201 was planned around a vivid hazard: *the fix can invalidate
+its own approval marker mid-execution*. The Logistics Chief dissolved it in three
+measurements — the renormalise is a no-op here, untracked files are never
+rewritten, and the Write tool emits LF so the artifacts were already in the
+target representation. Confirmed afterwards in production: the marker still
+matched after 83 files were re-materialised.
+
+The real risk was somewhere else entirely — a *tracked duplicate* of the gate
+hook at `.claude/hooks/dcs_gate.py`, which is what actually enforces, and which
+no test asserted matched its payload copy. **A hazard you can picture is not
+thereby the hazard you have.** Plan against the measured one.
+
+### Two smaller ones from the same incident
+
+- **An untracked deliverable is invisible to every in-tree check.** A clone of
+  the then-HEAD reproduced the entire original defect while every criterion,
+  measured inside the worktree, read green. `git commit -a` omits untracked
+  files silently. Stage new files explicitly; verify with `git show --stat`.
+- **Delete a rotting derived number; do not correct it.** `CLAUDE.md`'s suite
+  counts had drifted from 25/12 to 32/15. Updating them resets the clock;
+  removing them and pointing at each suite's own `N/M` output ends the class.
+  Same reasoning retired a budget derivation whose arithmetic was simply wrong
+  (`ceil(37906/1024)+1` is 39, not 38) and which had survived a prior review
+  because the *value* was right and nobody evaluated the *formula*.
+
 ## Links
 
 - [[Post-mortems/energy-cost-model-rework]] — the incident behind v0.5.12

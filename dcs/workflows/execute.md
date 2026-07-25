@@ -32,13 +32,23 @@ approval marker is technically valid.
 ## 2. Verify the approval marker — do this even though the hook also checks it
 
 ```bash
-python -c "import hashlib; print(hashlib.sha256(open(r'<incident_dir>/IAP.md','rb').read()).hexdigest())"
+python -c "
+import hashlib
+raw = open(r'<incident_dir>/IAP.md', 'rb').read()
+lf = raw.replace(b'\r\n', b'\n')
+crlf = lf.replace(b'\n', b'\r\n')
+print({hashlib.sha256(v).hexdigest() for v in (raw, lf, crlf)})
+"
 ```
 
-Compare against the first line of `<incident_dir>/IAP-APPROVED`. If the
-file is missing, or the hash doesn't match: **stop.** Tell the Owner the
-IAP needs re-approval — someone edited `IAP.md` after it was approved (or
-it was never approved). Do not spawn any specialist and do not attempt any
+Compare the first line of `<incident_dir>/IAP-APPROVED` against this set —
+valid if it matches **any member** of it. The set holds up to three digests
+(raw bytes, LF-normalised, and CRLF-normalised derived from the LF form) and
+fewer when those forms coincide: a pure-LF file yields two, since `raw` and
+`lf` are the same bytes. If the file is missing, or the stored hash matches
+no member: **stop.** Tell the Owner the IAP
+needs re-approval — someone edited `IAP.md` after it was approved (or it
+was never approved). Do not spawn any specialist and do not attempt any
 edit yourself. Route to `/dcs-plan`.
 
 This check is redundant with `dcs_gate.py` by design: the hook is the

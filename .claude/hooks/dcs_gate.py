@@ -27,11 +27,14 @@ PreToolUse hooks -- never replacing them). Logic:
    transitioning through a closed state) has nothing left to enforce.
 5. Active incident, phase=execution -> the gate is open IF the approval
    marker (.dcs/incidents/<dir>/IAP-APPROVED) still matches the current
-   IAP.md's sha256. ACTIVE's first field resolves to the incident dir by
-   exact name, or tolerantly to the UNIQUE dir ending in "-<slug>" (the
-   date-prefixed form; ambiguity denies -- see resolve_incident_dir). Editing IAP.md after approval changes its hash and
-   silently revokes the marker -- this is deliberate: an edited plan is no
-   longer the plan the Owner approved (deviation doctrine, principle 8).
+   IAP.md's content, modulo line-ending representation (not its exact
+   bytes -- see approval_digests()). ACTIVE's first field resolves to the
+   incident dir by exact name, or tolerantly to the UNIQUE dir ending in
+   "-<slug>" (the date-prefixed form; ambiguity denies -- see
+   resolve_incident_dir). Editing IAP.md after approval changes its
+   content and silently revokes the marker -- this is deliberate: an
+   edited plan is no longer the plan the Owner approved (deviation
+   doctrine, principle 8).
 6. Active incident, phase=planning (pre-approval) -> only paths matching
    config.json's unguarded_paths (scratch/docs/.dcs/** by default) may be
    touched. Everything else is denied until /dcs-plan produces an approved
@@ -128,11 +131,49 @@ def load_config(project_root):
     return guarded, unguarded
 
 
-def sha256_of(path):
-    h = hashlib.sha256()
+def approval_digests(path):
+    """sha256 hex digests of the IAP's accepted byte forms, deduped.
+
+    A byte-exact hash of IAP.md is representation-dependent: git may check
+    the file out as LF or CRLF depending on core.autocrlf / .gitattributes,
+    and an approval stamp computed against one representation would then
+    fail to verify against the other checkout of the SAME commit -- a real
+    field failure (2026-07-25), not a hypothetical.
+
+    Widen the accepted set to exactly the equivalence class git's own
+    text-conversion declares -- \\r\\n <-> \\n -- and not one byte more:
+
+      raw  -- the file as-is
+      lf   -- raw with every \\r\\n folded to \\n
+      crlf -- lf with every \\n expanded to \\r\\n (derived from lf, NEVER
+              from raw, or an already-CRLF file would double into \\r\\r\\n)
+
+    A lone \\r (old Mac-style, or a real embedded CR) is deliberately left
+    untouched in all three forms: it is not part of git's \\r\\n<->\\n
+    conversion, so two files differing only by a real CR still hash apart.
+    Folding it in would widen the equivalence class beyond what the policy
+    declares.
+
+    One exception, found by exhaustive search during the incident that wrote
+    this (2026-07-25) and recorded rather than smoothed over: a CR that
+    IMMEDIATELY PRECEDES a CRLF is not distinguished, because lf() folds
+    "X\\r\\r\\n" and "X\\r\\n" to the same bytes. The asymmetry is one-way --
+    a stamp for "X\\r\\n" accepts a disk file "X\\r\\r\\n", not the reverse --
+    and it is git's own fold that is lossy there, not this function. The same
+    search confirmed the bound: over 1.19 million text pairs, no genuinely
+    different logical content is ever accepted, and every ordinary lone-CR
+    difference still denies.
+    """
     with open(path, "rb") as f:
-        h.update(f.read())
-    return h.hexdigest()
+        raw = f.read()
+    lf = raw.replace(b"\r\n", b"\n")
+    crlf = lf.replace(b"\n", b"\r\n")
+    digests = []
+    for form in (raw, lf, crlf):
+        d = hashlib.sha256(form).hexdigest()
+        if d not in digests:
+            digests.append(d)
+    return digests
 
 
 def resolve_incident_dir(project_root, slug):
@@ -174,7 +215,7 @@ def marker_valid(incident_dir):
         # fails a plain-utf-8 comparison (found in the field 2026-07-22).
         with open(approved, "r", encoding="utf-8-sig") as f:
             stored_hash = f.readline().strip()
-        return bool(stored_hash) and stored_hash == sha256_of(iap)
+        return bool(stored_hash) and stored_hash in approval_digests(iap)
     except OSError:
         return False
 

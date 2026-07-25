@@ -59,10 +59,18 @@ An earlier version of this table mixed bases (1000-based "42.2 kB" and
 recovered more than it did. Corrected 2026-07-25 during
 `doctrine-hot-path-trim`.
 
-Historical rows are **git-blob bytes (LF)**, the only thing recoverable from
-history; the current row is **on-disk bytes**, which is what the guard actually
-reads. On a Windows checkout with `core.autocrlf=true` those differ by one byte
-per line — see the `hot-path-budget-eol-sensitivity` row in [[Backlog]].
+**This metric now has a stable definition, and did not before.** Until
+`hot-path-budget-eol-sensitivity` (2026-07-25) the guard read raw on-disk bytes,
+so the same commit measured differently depending on which files a given
+checkout had rewritten — the merged tree at one point held `doctrine.md` as CRLF
+and `schemas.md` as LF simultaneously. The check now **normalises CRLF to LF
+before counting**, and `.gitattributes` pins the tree to LF as well, so every row
+from v0.6.8 onward is comparable with the git-blob history above it without a
+caveat.
+
+Rows before that fix are **git-blob bytes (LF)** where taken from history, and
+**raw on-disk bytes** where measured live — which is why the two 2026-07-25 rows
+below carry the tree they were measured in.
 
 | when | bytes | kB (÷1024) | note |
 |---|---|---|---|
@@ -70,7 +78,8 @@ per line — see the `hot-path-budget-eol-sensitivity` row in [[Backlog]].
 | after the diet (`d5d8106`) | 31,723 | 31.0 | provenance moved to `doctrine-appendix.md` |
 | 2026-07-25, v0.6.4 (`51dd073`) | 41,444 | 40.5 | twelve versions of additions since |
 | 2026-07-25, v0.6.6 (`0428ac4`) | 42,623 | 41.6 | `schemas.md` +1,189 B in `6a57b97`; 385 B under the 42 kB budget |
-| **2026-07-25, v0.6.7** | **37,734** | **36.9** | after `doctrine-hot-path-trim` merged; **−4,889 B** |
+| 2026-07-25, v0.6.7 | 37,734 | 36.9 | after `doctrine-hot-path-trim` merged; **−4,889 B**. Raw on-disk, mixed-EOL tree — the last figure this table has to qualify |
+| **2026-07-25, v0.6.8** | **37,579** | **36.7** | after `hot-path-budget-eol-sensitivity`. **Normalised — identical in any checkout** |
 
 Regenerate the historical rows:
 

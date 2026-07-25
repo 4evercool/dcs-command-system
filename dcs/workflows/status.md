@@ -72,10 +72,20 @@ To check `IAP-APPROVED` validity from status (read-only, same check the
 gate hook and `/dcs-execute` both perform):
 
 ```bash
-python -c "import hashlib; print(hashlib.sha256(open(r'<incident_dir>/IAP.md','rb').read()).hexdigest())"
+python -c "
+import hashlib
+raw = open(r'<incident_dir>/IAP.md', 'rb').read()
+lf = raw.replace(b'\r\n', b'\n')
+crlf = lf.replace(b'\n', b'\r\n')
+print({hashlib.sha256(v).hexdigest() for v in (raw, lf, crlf)})
+"
 ```
 
-Compare against the first line of `IAP-APPROVED`.
+Compare the first line of `IAP-APPROVED` against this set — valid if it
+matches **any member** of it. The set holds up to three digests (raw bytes,
+LF-normalised, and CRLF-normalised derived from the LF form) and fewer when
+those forms coincide: a pure-LF file yields two, since `raw` and `lf` are the
+same bytes.
 
 ## 6. Stop
 

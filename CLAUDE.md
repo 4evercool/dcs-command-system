@@ -53,12 +53,17 @@ in it exists because that defect shipped at least once.
 ## Verification suite
 
 ```bash
-python tests/test_dcs_gate.py           # 25 cases — the approval gate
-python tests/test_dcs_intake.py         # 10 cases — the session intake nudge
-python tests/test_doctrine_integrity.py # 12 checks — package structure
+python tests/test_dcs_gate.py           # the approval gate
+python tests/test_dcs_intake.py         # the session intake nudge
+python tests/test_doctrine_integrity.py # package structure
 ```
 
 `npm test` runs the first two. Run all three before any close.
+
+Each prints its own `N/M passed` — **read that rather than a count written
+here.** A case count is a derived fact with a lifetime (principle 15), and
+the counts this file used to carry (25 / 10 / 12) had already rotted to
+32 / 10 / 15 by the time a Safety Officer measured them.
 
 ## Where lessons go — three stores, one rule each
 
