@@ -48,7 +48,7 @@ Safety Officer duty and state it explicitly in its charter. Leaning
 toward the first — it makes the claim checkable without adding a
 dependency.
 
-## 3. The register has no cross-project view
+## 3. The register has no cross-project view ✅ DECIDED — not building it
 
 Each project's register is its own portfolio (correct — see
 `plan.md` lint 8). But an Owner running DCS in several repos has no
@@ -56,7 +56,12 @@ single place showing what is in flight everywhere. `/dcs-status
 --campaign` is per-project by design.
 
 Not obviously worth solving; noted so it is a decision rather than an
-oversight.
+oversight. **Decided 2026-07-25** at the second `/dcs-esg`: not building it.
+The reasoning is in [[Decisions/cross-project-register-view]] — briefly, the
+thing that would make the view valuable (acting on the aggregate) is scoped
+per-project by construction, and the cost is a second write target on every
+state transition. Register row `KILLED`. Reopen if a second onboarded project
+makes the pain concrete.
 
 ## 4. Intake nudge has no telemetry
 
@@ -66,12 +71,14 @@ evidence for tuning it — and tuning by impression is what principle 15
 warns about. A single line appended to a local (gitignored) log would be
 enough.
 
-## 5. Version bumps still go through PowerShell
+## 5. Version bumps still go through PowerShell — QUEUED
 
 The encoding disaster in [[Meta/building-dcs-lessons]] §6 was repaired
 and guarded (no-Cyrillic check, `package.json` < 8 kB), but the *process*
 that caused it is unchanged: version bumps are still typed as PowerShell
 read-modify-write one-liners, now merely watched by a guard.
+
+**Queued 2026-07-25** as register row `version-bump-command`, rank 3.
 
 The durable fix is a tiny `bin/dcs.js bump <version>` that edits
 `dcs/VERSION` and `package.json` in Node — one command, correct
@@ -83,7 +90,7 @@ edit `package.json`'s version field at merge time and did it with the Edit
 tool specifically to avoid this hazard — a workaround a seat has to
 *remember*, which is the shape of a missing mechanism (§1).
 
-## 6. Type 5 express lane is under-used
+## 6. Type 5 express lane is under-used — PARKED
 
 Six of eight incidents ran the full Type 3 loop; several sub-parts would
 have qualified for the express lane (one specialist, IC verifies, no
@@ -91,7 +98,13 @@ incident directory). Worth watching whether typing is systematically
 conservative — if so, the typing guide needs sharper Type 5 examples
 rather than a doctrine change.
 
-## 7. The other half of the hot-path regrowth
+**Parked 2026-07-25** at the second `/dcs-esg`. The ratio above is from one
+*other* project, and this repo's first closed incident (`doctrine-hot-path-trim`,
+a genuine Type 3) adds nothing either way. Changing the typing guide on this
+base would be exactly the speculative mechanism §5 warns about. Revisit once
+several self-hosted incidents have closed.
+
+## 7. The other half of the hot-path regrowth — QUEUED (rank 2)
 
 `doctrine-hot-path-trim` landed the pair at 37,734 B against a post-diet
 31,723 B (regenerate both via [[Metrics/incident-metrics]]). The remaining
@@ -110,7 +123,7 @@ become the stronger one:
 - A ratchet re-seat to 37 or 36 kB after a period of stability, which would
   also narrow the guard-blind band described in item 8.
 
-## 8. Hot-path budget check is line-ending-sensitive
+## 8. Hot-path budget check is line-ending-sensitive — QUEUED (rank 1)
 
 `core.autocrlf=true` with no `.gitattributes`, and
 `tests/test_doctrine_integrity.py`'s hot-path check reads raw
