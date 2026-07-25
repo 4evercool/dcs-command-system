@@ -79,7 +79,70 @@ by the system or by the Owner, not by me. **This is why DCS self-hosts** —
 see [[Decisions/distribution-and-scheduling]] for what that does and does
 not cover.
 
+## 7. Citations into a file the incident is editing
+
+From `doctrine-hot-path-trim` (2026-07-25), the first self-hosted incident,
+which took **two Safety halts** — neither against the work, both against the
+bookkeeping that recorded it.
+
+The incident moved prose out of `doctrine.md` into `doctrine-appendix.md` and
+logged where each passage went, citing appendix **line ranges**. Those citations
+were correct when written and wrong when read: the same incident appended 114
+lines to that file and shifted every line past 45. The Safety Officer opened the
+cited ranges and found unrelated text.
+
+**Cite by content anchor, not by line range.**
+
+```bash
+grep -n -F "Principle 15 — the test-inversion lesson." dcs/references/doctrine-appendix.md
+```
+
+An anchor **is** the substance; a line number is a fact *derived about* the
+substance, with a lifetime. The anchor resolves in any tree, survives arbitrary
+edits above it, and when it does break it returns zero hits **loudly** instead of
+silently resolving to the wrong paragraph. This is principle 15 applied to
+citations specifically, and it is worth stating separately because "write the
+derivation, not the result" does not obviously imply "do not write line numbers".
+
+Three qualifications, each learned the hard way in the same incident:
+
+- **Anchors have their own failure mode: markdown hard-wrapping.** A phrase
+  spanning a line break matches nothing under line-based `grep`. One anchor here
+  (`three times in one incident`) returned 0 hits for exactly that reason. Choose
+  anchors **within a single physical line**, and uniqueness-check each one
+  (`grep -c -F` must return `1`) before writing it down. An anchor matching twice
+  is as useless as a rotted line number.
+- **Anchors eliminate rot, not under-coverage.** A row can still name too few
+  anchors — which is precisely what the second halt was. What the scheme actually
+  buys is that the population becomes *enumerable* and each member becomes a
+  one-command binary check; an officer could then exercise all 19 in a single
+  script rather than discovering one defect per verify cycle. Do not overclaim it
+  as making the class "unrepresentable" — this incident did, and its own Safety
+  Officer corrected it.
+- **A corrective can be worse than the defect it fixes.** The first correction
+  narrowed a citation from `116-135` to `128-135` on a prior officer's
+  observation, and broke a coverage that had been *correct*. Officer → IC →
+  Dispatcher, each faithfully transcribing the one before, none re-deriving
+  against the source — lesson 2's chain, occurring inside the remedy written for a
+  lesson-2 defect. **The seat applying a corrective owes the same re-derivation as
+  the seat that found the defect.**
+
+Two smaller notes from the same incident, both about *where* things live:
+
+- **Check where a corrective lands before choosing a disposition.** This one named
+  `214-LOG.md`, under `.dcs/**`, which specialists are barred from by
+  construction — so `execute.md`'s "fix-taskings" path was unavailable and the IC
+  had to name the Dispatcher as executor. The disposition menu assumes a
+  specialist can act; sometimes none can.
+- **A byte-count acceptance criterion is line-ending-sensitive on Windows.**
+  `core.autocrlf=true` with no `.gitattributes` means a fresh worktree measures
+  larger than a long-lived checkout of the same commit — 319 B here, against a
+  43,008 B ceiling. Name the tree in the criterion, measure in the worktree
+  (conservative), and treat the sensitivity as its own defect rather than folding
+  it in.
+
 ## Links
 
 - [[Post-mortems/energy-cost-model-rework]] — the incident behind v0.5.12
 - [[Metrics/incident-metrics]] — the evidence base
+- [[Backlog]] — including the rows `doctrine-hot-path-trim` discovered
