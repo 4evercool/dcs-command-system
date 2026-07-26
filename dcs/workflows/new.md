@@ -59,7 +59,8 @@ it exists. If spawning two, split the angle (e.g. one on
 reproduction+logs, one on codegraph impact+prior art) rather than having
 both do identical work.
 
-Collect their structured findings (`references/schemas.md` #1). If the two
+Collect their structured findings (`references/schemas.md` #1,
+situation-analyst findings). If the two
 disagree on something material (e.g. one finds a repro path the other
 calls unreproducible), note the disagreement rather than silently picking
 one — it belongs in the 201 as an open question.
@@ -112,7 +113,7 @@ probably describing more than one incident — reread it before typing.
 This is a command point (doctrine: "Transfer of command"). **If this
 session is not running Fable**: spawn `dcs-commander` via Task (model
 `fable`), passing the draft 201-BRIEF.md text in full; take its `typing`
-decision (schemas.md #6) as the proposal and record it in the eventual
+decision (schemas.md #6, commander decisions) as the proposal and record it in the eventual
 214-LOG.md as `command: typed <N> (IC=dcs-commander)`. **If this session
 is Fable**, you are the IC — decide yourself using `references/typing.md`'s
 triggers and concrete examples: Type 5, 3, or 1 with a one-sentence

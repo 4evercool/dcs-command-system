@@ -99,7 +99,7 @@ the remainder in `directives` as a follow-up incident to register. Return:
   multi-period or worktree incident runs — request activation meaning:
   recommend the founding session) — attach
   `esg_activation: {requested: true, reason}` to your decision (schemas.md
-  #6). You still return the tactical decision you were asked for; the
+  #6, commander decisions). You still return the tactical decision you were asked for; the
   activation request rides along with it, and the Dispatcher raises it as
   escalation trigger (e).
 - Your final message must end with the single JSON decision block for the

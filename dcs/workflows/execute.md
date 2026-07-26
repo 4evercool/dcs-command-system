@@ -144,7 +144,8 @@ without its structured block: re-spawn, never wait, never resume.
 
 ## 5. Collect and validate structured returns
 
-Each specialist returns the schema in `references/schemas.md` #4. Check
+Each specialist returns the schema in `references/schemas.md` #4
+(ops-specialist return). Check
 `files_touched` against that specialist's declared `territory` — any file
 outside territory is itself a violation worth flagging to the Owner even
 if the specialist didn't self-report it as a deviation.
@@ -156,7 +157,7 @@ remaining specialists beyond ones already safely completed on disjoint
 territory. This is a command point (doctrine: "Transfer of command"). **If
 this session is not running Fable**: spawn `dcs-commander` via Task (model
 `fable`) with the triggering specialist's full return, the current 202 and
-its 204, and the execution state; its `deviation` decision (schemas.md #6)
+its 204, and the execution state; its `deviation` decision (schemas.md #6, commander decisions)
 governs the disposition — `replan` / `amend_tasking` / `escalate_owner` —
 and is recorded in `214-LOG.md` (`command: deviation -> <disposition>
 (IC=dcs-commander)`). **If this session is Fable**, make the call yourself.
@@ -227,7 +228,7 @@ for is accretion, not convergence), and **one ESG-state line** (v0.3.2 —
 whether `<esg_root>/.dcs/esg/` is founded and this incident's register
 row, or "no ESG founded / no register row"; principle 14's ESG-absence
 cue cannot fire on evidence the commander was never given). Its
-`verdict_disposition` decision (schemas.md #6) selects the path below, and
+`verdict_disposition` decision (schemas.md #6, commander decisions) selects the path below, and
 its `directives` supply the fix-tasking content where applicable. Record it
 in `214-LOG.md` (`command: verdict -> <disposition> (IC=dcs-commander)`).
 **If this session is Fable**, the judgment below is yours — with the same

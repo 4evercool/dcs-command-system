@@ -1,6 +1,7 @@
 <!--
 204-TASKING/{{ID}}.md -- one file per specialist, transcribed verbatim by
-the IC from the Planning Chief's `taskings[]` array (schemas.md #2). The
+the IC from the Planning Chief's `taskings[]` array (schemas.md #2, chief
+plan). The
 specialist receives exactly this file's content plus the relevant IAP
 excerpt -- nothing else. If the tasking is ambiguous, that's a planning
 defect to fix during /dcs-plan, not something for the specialist to
@@ -37,6 +38,7 @@ resolve by guessing.
 ## On discovering the plan doesn't fit reality
 
 STOP. Do not improvise a different fix. Return `status: "deviation"` per
-`references/schemas.md` #4, with `found`, `why_plan_wrong`, and a
+`references/schemas.md` #4 (ops-specialist return), with `found`,
+`why_plan_wrong`, and a
 `proposal` (a recommendation, not an action). The IC will re-enter
 planning around your finding.

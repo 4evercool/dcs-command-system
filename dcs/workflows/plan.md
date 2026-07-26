@@ -109,7 +109,7 @@ that is a signal the 202 is unstable — see 4b's repeated-reject trigger.
 
 From the Planning Chief: `objectives_feedback`, `tactics[]`, `taskings[]`,
 `partition_ok`, `risks[]`, `verification_plan` (schema in
-`references/schemas.md` #2).
+`references/schemas.md` #2, chief plan).
 
 ### 4a. Tasking lint — mechanical, run BEFORE the command point (v0.5.1)
 
@@ -206,7 +206,7 @@ session is not running Fable**: announce the spawn first (doctrine, "A
 command point is never a silent wait" — say that no file changes until
 the decision returns), then spawn `dcs-commander` via Task (model
 `fable`) with the full 201 + 202 text and the chiefs' complete structured
-returns; its `iap_review` decision (schemas.md #6) governs — on
+returns; its `iap_review` decision (schemas.md #6, commander decisions) governs — on
 `"reject"`, use its `required_changes` verbatim as the re-spawn
 instruction to the Planning Chief and repeat this step; on `"accept"`,
 proceed. **If the spawn returns no decision block** (quota exhausted, API
@@ -267,7 +267,8 @@ gets typed next. If `REGISTER.md` doesn't exist, skip this step.
 **Delegation check (Type 3 only):** if the incident is Type 3 AND
 `<project>/.dcs/esg/DELEGATION.md` exists, parse its latest (highest
 `version`) fenced ```delegation-bounds``` JSON block — never the prose
-around it (schemas.md #7 is the authoritative shape). Evaluate ALL of:
+around it (schemas.md #7, delegation bounds, is the authoritative shape).
+Evaluate ALL of:
 
 - `max_files` is >= the IAP's total partitioned file count.
 - every `territory[]` glob across every `204-TASKING/*.md` misses every
