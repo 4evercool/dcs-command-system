@@ -303,6 +303,54 @@ incident's own `214-LOG.md` turned out to have no trailing newline and an
 append against it failed. Derivation from structure beat waiting for the
 field by less than a day.
 
+## 11. A cut registry constrains aim, not prose — and only aim is a contract
+
+`schemas-md-trim` (2026-07-26) ran the technique `doctrine-hot-path-trim`
+invented: the Planning Chief enumerates every span to be cut, **measures**
+each one instead of estimating, attaches a KEEP-list, and the specialist
+executes the ledger rather than exercising fresh editorial judgement. It hit
+the target on the first attempt again, with the pre-authorised reserve
+untouched — two for two.
+
+What the second run taught, which the first could not: **the two columns of a
+cut registry have completely different force.**
+
+- **"Before" is a contract.** Every one of the five positions matched its
+  registered size exactly (one within 2 B, on blank-line accounting). That
+  agreement *is* the evidence that the specialist cut the registered
+  fragments and nothing else — which is why the tasking's deviation clause
+  was keyed to it, and why no deviation was owed despite the other column
+  diverging.
+- **"After" is a forecast.** Replacement prose came out 26–87 B off the plan
+  in both directions, netting −2,331 against a planned −2,349. Nothing was
+  wrong: the length of a sentence someone has not written yet is not
+  knowable, and a registry that pretended otherwise would manufacture
+  deviations out of ordinary writing.
+
+So: size the reserve against "after" drift, and trigger deviations only off
+"before". A registry that treats both columns as binding will spend command
+points on prose length; one that treats neither as binding stops being a
+registry and becomes a suggestion.
+
+### Label a historical measurement; do not recompute it
+
+Same incident, and it is the sharper half of the lesson. The Safety Officer
+found the guard's ratchet comment mixing raw-CRLF and normalised byte counts
+with no basis named, and offered two fixes: label the old numbers, or convert
+them. The IC chose **label**, and the reason generalises past this file — the
+prior incident *genuinely measured raw*. Substituting normalised equivalents
+would credit it with measurements it never took and mint three new derived
+facts in place of one labelled basis.
+
+The cost of the unlabelled number is worth recording precisely, because it is
+larger than it looks. One figure — "1,189 B" — lived in six artifacts without
+its basis. Unpicking it in a single period produced **three separate errors**:
+the IAP attributed the growth to the wrong file, the mandated correction broke
+the arithmetic of the sentence around it, and the tasking prompt inherited the
+wrong attribution. See §2 ("Derived facts rot, and they travel") — this is
+that lesson's worked example, and the antidote is one clause: name the basis
+where the number is written.
+
 ## Links
 
 - [[Post-mortems/energy-cost-model-rework]] — the incident behind v0.5.12
