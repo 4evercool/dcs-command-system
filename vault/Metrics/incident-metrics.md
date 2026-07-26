@@ -79,7 +79,37 @@ below carry the tree they were measured in.
 | 2026-07-25, v0.6.4 (`51dd073`) | 41,444 | 40.5 | twelve versions of additions since |
 | 2026-07-25, v0.6.6 (`0428ac4`) | 42,623 | 41.6 | `schemas.md` +1,189 B in `6a57b97`; 385 B under the 42 kB budget |
 | 2026-07-25, v0.6.7 | 37,734 | 36.9 | after `doctrine-hot-path-trim` merged; **−4,889 B**. Raw on-disk, mixed-EOL tree — the last figure this table has to qualify |
-| **2026-07-25, v0.6.8** | **37,579** | **36.7** | after `hot-path-budget-eol-sensitivity`. **Normalised — identical in any checkout** |
+| 2026-07-25, v0.6.8 | 37,579 | 36.7 | after `hot-path-budget-eol-sensitivity`. **Normalised — identical in any checkout** |
+| 2026-07-26, v0.6.9 (`532b809`) | 38,878 | 38.0 | after `halt-loop-unbounded`. `doctrine.md` **+1,299 B** for principle 13's ceiling clause; **34 B of slack** under the 38 kB ratchet — the tightest this table has recorded |
+| **2026-07-26 (`08f75f0`)** | **36,561** | **35.7** | after `schemas-md-trim`. `schemas.md` −2,317 B; ratchet re-seated **38 → 37**, so slack is **1,327 B** against a *lower* ceiling |
+
+Regenerate the two current rows — note this uses the **normalised** measure
+the guard itself applies (`CRLF → LF` before counting), not `os.path.getsize`,
+which the earlier version of this line used and which disagrees with the
+guard in a CRLF checkout:
+
+```bash
+python -c "import pathlib; d=pathlib.Path('dcs/references/doctrine.md').read_bytes().replace(b'\r\n',b'\n'); s=pathlib.Path('dcs/references/schemas.md').read_bytes().replace(b'\r\n',b'\n'); print(len(d), len(s), len(d)+len(s))"
+```
+
+**Read the 2026-07-26 pair together or not at all.** `halt-loop-unbounded`
+spent almost the entire margin on one clause and left 34 B; `schemas-md-trim`
+then took 2,317 B back out of the file that had *not* grown and lowered the
+ceiling with it. Neither row means much alone: the first looks like
+negligence, the second like a windfall, and what actually happened is that
+the budget worked — it made the cost of the clause visible immediately.
+
+**The 1,189 B in the v0.6.6 row belongs to `schemas.md`, and its basis is
+raw CRLF.** Normalised the same growth is **1,179 B** (14,434 → 15,613 at
+`6a57b97`); `doctrine.md` did not change in that commit at all. Six artifacts
+carried "1,189" without naming a basis, and during `schemas-md-trim` that
+unlabelled number produced three separate errors — a wrong file attribution
+in an IAP, a broken arithmetic sentence in the guard's own comment, and a
+misdirected tasking prompt. Regenerate:
+
+```bash
+python -c "import subprocess; f=lambda r: len(subprocess.run(['git','show',r+':dcs/references/schemas.md'],capture_output=True).stdout.replace(b'\r\n',b'\n')); print(f('6a57b97')-f('6a57b97^'))"
+```
 
 Regenerate the historical rows:
 

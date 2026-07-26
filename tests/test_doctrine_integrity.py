@@ -54,34 +54,50 @@ REPO = Path(__file__).resolve().parent.parent
 # the diet into doctrine-appendix.md (never @-included), taking doctrine.md
 # from 27,167 to 22,121 B.
 #
+# BASIS: the figures 27,167 / 22,121 above and 36,717 below are RAW-CRLF --
+# the basis in use before hot-path-budget-eol-sensitivity normalised the
+# measure. Everything from "1,179" onward is normalised (CRLF -> LF). The
+# two bases sit ~1 byte per line apart and must never be added across: in
+# the raw basis the sentence below is 36,717 + 1,189 = 37,906, which is
+# where that pair figure comes from. Normalised, the same three read
+# 27,010 / 21,966 / 36,400 -- deliberately NOT substituted here, because
+# that incident genuinely measured raw, and restating its numbers would
+# credit it with measurements it never took.
+#
 # The budget is set on the MERGE RESULT, not on either branch: that incident
-# measured 36,717 B and derived 37, but schemas.md grew 1,189 B on main
-# (6a57b97) while the incident was open, so the merged pair came out larger
-# and a 37 kB budget would have landed red. That is the whole reason it was
-# re-derived rather than carried across -- a size is a derived fact with a
-# lifetime (doctrine principle 15), and that one expired between being
-# measured and being merged.
+# measured 36,717 B and derived 37, but schemas.md grew 1,179 B on main
+# (6a57b97, normalised CRLF -> LF; the raw-CRLF figure this line used to
+# carry was 1,189 B) while the incident was open, so the merged pair came
+# out larger and a 37 kB budget would have landed red. That is the whole
+# reason it was re-derived rather than carried across -- a size is a
+# derived fact with a lifetime (doctrine principle 15), and that one
+# expired between being measured and being merged.
 #
-# Incident hot-path-budget-eol-sensitivity (2026-07-25) then made the measure
-# itself tree-independent, and the budget is re-based onto that measure:
+# Incident hot-path-budget-eol-sensitivity (2026-07-25) then made the
+# measure itself tree-independent -- a *normalised* byte count (CRLF
+# collapsed to LF before counting), not raw on-disk size, because on-disk
+# bytes make the same commit measure differently in a CRLF checkout than
+# an LF one (one extra byte per line), so a byte-exact budget must not
+# depend on which checkout ran it -- and re-based the budget onto that
+# measure: math.ceil(37579/1024) + 1 = 38. Both the arithmetic and the
+# basis were corrected as Safety advisories on that incident's pass; the
+# line used to read "math.ceil(37906/1024) + 1 = 38", which was wrong
+# twice -- that expression evaluates to 39, and 37,906 was the raw-CRLF
+# basis this incident replaced.
 #
-#   budget = math.ceil(37579/1024) + 1 = 38
+# Incident schemas-md-trim (2026-07-26) executed a measured cut registry
+# against schemas.md (relocating #8's body to templates/209-SITREP.md,
+# trimming the #7 deploy Notes cell and the #5 advisories paragraph to
+# their live first sources, and landing two preamble paragraphs'
+# provenance in doctrine-appendix.md), then re-derived the ratchet from
+# the resulting, final, normalised size:
 #
-# Still a ratchet: it bites 4 kB sooner than the 42 kB it replaces.
+#   budget = math.ceil(36547/1024) + 1 = 37
 #
-# Both the arithmetic and the basis above were corrected as Safety advisories
-# on that incident's pass. The previous line read
-# "budget = math.ceil(37906/1024) + 1 = 38", which was wrong twice: that
-# expression evaluates to 39, and 37,906 was the raw-CRLF basis this incident
-# replaced.
-# The measure is a *normalised* byte count (CRLF collapsed to LF before
-# counting), not raw on-disk size: on-disk bytes make the same commit
-# measure differently in a CRLF checkout than an LF one -- one extra byte
-# per line -- so a byte-exact budget must not depend on which checkout
-# ran it (incident hot-path-budget-eol-sensitivity, 2026-07-25). Regenerate
-# with:
+# Still a ratchet: it bites 1 kB sooner than the 38 kB it replaces.
+# Regenerate with:
 #   python -c "d=open('dcs/references/doctrine.md','rb').read().replace(b'\r\n', b'\n'); s=open('dcs/references/schemas.md','rb').read().replace(b'\r\n', b'\n'); print(len(d), len(s), len(d)+len(s))"
-HOT_PATH_BUDGET_KB = 38
+HOT_PATH_BUDGET_KB = 37
 
 # Directories holding generated/binary artefacts that are never source and
 # never shipped: .git internals, npm's node_modules, and Python's

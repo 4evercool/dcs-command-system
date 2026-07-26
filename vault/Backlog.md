@@ -104,7 +104,44 @@ a genuine Type 3) adds nothing either way. Changing the typing guide on this
 base would be exactly the speculative mechanism §5 warns about. Revisit once
 several self-hosted incidents have closed.
 
-## 7. The other half of the hot-path regrowth — QUEUED (rank 2)
+## 7. Trim schemas.md ✅ DONE
+
+**Closed 2026-07-26** by incident `schemas-md-trim`, integration commit
+`08f75f0`. Type 3, **one period, one specialist, one attempt, zero
+deviations, zero Safety halts** — the second clean self-hosted incident.
+
+`schemas.md` 15,613 → **13,296 B**; the pair 38,878 → **36,561**; ratchet
+**38 → 37**; slack **34 B → 1,327 B**. Slack restored *and* the ceiling
+lowered in one act, because unclaimed slack under an unchanged ceiling grows
+straight back. Regenerate:
+
+```bash
+python -c "import pathlib; d=pathlib.Path('dcs/references/doctrine.md').read_bytes().replace(b'\r\n',b'\n'); s=pathlib.Path('dcs/references/schemas.md').read_bytes().replace(b'\r\n',b'\n'); print(len(d), len(s), len(d)+len(s), 37*1024-len(d)-len(s))"
+```
+
+**This item's own framing was wrong, and the stem caught it.** It said "the
+other half of the hot-path regrowth". Two analysts independently measured
+that `schemas.md` had **not changed since `6a57b97`** — 15,613 B at that
+commit, at `bbb17ac`, and at HEAD. The 1,299 B that consumed the slack came
+from `doctrine.md` during `halt-loop-unbounded`. This file was the **donor**,
+not the source. Worth remembering when filing the next item: a title is a
+claim, and this one survived unmeasured through a `/dcs-esg` session and into
+a register row.
+
+**Two rows were split out at the stem** and are queued:
+`schema-citation-guard` (rank 2) and `json-examples-unparsed` (rank 11). The
+first exists because an analyst *demonstrated* the hazard instead of arguing
+it — deleting a section and renumbering its neighbours left all three suites
+green while 19 `schemas.md #N` citations pointed at the wrong sections. The
+trim therefore forbade renumbering outright and left section 8's number
+reserved with a pointer.
+
+This item's second candidate — a ratchet re-seat — was executed as part of
+the same act rather than deferred, for the reason above. The open question it
+inherited from item 8 (budget in bytes rather than kB) was **not** taken: the
+period changed the ratchet's value, not its unit.
+
+### As originally filed
 
 `doctrine-hot-path-trim` landed the pair at 37,734 B against a post-diet
 31,723 B (regenerate both via [[Metrics/incident-metrics]]). The remaining
