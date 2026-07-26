@@ -318,6 +318,38 @@ the rule pins to immutable evidence and to the invariant rather than the
 instance: a fixture, a frozen blob, or a commit SHA cannot un-collide
 itself out from under the test the way a live branch pair can.
 
+**Principle 15 — the v0.6.5 mechanization (field lesson 2026-07-26,
+incident `safety-halt-functional-scope`).** v0.6.5 gave the Safety
+Officer's charter an explicit default: an artifact-hygiene finding is an
+`advisories[]` entry, not a `halt`, unless it clears one of three named
+bars (`agents/dcs-safety-officer.md` step 6). The charter justified that
+default with a census — "13 of 17 Safety halts across all incidents to
+date were process/artifact findings" — which was itself a derived fact
+with no regenerating command beside it, principle 15 applied to the
+sentence that introduced the advisory/refutation split. When this
+incident tried to regenerate it, **no query over the surviving
+`214-LOG.md` artifacts reconstructed 17** — several were tried, by the
+incident and again independently by its Safety Officer, and they
+disagreed with each other as well as with the census. The population
+predates the sentinel grammar that would let it be recounted, so there
+is no command to put beside the number. It was therefore deleted
+outright rather than replaced with a second unverifiable figure,
+because the argument for the
+default (a binding halt costs a full execute-and-verify cycle; spending
+it on a docstring misallocates the one mechanism that can stop a merge)
+never needed the census to hold — the count was decoration on a
+structural argument, not load-bearing.
+
+The same incident closed a second, independent divergence: principle 15
+itself still read "Enforced by the Safety Officer's checklist (principle
+7), not by discipline" after v0.6.5 shipped, a phrasing that named no
+default and, read next to the charter's actual step 6, sounded like
+every finding is still binding. Doctrine and charter answered "what does
+the officer do by default with a hygiene finding" differently until this
+edit — doctrine now names the default and points at the charter step
+that enforces it, so the two documents give the same answer read back to
+back.
+
 ## The lifecycle (Planning P mapped to software)
 
 **Why the default is close/merge/ship, not "keep going until everything's

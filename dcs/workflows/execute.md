@@ -288,15 +288,18 @@ summarized or softened). Append to `214-LOG.md`:
 
 **Advisories on a pass (v0.6.5):** a `pass` carrying `advisories[]` is a
 normal, healthy verdict — the deliverable is sound and the paperwork
-needs a touch-up. **The IC fixes them itself, now**, folding them into
-the integration commit at 9b: they are artifact edits (a stale count in
-a docstring, a hash in a comment, an un-regenerable census in an AAR),
-they are inside the incident's own territory, and routing them through a
-fix-tasking would spend an execute-and-verify cycle on prose. Record
-each advisory and its resolution in `SAFETY.md`, and re-verify nothing —
-the officer already passed the criteria. **Never upgrade an advisory to
-a halt** to be thorough; the halt is the only lever that stops a merge
-and its value comes entirely from being reserved.
+needs a touch-up. This is the default the bar sets
+(`agents/dcs-safety-officer.md` step 6): an artifact-hygiene finding is
+an advisory unless it clears one of that step's bars. **The IC fixes
+them itself, now**, folding them into the integration commit at 9b: they
+are artifact edits (a stale count in a docstring, a hash in a comment,
+an un-regenerable census in an AAR), they are inside the incident's own
+territory, and routing them through a fix-tasking would spend an
+execute-and-verify cycle on prose. Record each advisory and its
+resolution in `SAFETY.md`, and re-verify nothing — the officer already
+passed the criteria. **Never upgrade an advisory to a halt** to be
+thorough; the halt is the only lever that stops a merge and its value
+comes entirely from being reserved.
 
 ## Escalation-trigger check — after the Safety verdict (v0.2, doctrine principle 13)
 

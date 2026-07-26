@@ -25,6 +25,38 @@ from recollection. Releases before 0.6.5 are recorded only in
 Hot-path trim, and a correction: **0.6.9 shipped twice with different
 contents.** If you installed 0.6.9, take 0.6.10 — see below.
 
+### Added
+
+- **`test_doctrine_integrity.py` check 14, "bar carrier."** The
+  advisory/refutation split (which artifact-hygiene finding is an
+  `advisories[]` entry rather than a `halt`) had existed since v0.6.5 only
+  as prose inside one agent's charter; it now has a check that parses the
+  charter at run time and holds every other prose surface citing it to
+  the charter's own live step number, bar count and default verdict
+  token, plus a separate, charter-scoped check that **fails** a bare
+  `N of M` census whose paragraph carries no command to regenerate it.
+  Both derive their population by walking the tree, never from a
+  hand-kept file list. `python tests/test_doctrine_integrity.py`:
+  **73/73 passed**, up from **59/59** on the tree this incident forked
+  from — extract that tree somewhere outside your working copy and run
+  its own suite:
+
+  ```bash
+  git archive 6ef9c47 | tar -x -C /tmp/dcs-6ef9c47
+  ```
+
+  Candidate population for the split: **43** matching lines across **9**
+  files, each number by its own command —
+
+  ```bash
+  grep -rniE "advisor(y|ies)|refutation" dcs/references/ dcs/workflows/ agents/ --include=*.md | wc -l
+  grep -rliE "advisor(y|ies)|refutation" dcs/references/ dcs/workflows/ agents/ --include=*.md | wc -l
+  ```
+
+  `test_dcs_gate.py` and `test_dcs_intake.py` are untouched by this
+  change: 100/100 (`python tests/test_dcs_gate.py`) and 10/10 (`python
+  tests/test_dcs_intake.py`).
+
 ### Changed
 
 - **`schemas.md` trimmed 15,613 → 13,296 B, and the hot-path ratchet
@@ -52,11 +84,48 @@ contents.** If you installed 0.6.9, take 0.6.10 — see below.
   Two shipped trees, one published version — which is exactly what "version
   sync is atomic" exists to prevent. 0.6.10 is that correction, and the
   version number is the only way to make it visible.
+- **Doctrine principle 15 stopped contradicting the Safety Officer's
+  charter.** It closed with "Enforced by the Safety Officer's checklist
+  (principle 7), not by discipline," which named no default; it now names
+  the actual one (an artifact-hygiene finding is an advisory unless it
+  clears a bar in `agents/dcs-safety-officer.md` step 6) and points at
+  that step, so both documents give the same answer
+  (`git diff 6ef9c47 -- dcs/references/doctrine.md`).
+- **An un-regenerable count left the charter.** Step 6 justified the
+  advisory/refutation default with a census of Safety halts to date that
+  carried no command to reproduce it and cannot be reconstructed from the
+  artifacts that remain. The sentence's argument didn't depend on the
+  count, so the count was deleted rather than replaced
+  (`git diff 6ef9c47 -- agents/dcs-safety-officer.md`).
 
 ### Config
 
 No new keys. **0.6.9's `esg.max_halts_per_attempt` still has to be added by
 hand** if you have not already — see [Upgrading](README.md#upgrading).
+
+### Verified at release
+
+`test_doctrine_integrity.py` 73/73, `test_dcs_gate.py` 100/100,
+`test_dcs_intake.py` 10/10 (each re-run at close: `python
+tests/test_doctrine_integrity.py`, `python tests/test_dcs_gate.py`,
+`python tests/test_dcs_intake.py`). Hot path (`doctrine.md` + `schemas.md`,
+CRLF normalised to LF) **36,683 B**, headroom **1,205 B** against the
+37 kB ceiling — up from 36,582 B / 1,306 B on the tree this incident
+forked from. Both figures come out of one command, run in each tree:
+
+```bash
+python -c "import pathlib; d=pathlib.Path('dcs/references/doctrine.md').read_bytes().replace(b'\r\n',b'\n'); s=pathlib.Path('dcs/references/schemas.md').read_bytes().replace(b'\r\n',b'\n'); print(len(d)+len(s), 37*1024-len(d)-len(s))"
+```
+
+Behavioural proof that check 14 is load-bearing: forging `schemas.md`
+§5's "three bars" to "two bars" and re-running
+`test_doctrine_integrity.py` takes the suite to **72/73**, naming the
+file and the mismatch; the identical forgery applied to an extraction of
+`6ef9c47` (`git archive 6ef9c47 | tar -x -C /tmp/dcs-6ef9c47`) leaves
+that tree's own suite green at **59/59**, because check 14 does not
+exist there.
+
+Shipped by incident `safety-halt-functional-scope`.
 
 ---
 
