@@ -26,18 +26,29 @@ never write directly into the incident directory.
 
 The log is the only artifact that must never be "corrected" — if a phase
 transition happened, it happened, even if it later turns out to have been
-premature (e.g. an IAP approved and then voided by a deviation). Deleting
+premature (e.g. an IAP that was approved, then voided by a deviation). Deleting
 or editing a past entry to make the incident's history look cleaner defeats
 its purpose: a future session (or a human auditing what went wrong) needs
 the honest sequence, not a tidied one. Log entry format:
 
 ```
-[2026-07-22T14:03:00+11:00] phase: planning -> execution (IAP approved, hash=3f2a...)
+[2026-07-22T14:03:00+11:00] IAP-APPROVED: 3f2a1b9c7d4e -- phase: planning -> execution (period 2)
 [2026-07-22T15:41:00+11:00] deviation reported by S1 -- returning to planning
-[2026-07-22T16:10:00+11:00] phase: planning -> execution (IAP re-approved, hash=9b7c...)
-[2026-07-22T17:22:00+11:00] SAFETY: pass -- period 2 complete
+[2026-07-22T16:10:00+11:00] IAP-APPROVED: 9b7c4a2f1e08 -- phase: planning -> execution (period 2)
+[2026-07-22T16:45:00+11:00] SAFETY-HALT: two refutations on the same check -- see SAFETY.md
+[2026-07-22T17:22:00+11:00] SAFETY-PASS: period 2 complete
 [2026-07-22T17:25:00+11:00] incident closed, archived
 ```
+
+Sentinels (`IAP-APPROVED:`, `SAFETY-HALT:`, `SAFETY-PASS:`) are recognized
+only through `dcs_gate.py`'s own published grammar (`GRAMMAR_LINE`): "An
+entry begins at column zero with a mandatory bracketed timestamp; any other
+line is a continuation, never a sentinel, and quoting a whole prior entry
+inside a body requires indenting it off column zero." — `dcs_gate.py`'s
+halt-ceiling counter parses them from exactly that position (doctrine
+principle 13), so a wording pass that drops the bracketed timestamp, moves
+the token out of position, or paraphrases it, silently disarms the
+counter.
 
 ## Why 204 is chief-authored but IC-transcribed
 

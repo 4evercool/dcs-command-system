@@ -98,13 +98,21 @@ at the period boundary and after the Safety verdict. Four outcomes:
 ## 6. Safety valve — period cap
 
 Every time this `/dcs-run` invocation is about to loop step 4 → 5 again
-for this same incident without having reached step 7 (close), count how
-many operational periods it has already run this turn. If the count would
-exceed 3: **stop looping automatically.** File a 209 sitrep
-(`$HOME/.claude/dcs/templates/209-SITREP.md`, same mechanism as an
-`execute.md` escalation trigger) noting the incident has run more than 3
-operational periods without closing, and put continue/pivot/demobilize to
-the Owner via `AskUserQuestion` before proceeding further.
+for this same incident without having reached step 7 (close), read the
+count from `<incident_dir>/214-LOG.md` instead of tallying loop
+iterations locally: count IAP stamps the same way `execute.md`'s trigger
+(c) does (v0.5.12: attempts, not periods), and also read the halt count
+with `python "<project>/.claude/hooks/dcs_gate.py" --halt-count
+"<incident_dir>"` — the same runaway-loop failure, seen from the other
+axis. Reading from the log rather than a turn-local tally is what makes
+this valve hold across sessions: a multi-session incident must not reset
+to zero just because a fresh session started a new turn. If the stamp
+count would exceed 3, or the halt count is already sitting at
+`dcs_gate.py`'s own ceiling: **stop looping automatically.** File a 209
+sitrep (`$HOME/.claude/dcs/templates/209-SITREP.md`, same mechanism as an
+`execute.md` escalation trigger) noting why, and put
+continue/pivot/demobilize to the Owner via `AskUserQuestion` before
+proceeding further.
 
 This is independent of, and in addition to, `execute.md`'s own trigger (c)
 (`esg.max_periods_before_review`, default 3 — doctrine principle 13): that

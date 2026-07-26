@@ -123,6 +123,20 @@ become the stronger one:
 - A ratchet re-seat to 37 or 36 kB after a period of stability, which would
   also narrow the guard-blind band described in item 8.
 
+**Fresh evidence, 2026-07-26 — the slack is now 34 B.** `halt-loop-unbounded`
+closed at **38 878 of 38 912 B**, having spent almost the whole remaining
+margin on one rewritten clause of principle 13. It held the ratchet at 38
+(the IAP forbade raising it, and a raise was declared a deviation rather
+than an option), so nothing is broken — but this item stopped being a
+tidiness project. **34 B is less than one line of prose.** The next
+doctrine or schemas addition of any size turns the merge-time guard red,
+and whoever hits it will be mid-incident with a ratchet they are not
+allowed to touch. Regenerate:
+
+```bash
+python -c "import pathlib; d=pathlib.Path('dcs/references/doctrine.md').read_bytes().replace(b'\r\n',b'\n'); s=pathlib.Path('dcs/references/schemas.md').read_bytes().replace(b'\r\n',b'\n'); print(len(d)+len(s), 38*1024, 38*1024-len(d)-len(s))"
+```
+
 ## 8. Hot-path budget check is line-ending-sensitive ✅ DONE
 
 **Closed 2026-07-25** by incident `hot-path-budget-eol-sensitivity`,
@@ -214,3 +228,71 @@ that was borne out: `npm publish` failed with E415, "the package.json file
 in the tarball is too large (>10 MB)", which is what prompted the
 out-of-band fix. `install.ps1` never references `package.json`, so the
 local deploy path was never affected; it gated the registry release only.
+
+## 10. Safety's `halt` is binding on the IC — should it be?
+
+**Raised by the Owner, 2026-07-26**, during `halt-loop-unbounded`, from
+having watched real ICS: *the Safety Officer exercises the right to halt,
+but assessing and accepting the risk is the IC's own responsibility.*
+Today's doctrine says the opposite in as many words — `execute.md` step 9:
+"**`halt` (binding — no closing over this)**", and the officer's charter:
+"its halt verdict is binding on the IC". The IC picks the *disposition*
+of a halt and may escalate, but cannot close over one.
+
+The Owner's broader claim, which this item exists to carry: **the process
+must be results-oriented, not process-oriented**, and blind adherence
+produces paralysis. The evidence is this incident: 17 h from opening to
+its **first commit**, four stamps, two halts, one deviation, six specialist
+spawns, eight IC command-point spawns.
+
+**The counter-argument, so it is not relitigated from one side.** The
+201 of this very incident documents the failure mode: a safeguard a human
+can lift *gets lifted*. Trigger (b) asks the Owner on every halt, and on
+the fourth the Owner issued a blanket pre-authorization forward. Make the
+halt overridable by the IC and the pressure that currently produces
+"continue" simply moves to overriding halts — and the IC here is a model,
+not a person. [[Meta/building-dcs-lessons]] §1 ("Prose fails; mechanisms
+hold") classifies exactly this.
+
+**A third framing that may be the real one:** a `halt` in DCS is not "stop
+an unsafe act" but "the work is not done." Those are different objects.
+The ICS analogy transfers cleanly to the first and not obviously to the
+second.
+
+Adjacent and possibly the cheaper lever: the already-queued
+`safety-halt-functional-scope` row — 8 of 10 halts on `prod-tools-drift`
+found no functional defect, so refutations about prose and stale line
+numbers weigh the same as functional ones. Narrowing what may be *called*
+a halt is mechanizable; making the halt advisory is not.
+
+**Not queued by the close** — putting a row in the register is an ESG act.
+Candidate for the next `/dcs-esg`.
+
+## 11. `amend_tasking` has no cheap route — the deviation path has no proportionality
+
+**Measured in `halt-loop-unbounded`, 2026-07-26.** S3 returned a
+`deviation` whose fix was: add one derived regex built by concatenation
+from an existing constant, and reword one bullet in a check's
+specification. Reaching that fix cost an IC arbitration spawn, a
+transcription pass, a full `/dcs-plan` run, a tasking lint, a second IC
+spawn for acceptance, an IAP rewrite, a 209 sitrep, two Owner questions,
+and a re-stamp.
+
+`schemas.md` #6 offers three dispositions — `replan`, `amend_tasking`,
+`escalate_owner` — but `execute.md` step 6 routes **all** of them through
+the same return-to-planning, because any tasking edit changes `IAP.md` at
+the next pass and voids the hash. So `amend_tasking` is a label on the
+`replan` path, not a cheaper one. **The scale of the response is not
+derived from the scale of the finding.**
+
+Why it is not simply "make amendments skip the stamp": the re-stamp is
+what made trigger (c) fire on the fourth attempt, which is the counter
+doing its job (see §10's evidence). A design that lets amendments bypass
+the stamp re-opens exactly the blind spot `halt-loop-unbounded` closed.
+The wanted thing is a **cheap but still-counted** route — plausibly: the
+counter counts cycles rather than stamps, so a stamp stops being the only
+observable unit of cost.
+
+**Not queued by the close** — same reason as §10. Candidate for the next
+`/dcs-esg`, and it pairs naturally with §10 as one "cost of the process"
+agenda item.
