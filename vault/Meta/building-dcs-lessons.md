@@ -351,6 +351,35 @@ wrong attribution. See §2 ("Derived facts rot, and they travel") — this is
 that lesson's worked example, and the antidote is one clause: name the basis
 where the number is written.
 
+### And the limit of labelling: a basis protects the reader, not the decision
+
+The same incident then demonstrated where that antidote stops, by falling
+into the gap itself — which is why this paragraph exists rather than a
+tidier version of the rule.
+
+Its criterion 10 waived a version bump on the grounds that the version was
+unpublished. The figure behind that came from an `npm view` run **two and a
+half hours earlier**, and it was cited three times — 201, AAR, deploy sitrep
+— each time **correctly labelled** "measured during the previous incident's
+deploy". Labelling did its whole job: no reader was misled about provenance.
+The version had been published 90 minutes before the IAP was stamped anyway,
+and the release went out twice under one number.
+
+So the rule has two halves, and only the first is widely understood:
+
+- **Writing a number:** name its basis. Protects anyone who reads it later.
+- **Resting a decision on a number:** re-run the command. A label tells you
+  where a fact came from; it says nothing about whether it is still true,
+  and an acceptance criterion is a decision, not a reader.
+
+The tell is grammatical and easy to check: a criterion phrased as a **claim
+about present state** ("X is unpublished", "the registry stands at N", "the
+deployed marker is M") is asserting something the process must verify at the
+moment it matters. A criterion phrased as an **invariant to establish** ("the
+command returns empty", "the sets are equal") already carries its own check.
+Lint 3a enforces the second shape for population sweeps; nothing yet enforces
+it for single external facts. See [[Backlog]] item 13.
+
 ## Links
 
 - [[Post-mortems/energy-cost-model-rework]] — the incident behind v0.5.12

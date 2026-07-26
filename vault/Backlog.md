@@ -394,3 +394,72 @@ runnable in this repo and both deploys to date said so and skipped it.
 deploy-train side effect. Candidate for the next `/dcs-esg`, and it belongs
 next to §10 and §11 as a third "the mechanism does not measure what it
 claims" item.
+
+## 13. An acceptance criterion may rest on a fact nobody is required to measure
+
+**Cost 2026-07-26: a version published twice with different contents, and a
+0.6.10 spent to correct it.** Not a near miss — it shipped.
+
+`schemas-md-trim`'s criterion 10 read, in substance, *"no version bump: 0.6.9
+is unpublished."* That is a claim about **external, volatile state** — the npm
+registry — and it was false when it was written. Timeline, local +1100:
+
+| time | event |
+|---|---|
+| 11:57 | `npm view dcs-command-system version` → `0.6.7`. **Correct at that moment** |
+| **14:33:16** | **Owner publishes 0.6.9** |
+| 15:35 | 202 written, criterion 10 waives the bump on "0.6.9 unpublished" |
+| 15:48 | tasking lint runs, **including lint 3a — which executes commands and records their output** |
+| 15:59 | IC accepts at command point 2, having verified other figures against the tree |
+| 16:03 | Owner approves the IAP |
+
+**Four checkpoints after publication, and one command at any of them would
+have caught it.** The 11:57 reading was cited three times — in the 201, in
+the AAR, and in a deploy sitrep — and **every citation was honestly labelled
+with its basis** ("measured during the previous incident's deploy"). The
+labelling worked exactly as §2 intends: no reader was deceived about where
+the number came from. It simply does not follow that the number was still
+true, and nothing in the process asked.
+
+**The diagnosis is not "re-measure later".** The gap is not between plan time
+and stamp time — 105 minutes separated the publish from the stamp, but the
+lint sat in the middle of that window and ran commands. The gap is that
+**the fact was never classified as measurable at all.** It read as prose
+inside a criterion, so no step owned running anything.
+
+That is what makes this distinct from §10 (a count done by ambiguous grep)
+and §11 (a historical measurement recomputed instead of labelled). Here the
+measurement was never attempted, and the artefact that would normally catch
+it — lint 3a — only triggers on criteria whose scope is a *population*
+("all", "every", "no remaining"). Criterion 10's scope was a single external
+boolean, which 3a does not recognise.
+
+### Candidate fixes
+
+1. **Widen lint 3a's trigger from "population" to "measured claim".** Any 202
+   criterion asserting a fact about state outside the working tree — a
+   registry version, a deployed marker, another repo's contents — must carry
+   the command that establishes it, and the Dispatcher runs that command and
+   records the output, exactly as 3a already does for sweeps. This is the
+   smallest change and reuses machinery that exists and works.
+2. **Mark volatile criteria and re-run at the pre-stamp checklist.** Stronger
+   for facts that can change *during* planning, which is precisely what
+   happened here. `plan.md` step 7 already refuses to stamp over a broken
+   command chain; refusing to stamp over an unrefreshed volatile fact is the
+   same shape of gate.
+3. **Mechanical and partial, but free:** a guard can never reach npm, but it
+   *can* check that every 202 criterion containing a figure also contains a
+   regeneration command. That catches the shape of the defect without
+   knowing the domain, and it pairs naturally with `schema-citation-guard`.
+
+Worth noting which fix the evidence actually supports: (1) would have caught
+this one, because the lint ran 75 minutes after the publish. (2) is the
+belt-and-braces version and costs a command at every stamp.
+
+**Related and probably one agenda item together:** §12 (the deployed-version
+marker cannot witness a same-version ship) is the same failure from the other
+end — there the mechanism measured the wrong thing, here it measured nothing.
+Both surfaced on the same day, on the same release, and both were found by
+*doing* the ship rather than by reviewing it.
+
+**Not queued** — an ESG act. Candidate for the next `/dcs-esg`.
