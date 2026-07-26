@@ -20,6 +20,44 @@ from recollection. Releases before 0.6.5 are recorded only in
 
 ---
 
+## 0.6.10 — 2026-07-26
+
+Hot-path trim, and a correction: **0.6.9 shipped twice with different
+contents.** If you installed 0.6.9, take 0.6.10 — see below.
+
+### Changed
+
+- **`schemas.md` trimmed 15,613 → 13,296 B, and the hot-path ratchet
+  re-seated 38 → 37 kB.** The pair (`doctrine.md` + `schemas.md`, read on
+  every invocation and every command-point spawn) is now 36,561 B with
+  1,327 B of headroom, against 34 B before. Slack was restored *and* the
+  ceiling lowered in one act, because unclaimed slack under an unchanged
+  ceiling grows straight back.
+- The bytes came from provenance, worked examples and duplication — **never
+  from contract**. A line-by-line slice of "section number + Field + Type"
+  is byte-identical across the edit for sections 1–7. Section 8's body moved
+  to the 209-sitrep template that already carried its fields plus a trigger
+  enum, `Decided at` and `Notes`; the section **keeps its number**, reserved
+  with a pointer, because 19 `schemas.md #N` citations across six charters,
+  four workflows and three templates depend on positional numbering and
+  nothing resolves them.
+
+### Fixed
+
+- **The published 0.6.9 was not the 0.6.9 in the repository.** 0.6.9 was
+  published from a tree whose `schemas.md` was 15,613 B and whose ratchet
+  was 38; the trim landed two hours later under the same version number.
+  Two shipped trees, one published version — which is exactly what "version
+  sync is atomic" exists to prevent. 0.6.10 is that correction, and the
+  version number is the only way to make it visible.
+
+### Config
+
+No new keys. **0.6.9's `esg.max_halts_per_attempt` still has to be added by
+hand** if you have not already — see [Upgrading](README.md#upgrading).
+
+---
+
 ## 0.6.9 — 2026-07-26
 
 The halt → fix-tasking → re-verify loop is bounded by a mechanism instead
