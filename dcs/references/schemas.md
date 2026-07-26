@@ -1,8 +1,8 @@
 # DCS Structured Return Schemas
 
-Doctrine principle 9: every agent return follows a fixed JSON schema — this is how an IC catches the disagreement between "I did the task" and "I did *a* task" instead of being snowed by free prose.
+Fixed JSON return schema closes the "I did the task" gap; provenance in `doctrine-appendix.md`.
 
-Agents return these as the final block of their response (fenced ```json``` or bare — the IC parses either). Subagents do **not** write these to disk themselves — the IC transcribes the return into the relevant numbered file (203/204/IAP/SAFETY/AAR) per `references/forms.md`, keeping a single writer per artifact and letting the IC reject a malformed or incomplete return before it becomes doctrine for the rest of the period.
+Agents return the JSON block; the IC alone transcribes it to disk, keeping a single writer per artifact (`doctrine-appendix.md`).
 
 ## 1. Situation-analyst findings (feeds 201-BRIEF.md)
 
@@ -83,14 +83,10 @@ Returned by `dcs-safety-officer`.
 {"verdict": "pass", "refutations": [], "advisories": [{"finding": "docstring of _check_batch_energy_identity states '16 batches violate the guard' with no regenerating command", "fix": "delete the count or add the query beside it (principle 15)"}], "checked": ["git diff src/db/inventory_repo.py — window check present, matches 202 criterion 1", "pytest tests/test_inventory_repo.py -x — 5 passed (ran independently)", "pytest tests/test_reminder_plugin.py -x — 8 passed", "manual repro of 201 repro_path — no longer flagged"]}
 ```
 
-**`pass` with advisories is the normal healthy verdict (v0.6.5)** — the
-deliverable is sound, the paperwork needs a touch-up. `advisories[]`
-carries artifact-hygiene findings (principle 15 in docstrings, comments,
-logs, AARs): the IC folds them into the integration commit, and they
-**never** block a merge. Only refutations against the acceptance criteria
-or the behaviour of the code are binding. See
-`agents/dcs-safety-officer.md` step 6 for the three bars a
-principle-15 finding must clear to count as a refutation instead.
+**`pass` with advisories is the normal healthy verdict (v0.6.5)**:
+advisories are fixed by the IC and never block a merge; only a `halt`'s
+refutations do. Bar for what counts as a refutation instead of an
+advisory: `agents/dcs-safety-officer.md` step 6.
 
 Halt shape, showing the `refutations` object:
 
@@ -147,26 +143,13 @@ The fenced ```delegation-bounds``` JSON block inside `DELEGATION.md` — the onl
 | `forbidden_topics` | string[] | Checked against the 201/202 text |
 | `require_tests_green` | boolean | If `true`, the chief's `verification_plan` must name a concrete automated test run, not "manual only" |
 | `max_specialists` | number | Compared against the 204 tasking count |
-| `deploy` (v0.4) | object, optional | Deploy delegation. `auto: true` = `/dcs-deploy` skips the go/no-go prompt when EVERY row about to ship is in-bounds; `auto_after_close: true` = an attended `/dcs-run` may invoke the deploy train immediately after a close (`/dcs-loop` still never deploys — hard rule 2 is untouched by this block); `frontend_only: true` = rows whose territory touches anything outside the project's frontend paths always ask; `forbidden_globs` = rows touching these ALWAYS ask (**must include the project's schema-migration paths — migration-bearing deploys are never routine**); `max_rows_per_train` = more rows than this always ask. Any bound failing on any row ⇒ the ordinary Owner prompt, naming the row and bound |
+| `deploy` (v0.4) | object, optional | Deploy delegation keys: `auto`, `auto_after_close`, `frontend_only`, `forbidden_globs`, `max_rows_per_train`. Behavior: `deploy.md` step 5, `run.md` step 7a. |
 
 `esg.max_periods_before_review` (doctrine principle 13, trigger c) is **not** part of this block — it lives in `config.json`'s `esg` key (default `3`), because trigger (c) applies to every incident regardless of whether a Delegation is even in force.
 
 ## 8. 209 sitrep (v0.2 — feeds `.dcs/esg/SITREPS/<slug>-p<N>.md`)
 
-Filed by the IC at any escalation trigger (doctrine principle 13). Not a subagent return — the IC assembles this directly from `202-OBJECTIVES.md`, `SAFETY.md`, and `214-LOG.md`, then the Owner's `AskUserQuestion` answer fills in `decision`/`decided_by`.
-
-```json
-{"incident": "slug", "period": 2, "status_summary": "One paragraph: what's true right now", "objectives_state": "criterion 1 met, criterion 2 partially met", "safety_state": "halt -- boundary case untested (second halt on this objective)", "resource_spend": "2 periods, 3 specialists total", "options": ["continue", "pivot", "demobilize"], "decision": "pivot", "decided_by": "Owner"}
-```
-
-| Field | Type | Notes |
-|---|---|---|
-| `incident` | string | slug |
-| `period` | number | operational period this sitrep was filed during |
-| `status_summary` | string | one paragraph, no hedging |
-| `objectives_state` | string | plain-language rollup of 202 criteria |
-| `safety_state` | string | last verdict + why, if `halt` |
-| `resource_spend` | string | periods/specialists/scope, for the Owner's cost judgment |
-| `options` | `["continue","pivot","demobilize"]` | fixed enum, always all three offered |
-| `decision` | one of `options` | filled in only after the Owner answers `AskUserQuestion` |
-| `decided_by` | string | always `"Owner"` — this decision is never delegated, Delegation bounds or not |
+Relocated to `$HOME/.claude/dcs/templates/209-SITREP.md`: its prose headings carry the
+same fields, plus a trigger enum, `Decided at`, and `Notes` that this
+section never had. The number `8` stays reserved on purpose, so every
+existing citation of this section keeps pointing here.

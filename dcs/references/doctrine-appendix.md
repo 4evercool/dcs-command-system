@@ -435,3 +435,23 @@ unconditionally the moment `.dcs/CLOSED` exists in that root, IAP marker
 or not. This is doctrine's only deliberately fail-closed exception to
 "the gate only reads the approval marker" (principle 11) — a closed
 incident's directory should never accidentally become a live one again.
+
+## Structured return schemas
+
+**Why every return is fixed JSON, not prose (principle 9).** A fixed
+schema is what lets an IC catch the gap between "I did the task" and "I
+did *a* task" — free-form prose lets a specialist narrate completion
+without ever committing to the specific, checkable claims (files
+touched, tests run, real command output) that let the IC or the Safety
+Officer test the claim against reality. The schema forces that
+commitment at return time, before the gap has a chance to calcify into
+the record as an unexamined success.
+
+**Why a single writer per artifact.** Subagents return their JSON block
+rather than writing `203`/`204`/`IAP`/`SAFETY`/`AAR` files themselves, so
+there is exactly one writer per numbered artifact: the IC, transcribing
+per `references/forms.md`. That single choke point is what lets the IC
+reject a malformed or incomplete return before it becomes doctrine for
+the rest of the period — a subagent writing straight to disk could
+commit a bad return to the record with nobody positioned to catch it
+first.
