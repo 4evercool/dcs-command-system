@@ -380,6 +380,41 @@ command returns empty", "the sets are equal") already carries its own check.
 Lint 3a enforces the second shape for population sweeps; nothing yet enforces
 it for single external facts. See [[Backlog]] item 13.
 
+## 12. The paper trail caught what no mechanism did — four times in one incident
+
+From `schema-citation-guard` (2026-07-26), the incident whose whole subject is
+claims nobody re-measures. Every defect below was found by **a seat reading a
+whole artifact**, and none of them was reachable by any guard DCS owns.
+
+| # | Found by | What |
+|---|---|---|
+| 1 | IC, command point 2 | The 202 said "six charters already carry an anchor" — five do. The sixth, `dcs-commander.md`, was in the 202's own list of *un*anchored citations, one line above. |
+| 2 | Dispatcher, accepting S1 | Criterion 8 named two errors in one CHANGELOG sentence; the fix removed one. Logged **before** Safety ran, deliberately unfixed, so the officer would reach it independently. It did. |
+| 3 | Safety Officer, second run | The Dispatcher's own criterion-9 annotation gave the wrong *cause*: it said the surface list was short "for the same reason" as the count. The predecessor's grep **did** find `doctrine.md`; it was missing from the prose list for an unrelated reason. |
+| 4 | Dispatcher, at close | The officer's advisory claimed a backtick in `` `schemas.md` #6 `` "evades even a naive grep", and the IC repeated it in a directive. Tested at close: the pattern's optional backtick absorbs it and the form **matches**. Two verifiers asserted a mechanism without running it. |
+
+**The pattern is not "everyone makes mistakes."** It is that each error was
+made by the seat *most* qualified to catch it, in its own area, and was caught
+only downstream by someone reading rather than skimming. #2 and #4 are the
+instructive pair: in #2 a seat found its own side's defect and chose to write
+it down instead of quietly fixing it, which is what let the adversarial check
+be a real test rather than a formality. In #4 the adversarial seat produced
+the unverified claim, and only the habit of testing before transcribing kept
+it out of the vault.
+
+**Consequence for how DCS is built:** the value of the artifact chain is not
+audit — it is that a claim written down becomes attackable by the next reader,
+whereas a claim passed in a summary is inherited. Every one of the four
+survived at least one hand-off before dying. This argues for the existing rule
+that the IC transcribes structured returns verbatim, and against any future
+convenience that would let a seat pass along a paraphrase.
+
+**Two return-form deviations in the same incident** (a specialist naming a
+divergence in `evidence` instead of returning `deviation`; another returning
+no structured block at all, so the territory bound had to be established
+forensically by the officer via `find -newermt`) are the same shape from the
+producer's side — see [[Backlog]] item 14.
+
 ## Links
 
 - [[Post-mortems/energy-cost-model-rework]] — the incident behind v0.5.12

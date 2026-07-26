@@ -24,8 +24,8 @@ known at intake).
 ## Evidence
 
 <!-- One bullet per analyst finding, each citing its source. Pull directly
-     from the dcs-situation-analyst structured returns (schemas.md #1) --
-     do not paraphrase away the citation. -->
+     from the dcs-situation-analyst structured returns (schemas.md #1,
+     situation-analyst findings) -- do not paraphrase away the citation. -->
 
 - {{evidence item 1 -- source: action_log / codegraph / grep / test run / vault}}
 - {{evidence item 2}}

@@ -34,6 +34,18 @@ away:
       dcs_gate.py itself rather than re-derived here) -- so a wording pass
       can't rename a token, or a new prose surface drift from the parser,
       without this check failing at merge time first
+  13. schema citation anchors: a `schemas.md #N` citation names a SECTION,
+      not just a number -- the number-to-title mapping is parsed from
+      dcs/references/schemas.md itself at run time (no section number or
+      title appears as a literal in the check), the population of citing
+      files is DISCOVERED by walking the tree (never a named list), one
+      named case exists per population file, a degeneracy guard fires if
+      the population, the parse, or a required citing surface collapses,
+      and a named case reruns the same comparator on a forged (shifted)
+      mapping to prove it actually reads titles rather than accepting
+      anything -- so a section deleted and the numbering below it shifted,
+      or a title silently rewritten under a stale number, fails here
+      instead of resolving as "the number exists"
 
 Run standalone, or as the merge-time guard named in CLAUDE.md (doctrine:
 close.md step 1a) so it runs before every incident merge.
@@ -450,6 +462,144 @@ check("log grammar: Channel A's grep -c identifier is defined in dcs_gate.py",
 # token must not be allowed to quietly erase this requirement too.
 check("log grammar: population contains a real IAP-APPROVED: witness (sentinel_of == 'stamp')",
       any(_gate.sentinel_of(_l) == 'stamp' for _l in _all_fenced_lines))
+
+# --- 13. schema citation anchors --------------------------------------------
+# A "schemas.md #N" citation is a pointer to a numbered SECTION; what it
+# actually promises the reader is the section's identity (its title), not
+# merely that N resolves to *some* heading. "number exists" catches zero of
+# fourteen silent title/number drifts (schema-citation-guard, 201 finding
+# A) -- a section deleted and the numbering below it shifted, or a title
+# rewritten while a stale number stayed put, both leave every citing "#N"
+# resolving to a heading, just the wrong one.
+#
+# The source of truth is dcs/references/schemas.md ITSELF, parsed at run
+# time -- there is no executor for a schema citation the way dcs_gate.py is
+# the executor check 12 imports its grammar from, so that "import the rule
+# from the mechanism" move does not apply here. No section number and no
+# section title appears as a literal anywhere below (criterion 2 of the
+# schema-citation-guard incident's 202); parsing schemas.md at run time is
+# what keeps this check itself from becoming the kind of stale duplicate it
+# exists to catch.
+schemas_md = read("dcs/references/schemas.md")
+_CITE_TITLE_CUT = re.compile(r"\s*[(" + chr(0x2014) + "]")  # em-dash via \u escape, ASCII source
+SCHEMA_KEY = {
+    int(_n): _CITE_TITLE_CUT.split(_t.strip())[0].strip().lower()
+    for _n, _t in re.findall(r"^##\s+(\d+)\.\s+(.+)$", schemas_md, re.M)
+}
+
+_CITE_RE = re.compile(r"schemas\.md`?\s*#\s*(\d+)")
+_CITE_WINDOW = 80
+
+
+def _schema_citation_matches(norm_text, key):
+    """Every 'schemas.md #N' citation in norm_text -- already whitespace-
+    collapsed AND lower-cased, because this reuses norm() (defined above,
+    check 6) rather than adding a third copy of the wrap normaliser next to
+    norm() and _ws_norm(): a hand-rolled third copy of one normalisation
+    rule, with no arbiter between the three, is the literal root cause this
+    incident opened over. Returns one (n, ok) pair per citation found: ok
+    is True iff key[n]'s title text appears within _CITE_WINDOW characters
+    after the digit -- same window size, same case-folding (via norm()),
+    same title truncation as the enumerator command 202's acceptance
+    criterion 1 runs verbatim."""
+    out = []
+    for _m in _CITE_RE.finditer(norm_text):
+        _n = int(_m.group(1))
+        _title = key.get(_n)
+        _ok = bool(_title) and _title in norm_text[_m.end():_m.end() + _CITE_WINDOW]
+        out.append((_n, _ok))
+    return out
+
+
+# (e) degeneracy guard, part 1: schemas.md must actually have yielded a
+# parsed heading, or the comparator below would find no title to check
+# against and every downstream case would pass vacuously.
+check("schema citation: schemas.md yields at least one parsed section heading",
+      bool(SCHEMA_KEY), f"parsed: {SCHEMA_KEY}")
+
+# (b) population: discovered by walking the tree, never a named list --
+# same exclusion set as 202's enumerator command (.git, node_modules,
+# __pycache__, .dcs, vault; .dcs/incidents is a frozen archive and vault/
+# never ships, per 202's stated rationale for both).
+_CITE_EXCLUDED = {".git", "node_modules", "__pycache__", ".dcs", "vault"}
+_cite_all_md = sorted(
+    p for p in REPO.rglob("*.md")
+    if not (_CITE_EXCLUDED & set(p.relative_to(REPO).parts))
+)
+
+_cite_population = []
+_cite_bad = {}
+for _p in _cite_all_md:
+    _rel = str(_p.relative_to(REPO)).replace("\\", "/")
+    _norm_text = norm(_p.read_text(encoding="utf-8"))
+    _matches = _schema_citation_matches(_norm_text, SCHEMA_KEY)
+    if not _matches:
+        continue
+    _cite_population.append(_rel)
+    _bad = [_n for _n, _ok in _matches if not _ok]
+    if _bad:
+        _cite_bad[_rel] = _bad
+
+# (e) degeneracy guard, part 2: red if the population itself collapsed, if
+# the one file known to need line-wrap normalisation to even enter the
+# population dropped out, or if a whole citing surface disappeared --
+# without these, "delete the citation instead of fixing the anchor" makes
+# the offending file (and its named case) vanish from the population
+# together, and the check would go green by erasure rather than by repair.
+check("schema citation: population is non-empty",
+      bool(_cite_population), f"population: {_cite_population}")
+
+check("schema citation: population includes agents/dcs-commander.md "
+      "(visible only after line-wrap normalisation)",
+      "agents/dcs-commander.md" in _cite_population,
+      f"population: {_cite_population}")
+
+_CITE_SURFACES = {
+    "agents/": lambda r: r.startswith("agents/"),
+    "dcs/workflows/": lambda r: r.startswith("dcs/workflows/"),
+    "dcs/templates/": lambda r: r.startswith("dcs/templates/"),
+    "dcs/references/doctrine.md": lambda r: r == "dcs/references/doctrine.md",
+}
+_cite_missing_surfaces = [
+    _label for _label, _pred in _CITE_SURFACES.items()
+    if not any(_pred(_r) for _r in _cite_population)
+]
+check("schema citation: all four citing surfaces represented "
+      "(agents/, dcs/workflows/, dcs/templates/, dcs/references/doctrine.md)",
+      not _cite_missing_surfaces, f"missing: {_cite_missing_surfaces}")
+
+# (d) one named case per population file, as in check 12(c) -- a missing or
+# mismatched anchor in a NEW file fails by name, not folded into one
+# aggregate count.
+for _rel in _cite_population:
+    _bad = _cite_bad.get(_rel, [])
+    check(f"schema citation: {_rel} -- every schemas.md #N carries N's real title",
+          not _bad, f"unanchored/mismatched: {['#' + str(_n) for _n in _bad]}")
+
+# (f) negative proof (202 acceptance criterion 3): rerun the SAME
+# comparator against a forged mapping derived from SCHEMA_KEY by shifting
+# every number onto its neighbour's title (never typed as a literal, per
+# criterion 2) -- a comparator that still reports every citation as "ok"
+# against the wrong title would be accepting anything, not reading titles.
+if SCHEMA_KEY:
+    _cite_nums = sorted(SCHEMA_KEY)
+    _cite_shifted_key = {
+        _n: SCHEMA_KEY[_cite_nums[(_i + 1) % len(_cite_nums)]]
+        for _i, _n in enumerate(_cite_nums)
+    }
+    _forged_mismatch_at = None
+    for _p in _cite_all_md:
+        _norm_text = norm(_p.read_text(encoding="utf-8"))
+        _matches = _schema_citation_matches(_norm_text, _cite_shifted_key)
+        if any(not _ok for _n, _ok in _matches):
+            _forged_mismatch_at = (str(_p.relative_to(REPO)).replace("\\", "/"), _matches)
+            break
+    check("schema citation: comparator flags a forged (shifted-numbering) mapping",
+          _forged_mismatch_at is not None,
+          f"no mismatch found against the shifted mapping {_cite_shifted_key}")
+else:
+    check("schema citation: comparator flags a forged (shifted-numbering) mapping",
+          False, "no SCHEMA_KEY parsed -- cannot build a forged mapping to test against")
 
 print(f"\n{checks - len(failures)}/{checks} passed")
 sys.exit(1 if failures else 0)

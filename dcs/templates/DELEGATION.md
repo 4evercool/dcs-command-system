@@ -2,7 +2,8 @@
 DELEGATION.md -- the Delegation of Authority. Human-readable terms above
 each version block, machine-readable delegation-bounds JSON block below it
 -- workflows (plan.md, run.md, loop.md) parse ONLY the JSON block, never
-this file's prose (schemas.md #7 is the authoritative shape). Amended by
+this file's prose (schemas.md #7, delegation bounds, is the authoritative
+shape). Amended by
 appending a NEW version block during a /dcs-esg session, by the Owner --
 never edit a past version block in place, it is the audit trail.
 

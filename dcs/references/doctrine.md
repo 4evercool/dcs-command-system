@@ -19,7 +19,7 @@ Command transfers to the qualified IC. DCS: whatever model the session runs on (
 - **Main session runs Fable** → it is the IC, no transfer.
 - **Otherwise** → the Dispatcher spawns `dcs-commander` (`model: fable`) at each **command point**, passes the required inputs, relays the decision to the Owner where Owner-facing, logs it in `214-LOG.md` as `command: <decision> (IC=dcs-commander)`.
 
-Four command points (contracts: `references/schemas.md` #6):
+Four command points (contracts: `references/schemas.md` #6, commander decisions):
 
 1. **Typing** (`/dcs-new`, after 201 draft) — Type 5 / 3 / 1.
 2. **IAP acceptance** (`/dcs-plan`, after chiefs return) — accept/reject tactics + partition before anything reaches the Owner.

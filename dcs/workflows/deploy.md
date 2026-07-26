@@ -116,7 +116,7 @@ isn't surprised their existence didn't affect the deploy scope.
 **Deploy-delegation check first:** read the latest `delegation-bounds`
 block from `<esg_root>/.dcs/esg/DELEGATION.md`. If it has a `deploy`
 object with `auto: true`, evaluate EVERY row about to ship against its
-bounds (schemas.md #7): territory vs `frontend_only` and the deploy
+bounds (schemas.md #7, delegation bounds): territory vs `frontend_only` and the deploy
 `forbidden_globs` (migration-bearing rows are never routine), row count
 vs `max_rows_per_train`. **All rows in-bounds:** the go/no-go prompt is
 covered by the Owner's standing, signed authorization — announce in one

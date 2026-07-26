@@ -38,9 +38,11 @@ contents.** If you installed 0.6.9, take 0.6.10 — see below.
   is byte-identical across the edit for sections 1–7. Section 8's body moved
   to the 209-sitrep template that already carried its fields plus a trigger
   enum, `Decided at` and `Notes`; the section **keeps its number**, reserved
-  with a pointer, because 19 `schemas.md #N` citations across six charters,
-  four workflows and three templates depend on positional numbering and
-  nothing resolves them.
+  with a pointer, because `schemas.md #N` citations scattered across the
+  package depend on positional numbering, and `tests/test_doctrine_integrity.py`
+  check 13 (schema citation anchors) now verifies each citation in the
+  shipped package against the section title it actually names. The walk
+  covers `*.md` and excludes `.dcs/` and `vault/`, neither of which ships.
 
 ### Fixed
 
