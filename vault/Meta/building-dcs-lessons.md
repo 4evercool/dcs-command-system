@@ -256,6 +256,53 @@ thereby the hazard you have.** Plan against the measured one.
   (`ceil(37906/1024)+1` is 39, not 38) and which had survived a prior review
   because the *value* was right and nobody evaluated the *formula*.
 
+## 10. A count a model performs by reading prose is not a count
+
+`halt-loop-unbounded` (2026-07-26) demonstrated this **on its own log,
+three times, while building the fix for it.**
+
+`execute.md` and `plan.md` both instruct the Dispatcher to count this
+incident's stamped attempts by grepping `214-LOG.md` for `IAP APPROVED` /
+`pre-stamp checklist PASSED`. Run against the live log at three successive
+points, that instruction returned **3, then 4, then 6** — against **1,
+then 3, then 4** real stamps. Nothing was wrong with the log. Ordinary
+narrative entries *mention* the tokens: an entry explaining that a hash was
+voided, an entry recording that the checklist passed, a Safety summary
+quoting the line it is about. The substring is in all of them.
+
+The failure is not sloppiness, and this is the part worth keeping. Each
+of those three miscounts was produced by a careful reader following a
+written instruction exactly. **The instruction was the defect** — it named
+a command whose output does not mean what the rule needs it to mean, and
+no amount of care recovers that. The Dispatcher counted correctly only at
+the fourth stamp, by abandoning the prescribed `grep` for an anchored
+pattern — that is, by using the field-position grammar the period had just
+finished building.
+
+Two consequences that generalize past this incident:
+
+- **A rule whose enforcement is "run this command and read the number" is
+  only as good as the command's precision.** Before writing such a rule,
+  run its command against a *realistic* artifact — one with narration in
+  it — not a clean example. This one had survived since v0.5.12 because it
+  was only ever checked against logs too short to contain narration.
+- **Self-application is the cheapest test available for a process rule,
+  and it is nearly free.** This incident found the defect four times over
+  without a single extra spawn, purely because the rule happened to apply
+  to the artifact the session was already writing. When a rule governs an
+  artifact DCS itself produces, run it on DCS's own artifacts before
+  shipping it. See §6 ("A rule you exempt yourself from is not a rule") —
+  this is its constructive twin.
+
+The same incident produced a second instance of the family from the
+opposite direction: the Logistics Chief derived requirement **L0-d** — a
+log with no trailing newline turns a verbatim append into a splice onto
+the last line — from the *shape* of the act, with no observed case. A
+specialist implemented it, a test pinned it, and hours later the
+incident's own `214-LOG.md` turned out to have no trailing newline and an
+append against it failed. Derivation from structure beat waiting for the
+field by less than a day.
+
 ## Links
 
 - [[Post-mortems/energy-cost-model-rework]] — the incident behind v0.5.12
