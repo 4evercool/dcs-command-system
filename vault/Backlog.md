@@ -580,3 +580,43 @@ assumption that today's regex generalises.
 
 **Not queued** — evidence for the adjacent-populations work, and an accepted
 boundary in the meantime.
+
+## 16. Check 14 goes green on a declaring site that drops its citation entirely
+
+Two facets of one carrier, both raised as Safety advisories on
+`safety-halt-functional-scope` (2026-07-27) and deliberately **not** pulled
+into that period — no acceptance criterion ordered them, and moving the bar
+after the verdict is the thing the incident existed to stop.
+
+**Facet (a) — silence passes.** Check 14 goes red when a declaring site
+*disagrees* with the charter (wrong step number, wrong bar count, wrong default
+verdict token) and when the population collapses. It does **not** go red when a
+declaring site simply stops citing the charter at all. Measured by the officer:
+deleting both `agents/dcs-safety-officer.md` step 6 references from
+`schemas.md` still gives `73/73 passed` — that file's own named case stays
+green vacuously, because there is nothing left to compare. The degeneracy guard
+does not catch it either: the site is still a declaring site by the
+co-occurrence predicate, so the population never empties. Direction of the fix:
+a declaring site must carry **at least one** charter-step reference, or FAIL.
+
+**Facet (b) — the `N of M` rule stops at the charter.** The bare-census check
+is scoped to `agents/dcs-safety-officer.md` on purpose (a whole-tree version
+false-positives), so the one remaining `[0-9]+ of [0-9]+` in the shipped
+package is outside it: `grep -rnE "[0-9]+ of [0-9]+" dcs/ agents/ --include=*.md`
+→ `dcs/references/doctrine-appendix.md:326`. That one is a **quotation** of the
+census the incident retired, which is a legitimate reason for it to exist —
+which is exactly why widening the scope needs a quotation-aware rule rather
+than a wider glob. Decide it: widen to `dcs/references/` with a quotation
+exclusion, or record the narrow scope as a deliberate boundary the way item 15
+records check 13's.
+
+**Language defect that belongs with the fix.** That incident's IAP verification
+plan said "delete one declaring place (the charter reference in `schemas.md`
+§5)" and predicted RED; the officer correctly got GREEN. The step conflated
+*declaring site* (defined by token co-occurrence) with *site carrying a
+reference*. Whoever writes facet (a) should settle the vocabulary, because the
+two are only the same thing once (a) is implemented.
+
+**Queued** as register row `check-14-hardening` at that incident's close.
+Related but distinct: [[Backlog]] item 15 is check **13**'s population
+boundary; this is check **14**'s predicate.

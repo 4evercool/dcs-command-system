@@ -415,6 +415,72 @@ no structured block at all, so the territory bound had to be established
 forensically by the officer via `find -newermt`) are the same shape from the
 producer's side — see [[Backlog]] item 14.
 
+## 13. A rule that lives only in a prompt decays measurably
+
+Lesson #1 says prose fails and mechanisms hold. This is the sharpest instance
+so far, because for once the decay was **measured** rather than inferred, and
+the rule that decayed was one written to fix this very failure mode.
+
+v0.6.5 gave the Safety Officer's charter an explicit default: an
+artifact-hygiene finding is an `advisories[]` entry, not a `halt`, unless it
+clears one of three named bars. It shipped at `6a57b97`, 2026-07-25T14:19:21
++1100 (`git log -1 --format=%ad --date=iso-strict 6a57b97`), and the installed
+copy under `~/.claude/` carried it the same afternoon.
+
+It did not take. On the incident that supplied the evidence
+(`C:\bread_bot\.dcs\incidents\2026-07-25-prod-tools-drift`), the
+`advisories[]` channel was used **zero times across eleven officer spawns** —
+`grep -c "advisor" .dcs/incidents/2026-07-25-prod-tools-drift/SAFETY.md` → 0 —
+while eight of ten halts carried no functional defect by the officers' own
+words, and **five of those eight postdate the install**. Anchored halt
+timestamps: `grep -n "^\[.*\] SAFETY: halt" …/214-LOG.md`.
+
+Three things are worth carrying forward.
+
+**A prompt is not a carrier.** The charter said the right thing, in the right
+place, to the exact agent that had to apply it, and eleven fresh spawns in a
+row did not apply it. Nothing observed the rule, so nothing noticed it was
+unobserved. `safety-halt-functional-scope` gave it check 14, which parses the
+charter at run time and holds every citing surface to the charter's own live
+step number, bar count and default verdict token — the check-13 shape, because
+this rule has no executing module to import from the way check 12 has
+`dcs_gate.py`.
+
+**Find out whether the rule exists before designing the fix.** The register row
+named the symptom ("8 of 10 halts found no functional defect") and read as
+*there is no rule*. There was one. The distinction changed the incident's whole
+shape — from "write a bar" to "give the existing bar a carrier" — and it was
+settled by reconnaissance, not by argument. Two analysts disagreed about it,
+and the disagreement was closed by one command rather than by picking the more
+confident analyst.
+
+**A fix can reintroduce the disease one file over.** The period's own new prose
+put an un-regenerable number into `doctrine-appendix.md`. The Safety Officer
+caught it, could not reproduce the number by any query it tried, called it "the
+same class of defect this incident was opened to remove, reproduced in one file
+off to the side" — **and still rated it an advisory**, because no acceptance
+criterion covered the appendix text and stopping a merge over a number in a
+historical note is exactly the spend the incident existed to end. That is the
+bar working on its own author, which is the only test of a bar that means
+anything.
+
+### Two smaller ones, both about trusting an input
+
+**A command decision is an input, not a fact.** At command point 4 the IC
+reported a typo (`10\10` in `CHANGELOG.md:98`) that does not exist —
+`grep -nF '10\10' CHANGELOG.md` returns nothing. The Dispatcher did not apply
+the directive and recorded the omission. The scepticism DCS aims at specialist
+self-reports applies upward too: a seat's authority is over the decision, not
+over the facts it cites.
+
+**Estimated timestamps are a derived fact like any other.** Several
+`214-LOG.md` entries in that incident were stamped by estimate rather than by
+clock and ran roughly 53 minutes ahead of the truth, anchored against
+`git show -s --format=%ad c0fea95`. The log is append-only, so the drift was
+recorded as a correction rather than tidied away — which is what append-only is
+for. `close.md` step 3's rule about the real clock exists for precisely this,
+and it was broken by the seat that transcribes the log.
+
 ## Links
 
 - [[Post-mortems/energy-cost-model-rework]] — the incident behind v0.5.12

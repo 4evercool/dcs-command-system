@@ -70,10 +70,7 @@ You receive, inline in your prompt:
    docstring, a hash in a comment, an un-regenerable census in an AAR:
    report each in `advisories[]` with the fix, and **still return
    `pass`** if the acceptance criteria are met. The IC folds advisories
-   into the integration commit. Measured 2026-07-25: **13 of 17 Safety
-   halts across all incidents to date were process/artifact findings, not
-   code** — one incident halted three times with the officer itself
-   writing "no functional defects" twice. A binding halt costs a full
+   into the integration commit. A binding halt costs a full
    execute-and-verify cycle; spending that on a docstring is a
    misallocation of the one mechanism that can stop a merge.
 

@@ -1,6 +1,6 @@
 ---
 tags: [dcs, metrics, incidents]
-updated: 2026-07-25
+updated: 2026-07-27
 ---
 
 # Incident metrics
@@ -11,6 +11,19 @@ a lifetime (doctrine principle 15):
 ```bash
 python vault/_scripts/incident_metrics.py <project-root> [<worktree>...]
 ```
+
+> **The script's `halts` column is not trustworthy today, in both directions**
+> (measured 2026-07-26 during `safety-halt-functional-scope`'s stem; queued as
+> register row `halt-enumeration-grammar-drift`). It counts with an unanchored
+> whole-file substring search — `vault/_scripts/incident_metrics.py:52`,
+> `halts=len(re.findall(r"SAFETY: halt", log))` — so narrative that quotes the
+> sentinel back counts as a verdict: it reports 10 halts for
+> `energy-cost-model-rework` where `grep -n "^\[.*\] SAFETY: halt"` finds 4
+> real verdicts. And the same regex cannot see the `SAFETY-HALT:` grammar
+> v0.6.9 introduced, so it reports **0** halts for `schema-citation-guard`,
+> which had one. No enumeration command currently spans both grammars —
+> anchor the pattern and check which grammar a log uses before citing any halt
+> count from this file.
 
 ## Snapshot — 2026-07-25, bread_bot (first eight incidents)
 
@@ -82,6 +95,8 @@ below carry the tree they were measured in.
 | 2026-07-25, v0.6.8 | 37,579 | 36.7 | after `hot-path-budget-eol-sensitivity`. **Normalised — identical in any checkout** |
 | 2026-07-26, v0.6.9 (`532b809`) | 38,878 | 38.0 | after `halt-loop-unbounded`. `doctrine.md` **+1,299 B** for principle 13's ceiling clause; **34 B of slack** under the 38 kB ratchet — the tightest this table has recorded |
 | **2026-07-26 (`08f75f0`)** | **36,561** | **35.7** | after `schemas-md-trim`. `schemas.md` −2,317 B; ratchet re-seated **38 → 37**, so slack is **1,327 B** against a *lower* ceiling |
+| 2026-07-26 (`9830af5`) | 36,582 | 35.7 | after `schema-citation-guard`. `doctrine.md` **+21 B** for check 13's anchor. Row added retroactively at the next incident's close — that incident did not record one, which is why the step from 36,561 looked unexplained |
+| **2026-07-27 (`c0fea95`)** | **36,683** | **35.8** | after `safety-halt-functional-scope`. `doctrine.md` **+101 B**: principle 15 now names the advisory default and cites the charter step instead of "checklist". Provenance went to `doctrine-appendix.md`, which is outside the pair. **1,205 B of slack** against the 37 kB ratchet |
 
 Regenerate the two current rows — note this uses the **normalised** measure
 the guard itself applies (`CRLF → LF` before counting), not `os.path.getsize`,

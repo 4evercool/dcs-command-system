@@ -601,5 +601,229 @@ else:
     check("schema citation: comparator flags a forged (shifted-numbering) mapping",
           False, "no SCHEMA_KEY parsed -- cannot build a forged mapping to test against")
 
+# --- 14. advisory/refutation bar carrier ------------------------------------
+# Doctrine principle 15's advisory/refutation split names its bars in
+# exactly ONE place -- a numbered step inside agents/dcs-safety-officer.md,
+# discovered here by content, never by a hardcoded number. Every other prose
+# surface that discusses the split cites that step rather than restating
+# the bars. Until this check, that citation contract was prose: nothing
+# caught a renumbered step, a bar count quoted stale beside a citation, or
+# the whole declaring population shrinking to nothing if a rewrite deleted
+# the split instead of reconciling every citation to it.
+#
+# The charter IS the source of truth and is parsed at run time -- no other
+# file's name, and no line number, appears as a literal below (criterion 2
+# of this incident's 202); parsing the charter here is what keeps this
+# check from becoming the kind of stale duplicate it exists to catch, the
+# same discipline check 13's schema-citation anchors use, because this rule
+# likewise has no executing module the way check 12's grammar does.
+safety_officer_md = read("agents/dcs-safety-officer.md")
+
+_BAR_ADVISORY_RE = re.compile(r"advisor(?:y|ies)", re.I)
+_BAR_HALT_OR_REFUTATION_RE = re.compile(r"refutation|\bhalts?\b", re.I)
+_BAR_CITE_RE = re.compile(r"agents/dcs-safety-officer\.md`?\s+step\s+(\d+)", re.I)
+_BAR_NUM_WORDS = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
+                  "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10}
+_BAR_COUNT_RE = re.compile(
+    r"\b(\d+|" + "|".join(_BAR_NUM_WORDS) + r")\s+(?:named\s+)?bars?\b", re.I)
+_BAR_DEFAULT_TOKEN_RE = re.compile(
+    r"`(pass|halt)`[^.\n]{0,40}\bnormal\b|\bstill return[^`\n]{0,10}`(pass|halt)`",
+    re.I)
+
+
+def _bar_num(word):
+    return int(word) if word.isdigit() else _BAR_NUM_WORDS[word.lower()]
+
+
+def _bar_paragraphs(text):
+    """Blank-line-delimited paragraphs -- the same unit criterion 3's
+    mechanical half below uses, and the binding definition of 'same
+    paragraph' the Owner confirmed at this incident's IAP approval."""
+    return re.split(r"\n\s*\n", text)
+
+
+# (a) source of truth: parse the charter's own <process> steps to find the
+# one whose body introduces the advisory/refutation split -- by content
+# ("ADVISORIES, not refutations"), never by a hardcoded step number -- its
+# live step number, how many bars its bullet list names, and the default
+# verdict token its own sentence states in code markup. Never a copy of
+# that prose here.
+_bar_proc_m = re.search(r"<process>(.*?)</process>", safety_officer_md, re.S)
+_bar_proc_text = _bar_proc_m.group(1) if _bar_proc_m else ""
+_bar_step_starts = list(re.finditer(r"^(\d+)\.\s+\*\*", _bar_proc_text, re.M))
+_bar_step_num = None
+_bar_step_body = ""
+for _bar_i, _bar_sm in enumerate(_bar_step_starts):
+    _bar_end = (_bar_step_starts[_bar_i + 1].start()
+                if _bar_i + 1 < len(_bar_step_starts) else len(_bar_proc_text))
+    _bar_body = _bar_proc_text[_bar_sm.start():_bar_end]
+    if re.search(r"advisories,\s*not\s*refutations", _bar_body, re.I):
+        _bar_step_num = int(_bar_sm.group(1))
+        _bar_step_body = _bar_body
+        break
+
+check("bar carrier: charter names a <process> step introducing the "
+      "advisory/refutation split",
+      _bar_step_num is not None,
+      "no numbered <process> step contains 'ADVISORIES, not refutations'")
+
+_bar_charter_count = len(re.findall(r"^\s*-\s+\*\*", _bar_step_body, re.M))
+check("bar carrier: charter's own step lists at least one bar",
+      _bar_charter_count > 0, f"step {_bar_step_num}: 0 bullet bars found")
+
+_bar_default_m = re.search(r"return\s*`(\w+)`", _ws_norm(_bar_step_body))
+_bar_charter_token = _bar_default_m.group(1) if _bar_default_m else None
+check("bar carrier: charter's own step states a default verdict token in "
+      "code markup",
+      bool(_bar_charter_token),
+      f"step {_bar_step_num}: no 'return `token`' sentence found")
+
+# (b) candidate population: same filter as the incident's own reproducing
+# command -- *.md under the three scanned surfaces, matching
+# advisor(y|ies)|refutation case-insensitively -- discovered by walking the
+# tree, never a named list.
+_bar_pop_re = re.compile(r"advisor(?:y|ies)|refutation", re.I)
+_bar_scan_dirs = [REPO / "dcs" / "references", REPO / "dcs" / "workflows", REPO / "agents"]
+_bar_candidates = sorted(
+    {p for _bar_d in _bar_scan_dirs if _bar_d.is_dir() for p in _bar_d.rglob("*.md")
+     if _bar_pop_re.search(p.read_text(encoding="utf-8"))},
+    key=lambda p: p.as_posix(),
+)
+_bar_line_count = sum(
+    1 for _bar_p in _bar_candidates
+    for _bar_l in _bar_p.read_text(encoding="utf-8").splitlines()
+    if _bar_pop_re.search(_bar_l)
+)
+check(f"bar carrier: candidate population has {_bar_line_count} matching "
+      f"lines across {len(_bar_candidates)} files (compare: grep -rniE "
+      "\"advisor(y|ies)|refutation\" dcs/references/ dcs/workflows/ agents/ "
+      "--include=*.md | wc -l)",
+      _bar_line_count > 0 and len(_bar_candidates) > 0)
+
+# A "declaring place" is a candidate file with at least one paragraph where
+# an advisory token AND a refutation/halt-verdict token co-occur -- the
+# bounded window (d) requires. Measured at period start: four candidate
+# files each carry only one of the two token classes, so a correct
+# co-occurrence predicate captures none of them -- never special-cased by
+# name here; the exclusion falls out of the predicate itself.
+_bar_declaring = []
+_bar_declaring_paras = {}
+for _bar_p in _bar_candidates:
+    _bar_text = _bar_p.read_text(encoding="utf-8")
+    _bar_paras = [
+        _bar_para for _bar_para in _bar_paragraphs(_bar_text)
+        if _BAR_ADVISORY_RE.search(_bar_para) and _BAR_HALT_OR_REFUTATION_RE.search(_bar_para)
+    ]
+    if _bar_paras:
+        _bar_declaring.append(_bar_p)
+        _bar_declaring_paras[_bar_p] = _bar_paras
+
+_bar_declaring_rel = [str(p.relative_to(REPO)).replace("\\", "/") for p in _bar_declaring]
+
+# (c) degeneracy guard: non-empty, includes the charter itself, spans at
+# least two of the three scanned surfaces -- stated structurally, never as
+# a file list, so a rewrite that deletes the prose instead of reconciling
+# it (population collapses to nothing) fails here instead of "passing" by
+# vacuous truth.
+check("bar carrier: declaring-place set is non-empty and includes the "
+      "charter itself",
+      bool(_bar_declaring) and any(r == "agents/dcs-safety-officer.md" for r in _bar_declaring_rel),
+      f"declaring places: {_bar_declaring_rel}")
+
+_BAR_SURFACES = {
+    "agents/": lambda r: r.startswith("agents/"),
+    "dcs/references/": lambda r: r.startswith("dcs/references/"),
+    "dcs/workflows/": lambda r: r.startswith("dcs/workflows/"),
+}
+_bar_surfaces_hit = [_bar_label for _bar_label, _bar_pred in _BAR_SURFACES.items()
+                     if any(_bar_pred(r) for r in _bar_declaring_rel)]
+check("bar carrier: declaring places span at least two of the three "
+      "scanned surfaces",
+      len(_bar_surfaces_hit) >= 2, f"surfaces hit: {_bar_surfaces_hit}")
+
+
+def _bar_paragraph_problems(paragraph, expected_step, expected_bar_count, expected_token):
+    """Every problem invariants 1/2/3 find in one qualifying paragraph,
+    against the SUPPLIED expected values -- never a private
+    re-derivation -- so the same function serves both the real comparator
+    below and the forged-parse negative proof that follows it."""
+    _problems = []
+    _norm_para = _ws_norm(paragraph)
+    for _cm in _BAR_CITE_RE.finditer(_norm_para):
+        _n = int(_cm.group(1))
+        if _n != expected_step:
+            _problems.append(f"cites step {_n}, charter's live step is {expected_step}")
+        _window = _norm_para[max(0, _cm.start() - 150):_cm.end() + 150]
+        _bar_m = _BAR_COUNT_RE.search(_window)
+        if _bar_m:
+            _named = _bar_num(_bar_m.group(1))
+            if _named != expected_bar_count:
+                _problems.append(
+                    f"names {_named} bars beside the step citation, "
+                    f"charter's step {expected_step} lists {expected_bar_count}")
+    for _tm in _BAR_DEFAULT_TOKEN_RE.finditer(_norm_para):
+        _tok = _tm.group(1) or _tm.group(2)
+        if _tok != expected_token:
+            _problems.append(
+                f"states default verdict token `{_tok}`, charter states `{expected_token}`")
+    return _problems
+
+
+# (d) one named case per declaring place (idiom of checks 12(c)/13(d)): a
+# missing or mismatched citation in a NEW declaring place fails by name,
+# not folded into one aggregate.
+for _bar_p in _bar_declaring:
+    _bar_rel = str(_bar_p.relative_to(REPO)).replace("\\", "/")
+    _bar_problems = []
+    for _bar_para in _bar_declaring_paras[_bar_p]:
+        _bar_problems += _bar_paragraph_problems(
+            _bar_para, _bar_step_num, _bar_charter_count, _bar_charter_token)
+    check(f"bar carrier: {_bar_rel} -- every safety-officer.md step "
+          f"citation matches the charter (step {_bar_step_num}, "
+          f"{_bar_charter_count} bars, default `{_bar_charter_token}`)",
+          not _bar_problems, "; ".join(_bar_problems))
+
+# (e) negative proof (sample of checks 12(e)/13(f)): the SAME comparator,
+# rerun against a forged parse of the charter -- the live step shifted onto
+# its neighbour, and separately one bar dropped -- must find a mismatch
+# somewhere in the same declaring population. A comparator that stays
+# quiet against both forgeries reads nothing.
+_bar_forged_step_problems = []
+for _bar_p in _bar_declaring:
+    for _bar_para in _bar_declaring_paras[_bar_p]:
+        _bar_forged_step_problems += _bar_paragraph_problems(
+            _bar_para, _bar_step_num + 1, _bar_charter_count, _bar_charter_token)
+check("bar carrier: comparator flags a forged (shifted) step number",
+      bool(_bar_forged_step_problems),
+      f"no mismatch found citing step {_bar_step_num + 1} instead of {_bar_step_num}")
+
+_bar_forged_count_problems = []
+for _bar_p in _bar_declaring:
+    for _bar_para in _bar_declaring_paras[_bar_p]:
+        _bar_forged_count_problems += _bar_paragraph_problems(
+            _bar_para, _bar_step_num, max(0, _bar_charter_count - 1), _bar_charter_token)
+check("bar carrier: comparator flags a forged (one bar dropped) bar count",
+      bool(_bar_forged_count_problems),
+      f"no mismatch found expecting {max(0, _bar_charter_count - 1)} bars "
+      f"instead of {_bar_charter_count}")
+
+# --- criterion 3 (mechanical half): a bare 'N of M' census in the charter,
+# with no regenerating command in the same paragraph, is red. "Same
+# paragraph" (blank-line delimited) was confirmed by the Owner at this
+# incident's IAP approval as the binding definition. Narrow to the charter
+# file on purpose -- a tree-wide version would false-positive on ordinary
+# prose that has nothing to do with this rule.
+_BARE_CENSUS_RE = re.compile(r"\b\d+\s+of\s+\d+\b")
+_REGEN_CMD_RE = re.compile(
+    r"```|`[^`\n]*\b(?:grep|python|git|wc|find|awk|sed|jq)\b[^`\n]*`", re.I)
+_bar_census_bad = []
+for _bar_para in _bar_paragraphs(safety_officer_md):
+    for _bar_cm in _BARE_CENSUS_RE.finditer(_bar_para):
+        if not _REGEN_CMD_RE.search(_bar_para):
+            _bar_census_bad.append(_bar_cm.group(0))
+check("bar carrier (criterion 3): the charter has no bare 'N of M' census "
+      "without a regenerating command in the same paragraph",
+      not _bar_census_bad, "; ".join(_bar_census_bad))
+
 print(f"\n{checks - len(failures)}/{checks} passed")
 sys.exit(1 if failures else 0)
