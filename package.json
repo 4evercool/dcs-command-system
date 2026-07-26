@@ -18,7 +18,8 @@
     "tests/",
     "install.ps1",
     "install.sh",
-    "README.md"
+    "README.md",
+    "CHANGELOG.md"
   ],
   "engines": {
     "node": ">=16.7.0"

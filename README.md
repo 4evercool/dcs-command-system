@@ -31,6 +31,57 @@ approval-gate hook. `dcs doctor` checks both. The auto-install skips
 politely in CI or when `~/.claude` doesn't exist
 (`DCS_SKIP_POSTINSTALL=1` opts out).
 
+## Upgrading
+
+**Updating the package is not enough to update a project.** The payload in
+`~/.claude/` (workflows, doctrine, agents, skills) is shared; the pieces
+that actually *enforce* anything live inside each onboarded project and
+are never written by an install. After every upgrade that changes a hook,
+do all three of these, **in this order**, in each project:
+
+**1. Update the package.** This refreshes `~/.claude/dcs/` only.
+
+```bash
+npm i -g dcs-command-system@latest
+```
+
+**2. Re-run `/dcs-init` in the project.** This is what copies the current
+hooks into `<project>/.claude/hooks/`. It must come *after* step 1 —
+`/dcs-init` copies from `~/.claude/dcs/hooks/`, so running it first just
+reinstalls the old hook. Never run it while an incident is active.
+
+Check that it took:
+
+```bash
+grep -c halt_cycles .claude/hooks/dcs_gate.py
+```
+
+`0` means the project has the new documentation and the old enforcer —
+the worst of both, because the docs now describe a ceiling the project
+does not have. Anything above `0` means the hook is current.
+
+**3. Add any new `.dcs/config.json` keys by hand.** `/dcs-init` copies the
+config template **only when the file does not exist**, so it will never
+add a key to a config you already have — not on the first re-run, not on
+the tenth. New keys are listed per release in
+[CHANGELOG.md](CHANGELOG.md); the full set with defaults is below.
+
+### `.dcs/config.json`
+
+Every key is optional and falls back to a safe default, so an older config
+keeps working — it just silently keeps the defaults.
+
+| Key | Default | What it does |
+|---|---|---|
+| `incidents_dir` | `.dcs/incidents` | Where incident directories live |
+| `guarded_paths` | `["**/*"]` | Globs the approval gate protects |
+| `unguarded_paths` | `[".dcs/**", "tasks/**", "*.md", ".claude/**"]` | Globs it exempts. **Careful:** matching is `fnmatch`, where `*` also crosses `/`, so a bare `*.md` exempts every markdown file at any depth |
+| `auto_approve_type3` | `false` | Fallback delegation for projects with no ESG |
+| `language` | `"auto"` | Language of incident artifacts |
+| `esg.max_periods_before_review` | `3` | Stamped attempts before an incident must escalate to the Owner |
+| `esg.max_incident_age_days` | `7` | Age at which an incident is flagged as stale |
+| `esg.max_halts_per_attempt` | `3` | **New in 0.6.9.** Safety Officer halts inside one attempt before the gate closes and refuses further edits. Answering "continue" does not reset it |
+
 **Optional tools.** The agent charters grant `mcp__codegraph__*` (a
 call-graph MCP) to the roles that plan, edit, and verify code. **It is
 entirely optional** — an MCP pattern that matches no installed server

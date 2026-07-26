@@ -1,0 +1,141 @@
+# Changelog
+
+Notable changes per release, newest first.
+
+**Read the [Upgrading](README.md#upgrading) section before applying any of
+these.** Updating the package refreshes `~/.claude/` only. Two things it
+never touches, in any release:
+
+- `<project>/.claude/hooks/*.py` — the copies that actually enforce
+  anything. They arrive only via `/dcs-init`.
+- `<project>/.dcs/config.json` — `/dcs-init` writes the template only when
+  the file is absent, so **a new config key never reaches an existing
+  project on its own**. Releases that add one say so under **Config** and
+  give the exact line to paste.
+
+Entries below are written from the repository's own artifacts — merge
+commits, incident AARs, and each suite's own `N/M passed` output — not
+from recollection. Releases before 0.6.5 are recorded only in
+`git log --format='%h %ad %s' --date=short -- dcs/VERSION`.
+
+---
+
+## 0.6.9 — 2026-07-26
+
+The halt → fix-tasking → re-verify loop is bounded by a mechanism instead
+of by the Owner's patience.
+
+### Added
+
+- **Halt ceiling in `dcs_gate.py`.** The hook counts `SAFETY-HALT:`
+  entries in an incident's `214-LOG.md` since the last reset anchor and
+  denies every guarded edit once the count reaches the ceiling. The count
+  is derived entirely from incident artifacts, so it survives a session
+  boundary and a context reset. Answering "continue" on an escalation is a
+  decision, not a reset — the wall lifts only on a freshly stamped,
+  Owner-approved IAP or a logged Safety Officer pass verdict.
+- **A single published sentinel grammar.** `ENTRY_PREFIX` is the one
+  definition of where a `214-LOG.md` entry begins; the halt, pass and
+  stamp patterns are built from it by concatenation. `GRAMMAR_LINE`
+  publishes the rule in one line of prose, quoted verbatim by every
+  document that describes it. The emergency rollback act is rendered by
+  the same module that parses it, so printing a line the parser would
+  reject is not possible by construction.
+- **A ceiling-breach deny message that names its own escape.** It carries
+  the exact bytes of the rollback act between two markers, so the act can
+  be extracted mechanically rather than transcribed by eye — including a
+  leading newline, which makes the append correct against a log that does
+  not end in one.
+- **Integrity check 12 derives its own population.** It walks
+  `dcs/**/*.md` for sentinel tokens instead of reading a hand-maintained
+  list of files, and validates each hit against the hook module's own
+  specimens. A seventh prose site cannot appear unnoticed.
+
+### Config
+
+**One new key. It will not reach an existing project by itself** — add it
+to `<project>/.dcs/config.json` by hand:
+
+```json
+"esg": { "max_halts_per_attempt": 3 }
+```
+
+Absent, malformed, `0`, `-1`, `3.0`, `true` or `"three"` all fall back to
+the built-in default of **3**. There is deliberately no value that means
+"no ceiling": disabling it requires writing a large integer, which is an
+explicit, typed, diff-visible act.
+
+### Fixed
+
+- Integrity checks 8, 9 and 10 walked the repository without an extension
+  filter and read `.pyc` bytecode as text. Check 8 could therefore report a
+  U+FFFD failure whenever a stale `__pycache__` happened to sit next to the
+  tests — a false positive in a guard that blocks merges. Bytecode and
+  `.git`, `node_modules`, `__pycache__` are now excluded consistently
+  across all three; no check was removed or weakened.
+
+### Verified at release
+
+`test_dcs_gate.py` 100/100 · `test_doctrine_integrity.py` 40/40 ·
+`test_dcs_intake.py` 10/10. Hot path 38 878 of 38 912 B with the ratchet
+held at 38 kB. Both copies of the hook byte-identical.
+
+Shipped by incident `halt-loop-unbounded`: one operational period, four
+stamped attempts, two Safety halts, one deviation, two Owner escalations.
+Full account in `.dcs/incidents/2026-07-25-halt-loop-unbounded/AAR.md`.
+
+---
+
+## 0.6.8 — 2026-07-25
+
+A line-ending policy, and an approval marker that was already broken.
+
+### Fixed
+
+- **The approval gate hashed the wrong bytes.** With `core.autocrlf=true`
+  and no `.gitattributes`, `IAP.md` could sit on disk with different line
+  endings than when it was approved, so a valid stamp could stop verifying
+  — this had already happened to an incident that closed hours earlier.
+  The gate now compares against a set of digests covering the raw,
+  LF-normalised and CRLF-normalised forms.
+- **The hot-path measurement had no stable definition** for the same
+  reason: the number depended on which files git had last rewritten.
+  `.gitattributes` pins the policy and the measurement normalises before
+  counting.
+
+Shipped by incident `hot-path-budget-eol-sensitivity` — four specialists,
+no deviations and no Safety halts.
+
+---
+
+## 0.6.7 — 2026-07-25
+
+### Changed
+
+- **Doctrine hot path trimmed 42 623 → 37 734 B**, ratchet 42 → 38 kB. The
+  provenance behind each rule moved to `doctrine-appendix.md`, which is
+  shipped but never `@`-included, so it costs nothing per invocation. No
+  rule was lost in the move.
+
+---
+
+## 0.6.6 — 2026-07-25
+
+### Fixed
+
+- Repaired double-encoding damage in `package.json`'s description, which
+  had grown large enough to fail `npm publish` with E415, and added two
+  guards that can see the class the BOM/U+FFFD check cannot: no Cyrillic
+  anywhere in the shipped package, and `package.json` under 8 kB.
+
+---
+
+## 0.6.5 — 2026-07-25
+
+### Changed
+
+- **Artifact hygiene advises; only the acceptance criteria halt.** The
+  Safety Officer's `halt` stops a merge, so its value comes from being
+  reserved. Stale counts, rough wording and missing cross-references are
+  now `advisories[]` on a passing verdict, fixed by the IC and folded into
+  the integration commit rather than costing an execute-and-verify cycle.
