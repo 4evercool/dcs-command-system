@@ -25,6 +25,15 @@ away:
   10. no CRLF line endings anywhere in the shipped package (the half of
       the .gitattributes policy that reaches a user)
   11. package.json stays small (double-encoding damage grows it silently)
+  12. log grammar: the population of prose files that mention SAFETY-HALT:
+      / SAFETY-PASS: / IAP-APPROVED: is DISCOVERED by walking dcs/**/*.md
+      (never a named list), each one quotes the halt-ceiling hook's own
+      published grammar (GRAMMAR_LINE) verbatim, and every fenced-code
+      sentinel-shaped line in it is accepted at the hook's own entry
+      boundary (sentinel_of() / STAMP_ENTRY_RE / SPECIMENS, imported from
+      dcs_gate.py itself rather than re-derived here) -- so a wording pass
+      can't rename a token, or a new prose surface drift from the parser,
+      without this check failing at merge time first
 
 Run standalone, or as the merge-time guard named in CLAUDE.md (doctrine:
 close.md step 1a) so it runs before every incident merge.
@@ -73,6 +82,21 @@ REPO = Path(__file__).resolve().parent.parent
 # with:
 #   python -c "d=open('dcs/references/doctrine.md','rb').read().replace(b'\r\n', b'\n'); s=open('dcs/references/schemas.md','rb').read().replace(b'\r\n', b'\n'); print(len(d), len(s), len(d)+len(s))"
 HOT_PATH_BUDGET_KB = 38
+
+# Directories holding generated/binary artefacts that are never source and
+# never shipped: .git internals, npm's node_modules, and Python's
+# __pycache__. __pycache__ is the load-bearing one here -- it is created by
+# merely IMPORTING a module (check 12 below imports dcs_gate.py; anything
+# that imports this test module, e.g. a test runner, does the same to it),
+# so its presence is a side effect of how the suite happened to be invoked,
+# not of the package's content. A file-content check whose result depends on
+# that is nondeterministic, and compiled bytecode is arbitrary enough binary
+# data that it occasionally contains a byte sequence a text check flags
+# (observed: tests/__pycache__/test_doctrine_integrity.*.pyc tripped the BOM
+# / U+FFFD check by chance). Exclude the directory outright rather than
+# special-casing the byte pattern.
+EXCLUDED_DIRS = {".git", "node_modules", "__pycache__"}
+BYTECODE_SUFFIXES = (".pyc", ".pyo")
 
 failures = []
 checks = 0
@@ -192,7 +216,8 @@ check(f"hot-path budget: doctrine+schemas <= {HOT_PATH_BUDGET_KB} kB",
 # --- 8. encoding -----------------------------------------------------------
 bad_enc = []
 for p in REPO.rglob("*"):
-    if p.is_file() and ".git" not in p.parts and "node_modules" not in p.parts:
+    if (p.is_file() and not EXCLUDED_DIRS & set(p.parts)
+            and p.suffix.lower() not in BYTECODE_SUFFIXES):
         raw = p.read_bytes()
         if raw[:3] == b"\xef\xbb\xbf" or b"\xef\xbf\xbd" in raw:
             bad_enc.append(str(p.relative_to(REPO)))
@@ -222,7 +247,7 @@ candidates += [REPO / f for f in SHIPPED_FILES if (REPO / f).is_file()]
 
 mojibake = []
 for p in candidates:
-    if ".git" in p.parts or "node_modules" in p.parts:
+    if EXCLUDED_DIRS & set(p.parts):
         continue
     if p.suffix.lower() not in TEXT_SUFFIXES:
         continue
@@ -245,7 +270,7 @@ check("no Cyrillic anywhere in the shipped package", not mojibake,
 # never ship, stay out of its reach.
 crlf_files = []
 for p in candidates:
-    if ".git" in p.parts or "node_modules" in p.parts:
+    if EXCLUDED_DIRS & set(p.parts):
         continue
     if p.suffix.lower() not in TEXT_SUFFIXES:
         continue
@@ -262,6 +287,153 @@ check("no CRLF line endings anywhere in the shipped package", not crlf_files,
 pkg_bytes = os.path.getsize(REPO / "package.json")
 check("package.json under 8 kB", pkg_bytes < 8 * 1024,
       f"currently {pkg_bytes:,} bytes — check for a field growing on each edit")
+
+# --- 12. log grammar --------------------------------------------------------
+# The halt-ceiling mechanism (dcs_gate.py, doctrine principle 13) parses
+# SAFETY-HALT: / SAFETY-PASS: / IAP-APPROVED: sentinels out of 214-LOG.md
+# using its OWN compiled patterns and its OWN published grammar
+# (GRAMMAR_LINE, ENTRY_PREFIX, SPECIMENS, sentinel_of(), STAMP_ENTRY_RE).
+# Import the hook module itself (stdlib only; main() sits behind
+# `if __name__ == "__main__"`, so importing it has no side effects) and hold
+# every prose surface to THAT grammar, rather than re-deriving it here -- a
+# duplicate would let this check and the hook drift apart exactly like the
+# bare-substring grammar it replaces once did.
+#
+# The population is DISCOVERED, not named (halt-loop-unbounded, period 1
+# revision 3): every dcs/**/*.md file mentioning any of the three sentinel
+# tokens is in scope, so a new prose surface that starts quoting the log
+# format is caught here the moment it exists, instead of waiting for a
+# Safety Officer to spot it by eye -- a seventh such file existed in the
+# field and was found exactly that way before this revision.
+import importlib.util
+
+_gate_spec = importlib.util.spec_from_file_location(
+    "dcs_gate", REPO / "dcs" / "hooks" / "dcs_gate.py")
+_gate = importlib.util.module_from_spec(_gate_spec)
+_gate_spec.loader.exec_module(_gate)
+
+_SENTINEL_TOKENS = ("SAFETY-HALT:", "SAFETY-PASS:", "IAP-APPROVED:")
+
+
+def _ws_norm(s):
+    """Collapse any run of whitespace to one space -- markdown hard-wraps
+    prose, so GRAMMAR_LINE quoted verbatim still spans a line break on
+    disk, and comparing raw strings would false-fail on the wrap alone."""
+    return re.sub(r"\s+", " ", s).strip()
+
+
+def _fenced_blocks(text):
+    """Every fenced (```/```) code block's lines, as a list of line lists.
+    The boundary claim in check (d) below only applies to a line meant to
+    BE a 214-LOG.md entry -- an inline mention of a token in running prose
+    (e.g. an inline `` `SAFETY-HALT:` `` reference) is not a log line and
+    is out of scope for that check."""
+    blocks = []
+    in_block = False
+    cur = []
+    for line in text.splitlines():
+        if line.strip().startswith("```"):
+            if in_block:
+                blocks.append(cur)
+                cur = []
+            in_block = not in_block
+        elif in_block:
+            cur.append(line)
+    return blocks
+
+
+# (a) population: discovered by walking dcs/**/*.md, never a named list.
+_population = sorted(
+    (p for p in (REPO / "dcs").rglob("*.md")
+     if any(tok in p.read_text(encoding="utf-8") for tok in _SENTINEL_TOKENS)),
+    key=lambda p: p.as_posix(),
+)
+_population_rel = [str(p.relative_to(REPO)).replace("\\", "/") for p in _population]
+
+# (b) non-degenerate: population is non-empty and includes doctrine.md --
+# a check whose own input set silently shrank to zero would pass vacuously.
+check("log grammar: population is non-empty and includes doctrine.md",
+      bool(_population) and any(p.name == "doctrine.md" and p.parent.name == "references"
+                                 for p in _population),
+      f"population: {_population_rel}")
+
+# (c) GRAMMAR_LINE quoted verbatim (whitespace-normalised) in every file of
+# the population -- one named case per file, so a missing quote in a NEW
+# population member fails by name instead of folding into one aggregate.
+for _p in _population:
+    _rel = str(_p.relative_to(REPO)).replace("\\", "/")
+    _text = _p.read_text(encoding="utf-8")
+    check(f"log grammar: {_rel} quotes GRAMMAR_LINE verbatim",
+          _ws_norm(_gate.GRAMMAR_LINE) in _ws_norm(_text))
+
+# (d) every fenced-code-block line containing a sentinel token, in every
+# population file, is accepted at the entry boundary: either sentinel_of()
+# itself classifies it (halt/pass/stamp), or -- the ONLY placeholder
+# concession, and only for the stamp token, because only there is the
+# argument's format part of the sentinel -- it carries IAP-APPROVED: and
+# matches the published positional form STAMP_ENTRY_RE. SAFETY-HALT: and
+# SAFETY-PASS: get no such concession: their placeholder forms must pass
+# sentinel_of() as-is.
+_all_fenced_lines = []
+for _p in _population:
+    _rel = str(_p.relative_to(REPO)).replace("\\", "/")
+    _text = _p.read_text(encoding="utf-8")
+    _bad = []
+    for _block in _fenced_blocks(_text):
+        for _line in _block:
+            if not any(tok in _line for tok in _SENTINEL_TOKENS):
+                continue
+            _all_fenced_lines.append(_line)
+            _ok = _gate.sentinel_of(_line) is not None
+            if not _ok and "IAP-APPROVED:" in _line:
+                _ok = bool(_gate.STAMP_ENTRY_RE.match(_line))
+            if not _ok:
+                _bad.append(_line)
+    check(f"log grammar: {_rel} -- every fenced sentinel-shaped line is boundary-valid",
+          not _bad, "; ".join(_bad))
+
+# (e) SPECIMENS: the module's own published examples, one named case each
+# -- the prose sentinel of a boundary defect is exactly these pairs, never
+# a private re-derivation of the boundary rule.
+for _line, _expected in _gate.SPECIMENS:
+    check(f"log grammar: SPECIMENS -- sentinel_of({_line!r}) == {_expected!r}",
+          _gate.sentinel_of(_line) == _expected)
+
+# (f) doctrine.md still names all three tokens (unchanged from revision 2).
+check("doctrine.md names all three sentinels (IAP-APPROVED:, SAFETY-HALT:, SAFETY-PASS:)",
+      all(tok in doctrine for tok in _SENTINEL_TOKENS))
+
+# (g) lint defect 3: no population file quotes the rollback act's own body
+# verbatim -- ROLLBACK_BODY dictated word for word would let a second
+# author walk a fabricated pass sentinel back in through the one door this
+# pivot exists to nail shut. Measured to hold today; this fixes it.
+_rollback_quotes = [
+    str(_p.relative_to(REPO)).replace("\\", "/")
+    for _p in _population
+    if _gate.ROLLBACK_BODY in _p.read_text(encoding="utf-8")
+]
+check("log grammar: no population file quotes the rollback body verbatim",
+      not _rollback_quotes, "; ".join(_rollback_quotes))
+
+# (h) lint defect 1: the identifier Channel A's `grep -c` preflight
+# (execute.md step 9) searches for in the project's installed hook copy
+# must actually be defined in dcs_gate.py -- otherwise a rename here makes
+# that preflight print "advisory" against a hook that is, in fact, still
+# enforcing.
+execute_text = read("dcs/workflows/execute.md")
+_channel_a = re.search(r"grep -c (\w+)", execute_text)
+check("log grammar: Channel A's grep -c identifier is defined in dcs_gate.py",
+      bool(_channel_a) and hasattr(_gate, _channel_a.group(1)),
+      f"identifier: {_channel_a.group(1) if _channel_a else None!r}")
+
+# (i) the IAP-APPROVED: witness: the population must contain at least one
+# line sentinel_of() classifies 'stamp' -- an unfilled template line with
+# a placeholder hex is correct at the boundary (STAMP_ENTRY_RE) but is not
+# this witness, because sentinel_of() itself returns None for it (STAMP_RE
+# never matches a non-hex argument). Softening check (d) for the stamp
+# token must not be allowed to quietly erase this requirement too.
+check("log grammar: population contains a real IAP-APPROVED: witness (sentinel_of == 'stamp')",
+      any(_gate.sentinel_of(_l) == 'stamp' for _l in _all_fenced_lines))
 
 print(f"\n{checks - len(failures)}/{checks} passed")
 sys.exit(1 if failures else 0)

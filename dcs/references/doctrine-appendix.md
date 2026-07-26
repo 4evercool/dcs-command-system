@@ -172,6 +172,143 @@ matching loophole on the plan side: three rejects in one period means the
 objectives, the chief's information diet, or the incident's size is
 wrong, not that the plan needs one more pass.
 
+**Principle 13 — the halt-ceiling field lesson (v0.6.9).** The gap this
+ceiling closes: trigger (b) already required a convergence read from the
+second halt on, but that read only ever fired inside the case the
+period-boundary escalation check actually walks — and the fix-tasking
+branch of the execute workflow runs its own halt to fix-tasking to
+re-verify cycle *inside* a single attempt, never crossing into a re-plan
+or a new period, so nothing upstream of this ceiling was ever watching
+that inner loop. One incident rode exactly that gap to ten halts across
+two attempts and sixteen hours forty minutes of continuous, un-closed
+execution; a related incident that did eventually close carried the same
+shape further before it was done — over thirty hours and a log file
+approaching 300 KB. Eight of the ten halts in the first incident carried
+no functional defect at all: the reviewing officer was re-litigating form
+(a stale count, a phrasing, a docstring) each time, which is exactly the
+same-class whack-a-mole the trigger (b) convergence read exists to name
+— except the read was never triggered, because trigger (b) only counted
+halts *between* attempts, and this loop never left its attempt. By the
+fourth iteration the owner had stopped reviewing each halt individually
+and granted a blanket "proceed" covering everything still to come, which
+is the human failure mode a mechanical ceiling is meant to make
+unnecessary: ten halts deep, "continue" had become a reflex, not a
+review. The earlier fix for the sibling gap — the attempt-counting rule
+that closed the loophole where several re-plans of one period never
+tripped trigger (c) — solved the *outer* loop and left this *inner* one
+completely open; the ceiling here is that rule's missing half, not a
+separate idea.
+
+These five figures — the ten halts, the sixteen hours forty minutes, the
+over thirty hours, the ~300 KB log, and the eight of ten — are historical
+counts from the incidents that produced this lesson, not numbers this
+file recomputes; read each as **as of the incident's own close — it
+moves**. The halt count specifically regenerates, for any incident's own
+log, with:
+
+`python .claude/hooks/dcs_gate.py --halt-count <incident-dir>`
+
+The recipe is the counter itself, not a re-derived regex, because a second
+implementation of the count is exactly the same class of divergence this
+principle exists to name: the earlier `grep -cE` recipe disagreed with the
+real counter on part of the fixture set, because it ignored the reset
+anchors — principle 15 applied to itself, and missed the first time. No
+count is quoted here because the old recipe was deleted with this edit,
+which leaves the disagreement with nothing to regenerate it from. The
+other four figures have no artifact left to regenerate from post-close and
+carry the annotation instead.
+
+**Principle 13 — the sentinel threat model (v0.6.9 revision 2).**
+Revision 1 of this ceiling used a bare-substring match and failed in
+both directions the same class of bug can fail: **T1**, false reset —
+ordinary narration that happens to contain a sentinel word (a halt
+entry's own summary quoting `IAP-APPROVED`, a status line describing
+what a period does) zeroed the tally though nothing was actually
+re-approved; and **T2**, false anchor-miss — a genuine re-approval or
+pass, logged in natural prose rather than the exact grammar, failed to
+lift the wall though the event was real. Both close the same way: a
+sentinel counts only as the first field of its `214-LOG.md` entry, never
+as a substring anywhere in it, and `plan.md`/`execute.md` write that
+exact grammar structurally, not as one phrasing among several. A third
+class, **T3**, is a deliberately fabricated, well-formed sentinel line
+with no real event behind it. For `IAP-APPROVED:` this is closed: the
+anchor only counts while its captured hash prefixes the stamped
+`IAP-APPROVED` marker the gate independently verifies, so forging the
+log line alone changes nothing. `SAFETY-PASS:` has no equivalent
+binding — no hash-verified artifact records a Safety verdict — so a
+session that deliberately writes a well-formed `SAFETY-PASS:` line does
+lift the wall. Hash-binding it is not currently possible, and removing
+the anchor would brick the close of every incident this ceiling is
+meant to let finish. The IC accepted this residual and required it
+recorded here rather than silently relitigated: such a line is a
+**false Safety verdict sitting in an append-only log, visible in
+`git diff`** — escalation material for whoever reviews the merge, not a
+path this mechanism is designed to support.
+
+**Same residual, extended (period 1 revision 3): the timestamp made
+mandatory, and the boundary named directly.** The remainder T3 leaves is
+not only the fabricated-sentinel case above but also its mirror image: a
+line that verbatim reproduces a genuine anchor entry — timestamp and
+token both, in full — is byte-for-byte indistinguishable from the real
+entry, and no line-by-line parser can ever tell the two apart from the
+bytes alone. That is exactly why the grammar (`dcs_gate.py`'s `GRAMMAR_LINE`) requires
+such a quotation to be indented off column zero when it appears inside a
+body: "An entry begins at column zero with a mandatory bracketed
+timestamp; any other line is a continuation, never a sentinel, and
+quoting a whole prior entry inside a body requires indenting it off
+column zero." An unindented copy of a whole anchor entry is, by that same
+definition, a new entry, not a quotation of an old one. This is the same accepted T3 residual already recorded above for
+`SAFETY-PASS:`, extended rather than reopened as a separate deal.
+
+One further gap belongs in this same residual, named here so it is not
+rediscovered as a finding (Safety Officer 3, period 1): `ENTRY_PREFIX`
+accepts **any** bracketed field, including an empty one — `[] SAFETY-PASS:
+…` at column zero does anchor, though `GRAMMAR_LINE` says "timestamp".
+The divergence runs the **opposite** way to the one that caused revision
+2's halt: what the prose publishes is strictly contained in what the code
+enforces, so an author who follows the prose always writes a line the
+parser accepts, and the "follow the documentation, get denied" symptom
+cannot occur. Narrowing the pattern to a non-empty field was considered
+and declined at command point 4: it buys cosmetic strictness at the price
+of a fourth verification cycle, in an incident whose whole subject is that
+such cycles were unbounded. Revision
+3 also made the bracketed timestamp **mandatory**, where revision 2 left
+it merely conventional: IC addendum 4's own rollback act, dictated as a
+bare `SAFETY-PASS:` body with no timestamp, would otherwise anchor as a
+level-0 act the moment a second author quoted that dictated body verbatim
+without also supplying the timestamp — a plan-level defect, not a
+mistake by the specialist who first hit it, and the reason the timestamp
+is a hard requirement now rather than an optional nicety.
+
+**Principle 13 — anchor absent means zero, not unbounded.** When the
+counter finds no `IAP-APPROVED:` or `SAFETY-PASS:` anchor at all in
+`214-LOG.md`, it starts the tally at the top of the log rather than
+refusing to count or erroring out — which, for a log with no anchor, is
+the same thing as starting at zero. Four reasons converge on that
+reading rather than any other: the mechanism's scope is exactly the
+grammar's scope, so a log that has never written an anchor has also
+never written the sentinel the ceiling counts, and there is nothing to
+be unbounded about; the state self-heals at the very next stamped
+`IAP-APPROVED`, the same act that resets a non-empty tally, so an absent
+anchor is never a *permanent* zero; it is the mechanical expression of a
+decision already made at the Owner level — the ceiling does not apply
+retroactively, so a log with no anchor owes no count from before this
+mechanism existed; and it is the only reading that keeps the deny
+message's promise true after a payload rollback, when a rolled-back
+`plan.md` stops writing the `IAP-APPROVED:` line the gate would
+otherwise look for. Practically, this is why every `214-LOG.md` written
+before this revision — in this repository and in every npm consumer's
+own project — behaves safely on first contact: it has no sentinel of
+any kind, so the walk finds no anchor, and the tally opens at zero
+instead of at "every halt since the log began."
+
+**Principle 13 — the convergence-read lesson (moved from
+`execute.md`).** Field lesson 2026-07-24: an IC produced exactly this
+read — unprompted and correctly — only at the fourth halt, and the
+Owner's pivot to a general guard ended the incident's rotation
+immediately. The read was right; it was late because nothing asked for
+it.
+
 **Principle 15 — the test-inversion lesson.** A regression test asserting
 that two live branches still collide is green only for as long as the
 defect survives: fixing the defect — the entire purpose of the incident

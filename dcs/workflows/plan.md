@@ -374,8 +374,26 @@ Update `<project>/.dcs/ACTIVE` to `<slug>|<type>|execution`.
 
 Append to `214-LOG.md`:
 ```
-[<timestamp>] phase: planning -> execution (IAP approved, hash=<hash prefix>...)
+[<timestamp>] IAP-APPROVED: <first 12 hex chars of IAP.md's sha256> -- phase: planning -> execution (period <N>)
 ```
+
+For example (fictional hash):
+```
+[2026-07-22T14:03:00+11:00] IAP-APPROVED: d6d1409c1234 -- phase: planning -> execution (period 1)
+```
+
+This line is also a reset anchor for the halt-iteration count `dcs_gate.py`
+enforces (doctrine's halt ceiling) — but only conditionally: the sentinel
+must satisfy `dcs_gate.py`'s own published grammar (`GRAMMAR_LINE`): "An
+entry begins at column zero with a mandatory bracketed timestamp; any other
+line is a continuation, never a sentinel, and quoting a whole prior entry
+inside a body requires indenting it off column zero." — the bracketed
+timestamp is mandatory, `IAP-APPROVED:` follows it immediately (`dcs_gate.py`'s
+`STAMP_RE`) — and the hex prefix it carries must be **at
+least 8 characters** of the hash just written to `IAP-APPROVED` above. The
+stamped marker is the authority; this log line only fixes the marker's
+position in time — a line that merely mentions the token, or carries a
+stale or invented hash, is never an anchor.
 
 ## 9. Report
 

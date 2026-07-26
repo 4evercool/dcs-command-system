@@ -6,6 +6,7 @@
   "language": "auto",
   "esg": {
     "max_periods_before_review": 3,
-    "max_incident_age_days": 7
+    "max_incident_age_days": 7,
+    "max_halts_per_attempt": 3
   }
 }

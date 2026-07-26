@@ -82,8 +82,14 @@ key (default `3` if unset or the key is absent).
 
 **Count ATTEMPTS, not periods (v0.5.12).** An attempt is any stamped IAP
 this incident has executed — so period 2 attempt 1 and period 1 revision
-3 both count, and the tally is simply the number of `IAP APPROVED` /
-`pre-stamp checklist PASSED` entries in `214-LOG.md`. If the attempt
+3 both count, and the tally is simply the number of `IAP-APPROVED:`
+sentinel entries (v0.6.9 — the same sentinel `dcs_gate.py` anchors the
+halt ceiling on, recognized only through `dcs_gate.py`'s own published
+grammar (`GRAMMAR_LINE`): "An entry begins at column zero with a mandatory
+bracketed timestamp; any other line is a continuation, never a sentinel,
+and quoting a whole prior entry inside a body requires indenting it off
+column zero." — see `references/doctrine.md` principle 13) in
+`214-LOG.md`. If the attempt
 about to run exceeds the threshold, this attempt **is** the mandatory
 escalation — do not fan out; skip to "On any escalation trigger" below
 instead of step 4. Counting periods alone let a real incident run four
@@ -197,6 +203,15 @@ attempt to refute completion using its own independent checks.
 
 ## 9. Handle the verdict — COMMAND POINT 4 (verdict disposition)
 
+**Preflight — Channel A: confirm this project's gate carries the halt
+ceiling before relying on it.** A package update refreshes
+`dcs/workflows`/`dcs/references`, never the project's own copy of the hook
+— only `/dcs-init` places `<project>/.claude/hooks/dcs_gate.py`. Run
+`grep -c halt_cycles "<project>/.claude/hooks/dcs_gate.py"`; `0` means no
+counter (a **phantom ceiling**). Say so in one named `214-LOG.md` line
+(`halt ceiling: advisory -- dcs_gate.py has no halt_cycles counter, run
+/dcs-init`) and treat the count below as **advisory**, not enforced.
+
 This is a command point (doctrine: "Transfer of command"). **If this
 session is not running Fable**: spawn `dcs-commander` via Task (model
 `fable`) with: the Safety Officer's verdict verbatim, the 202 acceptance
@@ -219,12 +234,19 @@ in `214-LOG.md` (`command: verdict -> <disposition> (IC=dcs-commander)`).
 two inputs checked, not assumed.
 
 **`halt` (binding — no closing over this):** append to `214-LOG.md`:
-`SAFETY: halt -- <summary of refutations>`. Two paths, the IC's judgment
-which fits:
-- **Fix-taskings:** if the refutation is narrow (e.g. a missed edge case
-  in one file), write new focused `204-TASKING/*.md` entries addressing
-  exactly the refutations, spawn Ops Specialists for those, then re-run
-  the Safety Officer (back to step 8).
+```
+[<timestamp>] SAFETY-HALT: <summary of refutations>
+```
+Before choosing a path, read
+the count: `python "<project>/.claude/hooks/dcs_gate.py" --halt-count
+"<incident_dir>"` — the gate's eventual denial is a **backstop, not the
+way one learns the news**. Two paths, the IC's judgment which fits:
+- **Fix-taskings:** narrow refutation (e.g. one file's missed edge case)
+  and the count leaves room: write focused `204-TASKING/*.md` entries,
+  spawn Ops Specialists, re-run the Safety Officer (step 8). If the next
+  iteration would hit the ceiling instead, this path is **unavailable** —
+  only a fresh IAP stamp resets it (`plan.md` step 8); an Owner "continue"
+  at trigger (b) below is a decision, not a reset.
 - **Return to planning:** if the refutation reveals the plan itself was
   wrong (not just incompletely executed), treat it like a deviation —
   route to `/dcs-plan` for this period's re-plan.
@@ -252,15 +274,16 @@ against the previous halt's and record the verdict in the 209 and
 
 State the read in one sentence the Owner can act on: *"halt N is the same
 class as halt N-1 — the population is unenumerated, so the fix belongs at
-the guard level, not the site level."* Field lesson 2026-07-24: an IC
-produced exactly this read — unprompted and correctly — only at the
-**fourth** halt, and the Owner's pivot to a general guard ended the
-incident's rotation immediately. The read was right; it was late because
-nothing asked for it.
+the guard level, not the site level."* This read used to depend entirely
+on someone asking for it; the halt-count ceiling in step 9's `halt` branch
+now backs it with a mechanical stop, so a same-class rotation ends even if
+nobody does.
 
 **`pass`:** write/append `SAFETY.md` with the verdict **verbatim** (not
 summarized or softened). Append to `214-LOG.md`:
-`SAFETY: pass -- period <N> complete`.
+```
+[<timestamp>] SAFETY-PASS: period <N> complete
+```
 
 **Advisories on a pass (v0.6.5):** a `pass` carrying `advisories[]` is a
 normal, healthy verdict — the deliverable is sound and the paperwork
@@ -279,10 +302,13 @@ and its value comes entirely from being reserved.
 Before moving on to 9b (on `pass`) or looping back into fix-taskings /
 re-plan (on `halt`), check the two verdict-time triggers:
 
-- **Trigger (b):** this is the **second** `SAFETY: halt` entry in
+- **Trigger (b):** this is the **second** `SAFETY-HALT:` entry in
   `214-LOG.md` for the same objective (same 202 goal text, not merely the
   same incident — a halt on a *different* period's objective doesn't
-  count). Grep `214-LOG.md` for prior `SAFETY: halt` lines before deciding.
+  count). Grep `214-LOG.md` for prior `SAFETY-HALT:` lines before deciding.
+  The halt ceiling checked in step 9's `halt` branch above is a separate,
+  mechanical thing: it works whether or not this trigger fired, and
+  whether or not the Owner was ever asked.
 - **Trigger (a):** the specialists' combined `files_touched` (step 5)
   exceeds the blast radius `201-BRIEF.md` declared, in a way the IAP's
   partition table didn't already account for.
