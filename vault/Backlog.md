@@ -333,3 +333,64 @@ observable unit of cost.
 **Not queued by the close** — same reason as §10. Candidate for the next
 `/dcs-esg`, and it pairs naturally with §10 as one "cost of the process"
 agenda item.
+
+## 12. The deployed-version marker is blind to a same-version ship
+
+**Found by running the deploy train, 2026-07-26**, shipping
+`schemas-md-trim`. Not a hypothesis — it happened, and it broke two separate
+steps of `deploy.md` in the same run.
+
+`deploy.md` uses `~/.claude/dcs/VERSION` as the deployed-version marker in
+two load-bearing places: step 4 reconciles every `MERGED` row against it to
+avoid re-shipping what is already live, and step 7 refuses to mark anything
+`DEPLOYED` unless the marker **advanced**. Both assume the marker changes
+when the payload does.
+
+It does not. `schemas-md-trim` deliberately did not bump the version — 0.6.9
+was unmerged and unpublished, so it was nobody's contract, and the incident's
+own criterion 10 permitted skipping the bump. The marker therefore read
+**0.6.9 before the deploy and 0.6.9 after**, while the payload genuinely
+changed: installed `schemas.md` went 15,613 → 13,296 B and the installed hot
+path 38,878 → 36,561 B.
+
+Both failure directions are real and neither is loud:
+
+- **Step 4 says "already live" for something unshipped.** The reconciliation
+  would have excluded this row from the train and quietly recorded it as
+  shipped out-of-band. Nothing would have deployed, and the register would
+  have claimed it did.
+- **Step 7 can never pass.** Its stop condition fires on a correct ship,
+  which trains whoever hits it to override the check — the exact erosion
+  `halt-loop-unbounded` documented for prose safeguards.
+
+**A stronger witness already exists and was used here** with the Owner's
+explicit authorisation: a byte-for-byte sha256 comparison of every payload
+file against the repo (31 files, all matching after the run). That is a
+direct check on reality, which is what step 7 was reaching for when it said
+"do not report success because the deploy command exited 0". Regenerate:
+
+```bash
+python -c "import hashlib,pathlib; h=pathlib.Path.home()/'.claude'/'dcs'; r=pathlib.Path('dcs'); print([str(f) for f in r.rglob('*') if f.is_file() and '__pycache__' not in f.parts and (not (h/f.relative_to(r)).exists() or hashlib.sha256(f.read_bytes()).hexdigest()!=hashlib.sha256((h/f.relative_to(r)).read_bytes()).hexdigest())] or 'byte-identical')"
+```
+
+Candidate fixes, in rough order of how much they change:
+
+1. **Make the payload hash the marker.** `install.ps1` writes a
+   `~/.claude/dcs/.deployed` containing a hash of the payload it just wrote;
+   step 4 and step 7 compare against that instead of a version string.
+   Advances on every real change, same-version or not.
+2. **Keep the version marker but add the content check as a second gate** —
+   cheaper, and it is exactly what this run did by hand.
+3. **Require a bump for every deploy** — rejected here on the merits: it
+   would spend a version number on a docs-and-size change to an unpublished
+   release, and DCS explicitly permits skipping the bump in that case.
+
+Adjacent, and worth deciding together: `deploy.md` step 4's ancestry check
+(`git merge-base --is-ancestor <merge> <deployed sha>`) presumes the marker
+is a **sha**. Here it is a version string, so that check has never been
+runnable in this repo and both deploys to date said so and skipped it.
+
+**Not queued** — putting a row in the register is an ESG act, not a
+deploy-train side effect. Candidate for the next `/dcs-esg`, and it belongs
+next to §10 and §11 as a third "the mechanism does not measure what it
+claims" item.
