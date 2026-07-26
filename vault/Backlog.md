@@ -136,6 +136,21 @@ green while 19 `schemas.md #N` citations pointed at the wrong sections. The
 trim therefore forbade renumbering outright and left section 8's number
 reserved with a pointer.
 
+> **Corrected 2026-07-26 by `schema-citation-guard` (Safety advisory 5).**
+> The population is **20 citations in 14 files**, not 19, and "pointed at the
+> wrong sections" overstates it: the measured split is **14 drifted, 6 kept
+> their meaning, 0 dangled**. Both errors have the same root — the count
+> above came from a line-based `grep` that cannot see the citation wrapped
+> across a newline in `agents/dcs-commander.md:101-102`. That the dangling
+> count is **zero** is the load-bearing fact, not a detail: it is why a guard
+> checking that a number *resolves* would have caught none of the 14.
+> Regenerate both figures with the enumerator recorded in
+> `.dcs/incidents/2026-07-26-schema-citation-guard/202-OBJECTIVES.md`
+> ("Область и метод"), which normalises wraps before matching; the drift
+> split comes from `201-BRIEF.md`'s Evidence section. `schema-citation-guard`
+> closed 2026-07-26; the hazard is now guarded by check 13 in
+> `tests/test_doctrine_integrity.py`.
+
 This item's second candidate — a ratchet re-seat — was executed as part of
 the same act rather than deferred, for the reason above. The open question it
 inherited from item 8 (budget in bytes rather than kB) was **not** taken: the
@@ -463,3 +478,105 @@ Both surfaced on the same day, on the same release, and both were found by
 *doing* the ship rather than by reviewing it.
 
 **Not queued** — an ESG act. Candidate for the next `/dcs-esg`.
+
+---
+
+## 14. Return-form drift: a specialist can answer without answering in the schema
+
+Two returns in one period (`schema-citation-guard`, 2026-07-26) diverged from
+the shape their own charter and `schemas.md` define, and **neither was caught
+by any mechanism** — both surfaced only because someone read the whole return
+instead of skimming for the JSON block.
+
+- **S2** found a real semantic divergence (check 13 matches the `schemas.md`
+  token case-insensitively because it reuses `norm()`; the 202 enumerator
+  matches case-sensitively) and reported it inside `evidence`. Its tasking
+  said in as many words that a semantic divergence must come back as
+  `status: "deviation"`. It measured the divergence to be currently empty and
+  chose to narrate rather than return the shape.
+- **S1-FIX1** returned no schema #4 block at all — evidence in prose, no
+  `status`, no `files_touched`, no `deviation`. `execute.md` step 4 says to
+  treat that as a failed spawn and re-spawn. The IC judged a re-spawn to be a
+  cycle spent on an envelope over work already on disk, logged the deviation
+  openly, and went to Safety instead.
+
+**The consequence was concrete, not theoretical.** With no `files_touched`
+claim, nobody had asserted the territory bound. The Safety Officer had to
+establish it forensically — `find -newermt` against the tasking file's mtime,
+which showed exactly three files changed after it. The territory guarantee for
+that fix came from the verifier, not from the worker. That inverts who is
+supposed to claim and who is supposed to check.
+
+**Why this is its own item and not a note on the queued row.** The queued
+`prompt-vs-schema-drift` row covers the *inbound* direction — a prompt naming
+a field the schema does not have. This is the *outbound* direction: a return
+omitting or relocating a field the schema does have. Same root (no arbiter
+between two hand-written copies of one contract), opposite direction, and a
+guard over the tree cannot see either — a prompt is not a file, and neither is
+a return.
+
+**Evidence:** `.dcs/incidents/2026-07-26-schema-citation-guard/214-LOG.md`
+entries at 19:43:40 and 20:04:06; `SAFETY.md` advisory 6 of the second run.
+
+**Not queued** — an ESG act, and probably one agenda item with
+`prompt-vs-schema-drift`.
+
+---
+
+## 15. Check 13's population stops at the shipped package — and one live citation is outside it
+
+Recorded as an **accepted boundary**, not a shortfall, so it is not
+relitigated by the next reader.
+
+Check 13 (`schema-citation-guard`, 2026-07-26) walks `*.md` and excludes
+`.git`, `node_modules`, `__pycache__`, **`.dcs/`** and **`vault/`**. The
+exclusions were argued at plan time and confirmed by the Owner: `.dcs/esg/` is
+in `.gitignore` and absent from a fresh clone, so a guard over it would
+produce different results on different clones; `.dcs/incidents/**` is tracked
+but is an immutable archive; `vault/` never ships.
+
+**But the boundary has a live inhabitant.** `vault/Backlog.md` §11 carries a
+real `schemas.md` #6 citation that nothing verifies. If §6 were ever
+renumbered, that line would silently point elsewhere and no suite would say so.
+
+**A claim about this line was made twice and is false — recorded here so it
+is not inherited.** The Safety Officer's advisory said the citation form
+"evades even a naive grep" because a backtick splits the pattern, and the IC
+repeated it in a directive. The Dispatcher tested it at close rather than
+transcribing it:
+
+| form | matches `` schemas\.md`?\s*#\s*(\d+) `` |
+|---|---|
+| `` `schemas.md` #6 `` (this line) | **yes**, `#6` |
+| `` `references/schemas.md` #4 `` | yes, `#4` |
+| `schemas.md #1` | yes, `#1` |
+
+The optional backtick in the pattern is exactly what absorbs the closing one.
+This line is outside the guard **only because `vault/` is excluded from the
+walk** — not because its grammar defeats the matcher. Two verifiers asserted a
+mechanism without running it, inside the incident whose subject is claims that
+nobody re-measures.
+
+**The detail worth keeping** is how it is written:
+
+```
+`schemas.md` #6 offers three dispositions
+```
+
+The backtick closes **before** the `#`, so the pattern
+`` schemas\.md`?\s*#\s*(\d+) `` does match it — but only because the optional
+backtick is in the right place. The adjacent uncovered populations named in
+`201-BRIEF.md` (79 "principle N", 34 "`<file>.md` step N", 25 "escalation
+trigger (x)") have wider grammars still, and the analyst already warned that
+one grammar will not serve two of them: `agents/dcs-safety-officer.md` has no
+markdown headings at all, while `dcs/workflows/deploy.md`'s steps are `## N.`
+headings.
+
+**Consequence for whoever widens the guard:** the citation *grammar* is the
+hard part, not the scope. Widening the walk to `vault/` is a one-line change;
+widening it to a population whose citation form was never standardised is a
+different job, and it should be scoped from measurement rather than from the
+assumption that today's regex generalises.
+
+**Not queued** — evidence for the adjacent-populations work, and an accepted
+boundary in the meantime.
