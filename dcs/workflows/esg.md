@@ -88,6 +88,10 @@ Present to the Owner:
     incident's directory sitting on disk; that is precisely the half-
     measure this audit exists to prevent (doctrine principle 10 amended,
     v0.3).
+(g) **Field repairs reported since the last sweep** — each Owner-reported
+    fix applied outside DCS's lifecycle, needing a post-hoc register row
+    per the register template's `RESOLVED (field repair)` convention
+    (`dcs/templates/REGISTER.md`).
 
 ## 3. Decide
 
@@ -105,6 +109,11 @@ at face value into step 4.
   removal is owed if the removal fails, same fallback as `close.md` step
   5a.4), `git branch -D dcs/<slug>` additionally for kill decisions only
   (park keeps the branch).
+- Originate a post-hoc `REGISTER.md` row for each field repair reported
+  under (g), per the register template's `RESOLVED (field repair)`
+  convention (`dcs/templates/REGISTER.md`) — verify the commit reference
+  (`git show <sha> --stat`) before writing the row, since its facts are
+  reported rather than observed.
 - If the Delegation changed: append a **new version block** to
   `DELEGATION.md` — bump `version`, date-stamp it, and keep every prior
   version block in the file exactly as written. It is the audit trail;

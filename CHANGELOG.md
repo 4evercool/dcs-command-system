@@ -20,6 +20,25 @@ from recollection. Releases before 0.6.5 are recorded only in
 
 ---
 
+## Unreleased
+
+### Added
+
+- **`RESOLVED` gained a qualifier, `RESOLVED (field repair)`, for an
+  Owner-authorized fix applied entirely outside DCS's lifecycle.** It
+  qualifies the existing `RESOLVED` state rather than adding a new one —
+  the same qualifier shape as `MERGED (deploy pending)` in 0.6.10.
+  `dcs/templates/REGISTER.md` declares the convention (which cells stay
+  at the row template's em-dash, the three-part Outcome minimum, and its
+  sole writer). `dcs/workflows/esg.md` gives it a live writer: agenda
+  item (g) surfaces Owner-reported field repairs each sweep, and step 4
+  originates the post-hoc row, verifying the commit reference (`git show
+  <sha> --stat`) first since its facts are reported rather than
+  observed. `python tests/test_doctrine_integrity.py`: **82/82 passed**,
+  unchanged.
+
+---
+
 ## 0.6.10 — 2026-07-26
 
 Hot-path trim, and a correction: **0.6.9 shipped twice with different

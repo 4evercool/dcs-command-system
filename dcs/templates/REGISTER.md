@@ -56,7 +56,11 @@ a write, not to serialize normal usage.
                   no worktree was ever opened, and it never enters the
                   deploy lifecycle. Worktree and Branch stay unset, and
                   Closed and Outcome are recorded at the same time as
-                  this state.
+                  this state. A field repair -- an Owner-authorized fix
+                  applied entirely outside the incident lifecycle -- is
+                  recorded under this same state, qualified: the State
+                  cell reads the exact literal `RESOLVED (field repair)`
+                  (see the block below).
 
      FACTS-ONLY (v0.4.1, same rule as close.md's AAR): a row states what
      was VERIFIED, never what was intended or attempted. "branch deleted"
@@ -70,6 +74,39 @@ a write, not to serialize normal usage.
      rather than implying DCS shipped it. Field lesson 2026-07-23: rows
      claimed a deleted branch that was still on disk and a pending
      deploy that was already live. -->
+
+<!-- FIELD REPAIR (a RESOLVED qualifier, not a new state): an
+     Owner-authorized fix applied entirely outside DCS's lifecycle -- no
+     201, no typing decision, no worktree, no IAP, no Safety review -- is
+     recorded under this same terminal state, qualified. State reads the
+     exact literal `RESOLVED (field repair)`, the same qualifier shape as
+     `MERGED (deploy pending)` above. This differs from RESOLVED's inline
+     case above by one clause: that case was a typed incident that ran
+     DCS's process end to end, only without a worktree; this one never
+     enters that process at all.
+
+     CELLS: every cell that would otherwise record a DCS act reads the
+     template's existing em-dash when that act never happened -- Type
+     (never typed), Priority (never ranked), Worktree and Branch (never
+     opened), Opened (the row never had a QUEUED/ACTIVE phase to leave).
+     Closed and Outcome are filled together, exactly as RESOLVED already
+     requires; Closed carries the date the fix was applied.
+
+     OUTCOME MINIMUM, all three: one line stating what was fixed; a
+     commit/diff reference given as a regenerating command -- `git show
+     <sha> --stat` or equivalent -- never a bare sha; and an explicit word
+     on whether a retroactive Safety look was done, "none" written out
+     when it was not, never left silent.
+
+     WRITER: the Chief of Staff, during /dcs-esg, on the Owner reporting a
+     fix made outside the lifecycle. Every other writer of this file
+     either transitions a row that already exists or originates one into
+     QUEUED/ACTIVE; this is the one writer that ORIGINATES a row directly
+     in a terminal state, with no prior QUEUED/ACTIVE phase at all.
+     Because the row's facts are REPORTED to the writing session rather
+     than observed by it, FACTS-ONLY carries one added rule this writer
+     alone needs: verify the commit reference first (`git show <sha>
+     --stat`) before the row is written. -->
 
 
 | ID | Title | Type | Priority | State | Worktree | Branch | Territory | Intake source | Opened | Closed | Outcome |
