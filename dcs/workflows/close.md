@@ -236,14 +236,17 @@ now lives under `.dcs/incidents/<date>-<slug>/` in the **main checkout**
 ## 6a. Update the register (v0.2, superseded by 5a in v0.3)
 
 **v0.3: this transition now happens at step 5a.3** (`ACTIVE` → `MERGED`,
-not `ACTIVE` → `CLOSED` — the register's terminal state for a shipped
-incident is `DEPLOYED`, reached later via `/dcs-deploy`). This heading is
-kept as a stable cross-reference target; there is nothing further to do
-here for a v0.3 incident. For a pre-v0.3 / never-worktreed incident
-(step 5a skipped): find this incident's row (by slug) and move it
-`ACTIVE` → `CLOSED` directly, filling in the closed date and outcome —
-the old v0.2 behavior, still correct for an incident that has no merge
-step to wait on.
+not `ACTIVE` → `CLOSED` — for a shipped incident, the register's terminal
+state is `DEPLOYED`, reached later via `/dcs-deploy`; that scoping still
+holds beside the newer `RESOLVED` state, which belongs to work that never
+enters the deploy lifecycle at all). This heading is kept as a stable
+cross-reference target; there is nothing further to do here for a v0.3
+incident. For a pre-v0.3 / never-worktreed incident (step 5a skipped):
+find this incident's row (by slug) and move it `ACTIVE` → `RESOLVED`
+directly, filling in the closed date and outcome — the old v0.2
+behavior's target renamed to match the current register enum (`CLOSED`
+was never a state in it), still correct for an incident that has no
+merge step to wait on.
 
 If `<esg_root>/.dcs/esg/STRATEGY.md` exists, read its ranked priorities
 and note the next queued priority in the final sitrep (step 7) so the

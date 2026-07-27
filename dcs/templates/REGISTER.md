@@ -5,7 +5,8 @@ territory-partition lock table. Lives ONLY in the main checkout's
 never in an incident worktree, even though the worktree is where the
 incident's own row gets read/decided about. Owned by the Chief of Staff
 (main session during /dcs-esg); also touched by /dcs-new (territory check
-+ QUEUED -> ACTIVE with worktree/branch), /dcs-plan (territory refined to
++ QUEUED -> ACTIVE with worktree/branch, or QUEUED -> RESOLVED with
+neither), /dcs-plan (territory refined to
 the IAP partition's union; Delegation auto-approval logging), /dcs-close
 (ACTIVE -> MERGED (deploy pending)), and /dcs-deploy (MERGED -> DEPLOYED,
 branch deleted). Every incident that opens should end up with a row here,
@@ -23,7 +24,7 @@ a write, not to serialize normal usage.
 # REGISTER — Incident Portfolio
 
 <!-- State values (v0.3): QUEUED | ACTIVE | MERGED (deploy pending) |
-     DEPLOYED | PARKED | KILLED
+     DEPLOYED | PARKED | KILLED | RESOLVED
 
      QUEUED    -- not yet opened; waiting its turn (territory conflict,
                   or just not picked up yet).
@@ -51,6 +52,11 @@ a write, not to serialize normal usage.
                   quietly aging on disk.
      KILLED    -- abandoned; worktree removed, branch deleted, reason
                   recorded in Notes.
+     RESOLVED  -- terminal for an incident whose work completed inline:
+                  no worktree was ever opened, and it never enters the
+                  deploy lifecycle. Worktree and Branch stay unset, and
+                  Closed and Outcome are recorded at the same time as
+                  this state.
 
      FACTS-ONLY (v0.4.1, same rule as close.md's AAR): a row states what
      was VERIFIED, never what was intended or attempted. "branch deleted"
@@ -68,7 +74,7 @@ a write, not to serialize normal usage.
 
 | ID | Title | Type | Priority | State | Worktree | Branch | Territory | Intake source | Opened | Closed | Outcome |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| {{slug}} | {{one-line title}} | {{5\|3\|1\|?}} | {{H\|M\|L or rank}} | {{QUEUED\|ACTIVE\|MERGED\|DEPLOYED\|PARKED\|KILLED}} | {{`<repo>-wt\<slug>` path, or "—" once removed}} | {{`dcs/<slug>`, or "—" if never opened (Type 5 has none)}} | {{glob(s) -- 201 blast radius initially, refined to the IAP partition's union after /dcs-plan}} | {{Owner chat / audit_results id / vault tech-debt / ...}} | {{date, or "—" while still QUEUED}} | {{date the row left ACTIVE (merged/parked/killed), or "—"}} | {{one-line outcome, or "—" until MERGED/DEPLOYED}} |
+| {{slug}} | {{one-line title}} | {{5\|3\|1\|?}} | {{H\|M\|L or rank}} | {{QUEUED\|ACTIVE\|MERGED\|DEPLOYED\|PARKED\|KILLED\|RESOLVED}} | {{`<repo>-wt\<slug>` path, or "—" once removed, or "—" if never opened}} | {{`dcs/<slug>`, or "—" if never opened (Type 5 has none)}} | {{glob(s) -- 201 blast radius initially, refined to the IAP partition's union after /dcs-plan}} | {{Owner chat / audit_results id / vault tech-debt / ...}} | {{date, or "—" while still QUEUED}} | {{date the row left ACTIVE (merged/parked/killed) or was resolved, or "—"}} | {{one-line outcome, or "—" until MERGED/DEPLOYED/RESOLVED}} |
 
 ## Notes
 

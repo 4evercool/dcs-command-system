@@ -27,6 +27,22 @@ contents.** If you installed 0.6.9, take 0.6.10 — see below.
 
 ### Added
 
+- **Register gained a seventh state, `RESOLVED`, for work that never
+  opens a worktree.** `dcs/templates/REGISTER.md` now defines it as
+  terminal for an incident whose work completed inline — `Worktree` and
+  `Branch` stay at the row template's em-dash, `Closed` and `Outcome` are
+  filled at the same time as the state. The Type 5 express lane
+  (`dcs/workflows/new.md` step 7a) writes it, update-only, when the
+  register already tracks the incident — a typo fix with no row underneath
+  it still gets no register ceremony. `dcs/references/forms.md`'s register
+  description and `dcs/workflows/close.md`'s pre-v0.3 fallback (formerly
+  `ACTIVE` → `CLOSED`, a state `CLOSED` never actually was) both now name
+  it instead. `python tests/test_doctrine_integrity.py`: **82/82 passed**,
+  unchanged — the one live declaring paragraph is still
+  `dcs/templates/REGISTER.md`'s state-description block (the FACTS-ONLY note
+  carries the token and a proof word but no rule shape, so it does not
+  declare). Regenerate:
+  `python tests/test_doctrine_integrity.py | grep 'declaring population'`.
 - **`test_doctrine_integrity.py` check 14, "bar carrier."** The
   advisory/refutation split (which artifact-hygiene finding is an
   `advisories[]` entry rather than a `halt`) had existed since v0.6.5 only

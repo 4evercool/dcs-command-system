@@ -567,6 +567,67 @@ through a contract that spans them. When the artifact being changed is one
 contract, the question is not "are these globs disjoint" but "does this
 contract have one author this period".
 
+## 16. Narrowing scope at the stem widened what could run beside it
+
+*From `direct-resolution-lane`, 2026-07-27. One period, two specialists, one
+attempt, zero deviations, zero halts — and the cheapest thing it did happened
+before any specialist ran.*
+
+The brief carried three manifestations under one asserted root cause: *"the
+register state machine and every workflow that writes it were designed
+exclusively for full-lifecycle incidents."* The IC ruled that sentence a
+**model, not a defect**, and split on principle 4.
+
+**The argument against splitting was concrete and it was wrong in an
+interesting way.** It ran: three incidents would each edit the same enum, which
+is worse than one. That does not follow — **one incident creates the state and
+the others consume it**, so the enum is edited once regardless. But the
+rebuttal only holds if the state's definition is general enough to be consumed
+without amendment, which is why the IC turned it into a **hard bound** rather
+than an aspiration: the definition may name no type, no workflow step, no lane.
+A scope argument became a design constraint, and the Safety Officer later
+verified by reading that both split-out rows are served unchanged.
+
+**Then the narrowing paid a second time, in a currency nobody was tracking.**
+Both chiefs recommended making `doctrine.md` and `typing.md` *forbidden* rather
+than *conditional*, on the reasoning that no doctrine rule was changing and the
+hot path had 1,205 B of slack. Accepting it dropped two files from the
+territory — and recomputing the portfolio collision from the Territory column
+showed the incident now blocked **three** queued rows instead of six. **Ranks 5,
+7 and 12 were freed by a decision made for an unrelated reason.**
+
+The generalisable part: **territory width is a portfolio cost, not just an
+incident cost**, and it is invisible unless someone recomputes the collision
+after the IAP narrows. `plan.md` step 5a refines the register's territory
+already; what it does not do is re-derive *which rows that unblocks*. Both times
+this session computed a blocked-rows list by hand it was wrong — once in each
+direction — and both times the fix was to intersect the Territory column
+mechanically instead.
+
+## 17. Hand the verifier what you already found
+
+*Same incident.* At step 5 the Dispatcher found a false claim in `CHANGELOG.md`
+— it named the wrong paragraph as check 15's declaring one — and deliberately
+did **not** fix it before spawning the Safety Officer, passing it forward as a
+claim to verify instead.
+
+The officer re-derived the predicate from source rather than accepting the
+finding, confirmed it, and then found **three things the Dispatcher had
+missed** — including that a specialist's own evidence reported a post-state as
+its own baseline (`4 → 4` where the genuine count went `3 → 4`).
+
+**The temptation is real and worth naming**: fixing it first would have been one
+edit, and the verdict would have come back clean. It would also have been a
+verdict on a tree the officer had not actually been asked to judge. A verifier
+handed a pre-cleaned artifact returns a cheaper answer and a weaker one, and the
+cost of the honest route was zero — the finding was an advisory either way, and
+the IC fixed it after the verdict under `execute.md` step 9's advisory rule.
+
+Related, and the sharper version of the same point: the officer's charter says
+specialist self-reports are never listed as the check itself, only as the claim
+being checked. **That rule should extend to the IC's own findings**, and here it
+did.
+
 ## Links
 
 - [[Post-mortems/energy-cost-model-rework]] — the incident behind v0.5.12
