@@ -628,6 +628,87 @@ specialist self-reports are never listed as the check itself, only as the claim
 being checked. **That rule should extend to the IC's own findings**, and here it
 did.
 
+## 18. A revision that fixes one criterion can silently unfix another
+
+*From `register-field-repair-path`, 2026-07-27. One period, two revisions,
+two halts, zero specialist deviations — and both halts were about the
+plan's own paperwork, not the convention it shipped.*
+
+**Halt 1 was an old acquaintance in new clothes.** A tasking asserted
+"0.6.10 is unpublished" as fact, inherited verbatim from a sibling
+incident's AAR. It was true when that incident closed and false 49 minutes
+before this one's own 201 was drafted — the Owner published in between,
+and nothing in the chain (two situation analysts, a Planning Chief, two
+command-point spawns) ran `npm view` to check. This is §2 and §11's
+"resting a decision on a number" clause, measured a second time: writing a
+number and *resting a decision* on it are different obligations, and only
+the first was met.
+
+**Halt 2 is the sharper, newer lesson.** Fixing halt 1 meant rewriting
+`IAP.md`'s objectives section. The rewrite carried forward criteria 1-4
+and wrote the new criterion 6 — and silently dropped criterion 5's
+already-Safety-verified "Criterion 5, answered" section, which lived in
+the same file but was not what the rewrite's attention was on. Nothing
+mechanical could have caught it: the plan's own protection for
+already-verified work was a pinned sha256 of two *payload* files
+(`dcs/templates/REGISTER.md`, `dcs/workflows/esg.md`), and criterion 5's
+deliverable was IAP *prose* — outside the pin's pathspec by construction,
+and outside `dcs_gate.py`'s reach too, since `.dcs/**` is unguarded. The
+false claim that the pin covered "criteria 1-5" rode through the rewrite,
+an IC self-review, and an Owner approval before the Safety Officer's full
+re-read of the file caught it.
+
+**Then the repair repeated the shape it was fixing.** Told the missing
+text was "fully recoverable verbatim" from two named sources, the IC
+restored a section and reported it as a verbatim recovery. It was not: a
+tree-wide grep for the section's distinctive phrases found it in exactly
+one file — the just-written `IAP.md` — and both cited sources hold only a
+one-clause summary and a differently-worded partial paraphrase. The
+*content* was right (the Safety Officer independently re-derived and
+confirmed every claim in it against the actual files), but the *claim
+about where it came from* was exactly as unverified as halt 1's claim
+about the registry. An assertion of fidelity is a fact like any other —
+principle 15 applies to "I copied this correctly" as much as to a byte
+count.
+
+**The transferable rule, in two parts:**
+
+> A revision scoped to one criterion must still prove it preserved every
+> other criterion's already-satisfied content — map each one to the
+> section that carries it, in the file as it now stands, before
+> re-stamping. "I only touched criterion 6" is a claim about intent; the
+> map is the check on the result.
+>
+> A restoration claimed as "verbatim" is a citation like any other and
+> must resolve the same way `grep -c -F` must return exactly the sources
+> named — before the claim is written, not after a reviewer asks.
+
+**One small aside, same incident:** a citation to a register row
+(`trivial-work-inline-lane`) survived, unchanged, through a 201, an IAP,
+and a register row's own quotation of itself — for hours after that row
+was `KILLED` and folded into another one at an ESG sweep. A row id is a
+derived fact too; nothing re-checks a citation against current portfolio
+state once it is written down, the same gap §16's territory-recomputation
+lesson names for a different column.
+
+**A second small aside, discovered writing this very AAR:** "the pin only
+covers payload files, so `.dcs/**` prose fixes need no re-approval" turned
+out to be false in a way the pin's own gap did not predict. Fixing the
+advisories above meant editing `IAP.md` again, post-pass, and the
+Dispatcher assumed that was harmless bookkeeping. `dcs_gate.py`'s actual
+execution-phase logic (read from source, not from memory of what it
+"should" do) checks `marker_valid()` **unconditionally** for any target
+outside `.dcs/**` — the `guarded_paths`/`unguarded_paths` exemption only
+matters *inside* the halt-ceiling sub-check, reached only once the marker
+is already valid. An invalid marker denies every other edit outright,
+`vault/**` included, regardless of what `config.json` lists it as. The
+next Edit call (to this very file) was denied, correctly, for exactly the
+reason the mismatch predicts. **A rule read from a docstring's *intent*
+("`.dcs/**` bookkeeping is unenforced") is not the same rule as the code's
+actual branching** — the intent is true of `.dcs/**` specifically, and
+the Dispatcher generalised it to "post-pass paperwork changes are
+unenforced," which the source does not say and does not do.
+
 ## Links
 
 - [[Post-mortems/energy-cost-model-rework]] — the incident behind v0.5.12
