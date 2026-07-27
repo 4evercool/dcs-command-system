@@ -46,6 +46,36 @@ away:
       anything -- so a section deleted and the numbering below it shifted,
       or a title silently rewritten under a stale number, fails here
       instead of resolving as "the number exists"
+  14. advisory/refutation bar carrier: the same discipline as check 13,
+      applied to principle 15's advisory/refutation split, whose one
+      declaring step lives in agents/dcs-safety-officer.md and is parsed
+      by content, never a hardcoded step number
+  15. deploy-evidence contract carrier: dcs/workflows/deploy.md step 7 is
+      the ONE place that states which deploy-evidence shape resolves to
+      `DEPLOYED` and which resolves to a stop (incident deploy-marker-
+      blind, 201: two prose surfaces disagreed about this in one form,
+      because nothing held either to the other). The step is found by
+      content, parsed for its live step number and class->disposition
+      map, and every OTHER declaring paragraph in the package (found by
+      ROLE -- `DEPLOYED` co-occurring with proof language AND bound in one
+      of three rule shapes -- not by MARKER vocabulary, which is what
+      missed halt 2's own line; a rule shape is still required, so a
+      rewording outside those three does dodge it) must carry a citation
+      to it by step number, and must not duplicate it within any file.
+      The two rules have DIFFERENT scopes and the gloss must not merge
+      them: the citation rule binds every declaring paragraph including
+      deploy.md's own outside step 7; only the duplication rule exempts
+      the source file, and it exempts it whole rather than merely its
+      step-7 section. It does NOT
+      check that a declaring paragraph's stated disposition agrees with
+      step 7's -- that comparator (once here, named Rule B) was removed at
+      halt 3 for over-claiming a coverage it could not deliver; see the
+      removal note beside check 15's rule-A loop in the check body
+  16. shared exclusion constants: tests/payload_check.py's EXCLUDED_DIRS
+      and BYTECODE_SUFFIXES, read as source text on both sides (never
+      imported -- importing this module runs its own checks), must stay
+      textually identical to this module's own, so the two never quietly
+      diverge on what "the package" means
 
 Run standalone, or as the merge-time guard named in CLAUDE.md (doctrine:
 close.md step 1a) so it runs before every incident merge.
@@ -824,6 +854,374 @@ for _bar_para in _bar_paragraphs(safety_officer_md):
 check("bar carrier (criterion 3): the charter has no bare 'N of M' census "
       "without a regenerating command in the same paragraph",
       not _bar_census_bad, "; ".join(_bar_census_bad))
+
+# --- 15. deploy-evidence contract carrier -----------------------------------
+# Incident deploy-marker-blind, 201: two prose surfaces stated the DEPLOYED
+# condition in one form, disagreeing with each other and with
+# dcs/workflows/deploy.md step 7's real (shape-dependent) logic -- and one
+# of the two disagreeing statements used no vocabulary an earlier,
+# word-list-based guard would have recognised ("DEPLOYED only after the
+# project's deployed marker was read and the merge commit confirmed an
+# ancestor of it"). Step 7 IS the source of truth and is parsed at run
+# time, same discipline as check 13's schemas.md parse and check 14's
+# dcs-safety-officer.md parse -- no step number, class name or disposition
+# token appears as a literal below (criterion 11's own no-literal rule).
+deploy_md_text = read("dcs/workflows/deploy.md")
+_DEP_SOURCE_REL = "dcs/workflows/deploy.md"
+
+# (a) source of truth: the ONE `## N.` process step whose own text states
+# it is the single source of every disposition -- found by content, never
+# a hardcoded number (idiom of check 14(a)'s search for "ADVISORIES, not
+# refutations" inside dcs-safety-officer.md's <process>). Exactly one match
+# is required; zero or two is red, not a silent first-match.
+_dep_step_starts = list(re.finditer(r"^##\s+(\d+)\.\s", deploy_md_text, re.M))
+_dep_source_hits = []
+for _dep_i, _dep_sm in enumerate(_dep_step_starts):
+    _dep_end = (_dep_step_starts[_dep_i + 1].start()
+                if _dep_i + 1 < len(_dep_step_starts) else len(deploy_md_text))
+    _dep_body = deploy_md_text[_dep_sm.start():_dep_end]
+    if re.search(r"single source of (?:every|any) disposition", _dep_body, re.I):
+        _dep_source_hits.append((int(_dep_sm.group(1)), _dep_sm.start(), _dep_end, _dep_body))
+
+check(f"deploy-evidence: exactly one deploy.md section is the disposition "
+      f"source of truth (found {len(_dep_source_hits)})",
+      len(_dep_source_hits) == 1,
+      f"matching step numbers: {[n for n, *_ in _dep_source_hits]}")
+
+if len(_dep_source_hits) == 1:
+    _dep_step_num, _dep_source_start, _dep_source_end, _dep_source_body = _dep_source_hits[0]
+else:
+    _dep_step_num, _dep_source_start, _dep_source_end, _dep_source_body = None, -1, -1, ""
+
+# class->disposition map: every bold bullet `- **Name**` at any indentation
+# inside the source section is a candidate named branch/class. Each one is
+# resolved from ITS OWN body (up to the next bullet at the same or a
+# shallower indent, so a parent's nested children never leak into a
+# sibling's body) by searching for an arrow-qualified `` `DEPLOYED` ``
+# token or a bold **stop** token -- arrow-qualified so an unrelated,
+# possibly negated mention elsewhere in the same bullet (e.g. "never mark
+# anything `DEPLOYED`") is not mistaken for a resolution. A bullet whose
+# body carries BOTH, or NEITHER, is a branching or non-resolving bullet
+# (e.g. the "Content witness" parent, which is itself shape-dependent) and
+# is excluded from the map rather than guessed at.
+_dep_bullet_re = re.compile(r"^( *)-\s+\*\*([^*]+?)\*\*", re.M)
+_dep_bullets = list(_dep_bullet_re.finditer(_dep_source_body))
+
+
+def _dep_bullet_body(idx):
+    _indent = len(_dep_bullets[idx].group(1))
+    _start = _dep_bullets[idx].end()
+    _end = len(_dep_source_body)
+    for _j in range(idx + 1, len(_dep_bullets)):
+        if len(_dep_bullets[_j].group(1)) <= _indent:
+            _end = _dep_bullets[_j].start()
+            break
+    return _dep_source_body[_start:_end]
+
+
+_DEP_ARROW = chr(0x2192)  # ASCII source -- U+2192 RIGHTWARDS ARROW
+# Backtick optional (halt 3 fix, same discipline as _DEP_RULE_SHAPE_RE
+# above): deploy.md's own bullets happen to backtick every arrow
+# resolution today, but the parser reading the source of truth should not
+# itself depend on markup any more than the population predicate does.
+_DEP_ARROW_DEPLOYED_RE = re.compile(re.escape(_DEP_ARROW) + r"\s*`?DEPLOYED`?")
+_DEP_BOLD_STOP_RE = re.compile(r"\*\*stop\*\*", re.I)
+
+_dep_class_map = {}
+for _dep_idx, _dep_m in enumerate(_dep_bullets):
+    _dep_name = _ws_norm(_dep_m.group(2))
+    _dep_body = _dep_bullet_body(_dep_idx)
+    _dep_has_deployed = bool(_DEP_ARROW_DEPLOYED_RE.search(_dep_body))
+    _dep_has_stop = bool(_DEP_BOLD_STOP_RE.search(_dep_body))
+    if _dep_has_deployed and not _dep_has_stop:
+        _dep_class_map[_dep_name] = "DEPLOYED"
+    elif _dep_has_stop and not _dep_has_deployed:
+        _dep_class_map[_dep_name] = "stop"
+
+check(f"deploy-evidence: class->disposition map has {len(_dep_class_map)} "
+      f"resolved classes (need >= 2; parsed as a degeneracy tripwire only "
+      f"-- no rule compares a declaring paragraph against it since Rule B's "
+      f"removal): {_dep_class_map}",
+      len(_dep_class_map) >= 2)
+
+# (b) population: *.md under dcs/, agents/, skills/, plus root CLAUDE.md and
+# README.md -- scoped structurally (three directory walks + two named
+# files), never by a hand-kept file list. CHANGELOG.md and docs/ are
+# deliberately OUT of scope: both are dated records of what the contract
+# was at a past release (CHANGELOG.md narrates each past release; a spec
+# doc like docs/spec-v0.3-parallel.md documents the design as of when it
+# was written) -- holding a dated record to LIVE text would rewrite
+# history, so both stay inside criterion 5's human walk instead, never
+# this run-time one.
+#
+# REASONED EXCEPTION (halt 3, IC directive (i)'s literal rule -- two file
+# literals permitted, deploy.md the source and REGISTER.md the anti-erasure
+# floor): CLAUDE.md and README.md are two MORE literals here, by name
+# rather than by walk. A non-recursive `REPO.glob("*.md")` at the repo root
+# was considered instead and rejected: it would also sweep in CHANGELOG.md,
+# which the paragraph above holds deliberately OUT of scope as a dated
+# record, so a walk would need its own CHANGELOG.md exclusion bolted on
+# right next to it -- two named files is the narrower, more honest choice
+# than a walk carrying a silent carve-out. Both are root-level prose DCS
+# does not ship as payload (README.md documents the package; CLAUDE.md is
+# this project's own protocol file, unguarded per this repo's CLAUDE.md
+# itself) and neither is reachable by the three directory walks below, so
+# naming them is the only way either enters this population at all.
+_dep_scan_roots = [REPO / "dcs", REPO / "agents", REPO / "skills"]
+_dep_scan_files = [REPO / "CLAUDE.md", REPO / "README.md"]
+_dep_population = sorted(
+    {p for _dep_r in _dep_scan_roots if _dep_r.is_dir() for p in _dep_r.rglob("*.md")
+     if not (_CITE_EXCLUDED & set(p.relative_to(REPO).parts))}
+    | {p for p in _dep_scan_files if p.is_file()},
+    key=lambda p: p.as_posix(),
+)
+_dep_population_rel = [str(p.relative_to(REPO)).replace("\\", "/") for p in _dep_population]
+_DEP_SURFACES = {"dcs/": lambda r: r.startswith("dcs/"),
+                  "agents/": lambda r: r.startswith("agents/"),
+                  "skills/": lambda r: r.startswith("skills/")}
+_dep_pop_surfaces_hit = sorted(s for s, pred in _DEP_SURFACES.items()
+                                if any(pred(r) for r in _dep_population_rel))
+
+check(f"deploy-evidence: population spans walked surfaces "
+      f"{_dep_pop_surfaces_hit} plus the named root files, "
+      f"{len(_dep_population_rel)} total, and includes the source file",
+      bool(_dep_population_rel) and _DEP_SOURCE_REL in _dep_population_rel
+      and len(_dep_pop_surfaces_hit) >= 2
+      # The named root files must actually BE there. Without this the line
+      # printed "plus the named root files" while both were deleted and the
+      # suite stayed green -- a claim outliving the thing it claims, which
+      # is this check's own subject matter (Safety advisory, verdict 5).
+      and all(p.is_file() for p in _dep_scan_files))
+
+# (c) declaring predicate -- BY ROLE, NOT VOCABULARY: a paragraph (blank-
+# line delimited, the same unit check 14 uses) is declaring iff it (i)
+# names the literal `DEPLOYED` token, (ii) co-occurs with proof language
+# (verified/read/confirmed/proof/ancestor/witness/evidence -- no marker
+# vocabulary, so the halting line "DEPLOYED only after the project's
+# deployed marker was read..." is caught by role), AND (iii) binds
+# `DEPLOYED` in a RULE shape -- a definitional dash/colon ("DEPLOYED --"),
+# an "only after/once/when/if" conditional immediately on `DEPLOYED`, or an
+# arrow resolution ("-> `DEPLOYED`") -- rather than merely narrating a
+# workflow ACTION ("marks rows DEPLOYED", "move it to `DEPLOYED`"). (iii)
+# is a deliberate narrowing of (i)+(ii) alone: co-occurrence without it
+# flags skills/dcs-deploy/SKILL.md's frontmatter description and its
+# <objective> (both narrate the same action, "verifies... then marks rows
+# DEPLOYED" / "verify... move shipped rows to `DEPLOYED`", never asserting
+# an independent condition) and dcs/templates/REGISTER.md's FACTS-ONLY
+# paragraph (which explicitly defers -- "DEPLOYED only per the
+# deploy-evidence disposition defined above -- a row never restates that
+# condition" -- and is not itself a competing rule) as second declaring
+# paragraphs in their files, which is exactly the shape of a false
+# positive, not the shape of the defect this check exists to catch. The
+# halting line itself ("DEPLOYED only after X and Y") remains caught: it
+# is a rule ("only after"), not an action.
+#
+# Halt 3 (Officer 3) fix: the dash/colon alternative below used to require
+# a BARE "DEPLOYED --"/"DEPLOYED:" -- a backticked "`DEPLOYED` --" (the
+# other two alternatives already tolerate an optional backtick either
+# side) silently failed to enter the population through this alternative.
+# Markup must never gate whether a rule statement is found; `?` around the
+# backtick makes all three alternatives symmetric on that point.
+_DEP_TOKEN_RE = re.compile(r"\bDEPLOYED\b")
+_DEP_PROOF_RE = re.compile(
+    r"\b(verif(?:y|ies|ied)|read|confirm(?:s|ed)?|proof|ancestors?|"
+    r"witness(?:es)?|evidence)\b", re.I)
+_DEP_RULE_SHAPE_RE = re.compile(
+    r"DEPLOYED`?\s*(?:--|:)"
+    r"|DEPLOYED`?\s+only\s+(?:after|once|when|if)\b"
+    r"|" + re.escape(_DEP_ARROW) + r"\s*`?DEPLOYED`?")
+
+
+def _dep_is_declaring(paragraph):
+    return bool(_DEP_TOKEN_RE.search(paragraph)
+                and _DEP_PROOF_RE.search(paragraph)
+                and _DEP_RULE_SHAPE_RE.search(paragraph))
+
+
+def _dep_paragraph_spans(text):
+    """Blank-line-delimited paragraph (start, end) offsets in `text` -- the
+    same split _bar_paragraphs uses, but keeping spans lets the source
+    file's OWN section be excluded by position rather than by (fragile)
+    substring identity."""
+    _seps = [(m.start(), m.end()) for m in re.finditer(r"\n\s*\n", text)]
+    _spans, _prev = [], 0
+    for _s, _e in _seps:
+        if _s > _prev:
+            _spans.append((_prev, _s))
+        _prev = _e
+    if _prev < len(text):
+        _spans.append((_prev, len(text)))
+    return _spans
+
+
+_dep_declaring = {}
+for _dep_p in _dep_population:
+    _dep_text = _dep_p.read_text(encoding="utf-8")
+    _dep_rel = str(_dep_p.relative_to(REPO)).replace("\\", "/")
+    if _dep_rel == _DEP_SOURCE_REL and _dep_step_num is not None:
+        # The source SECTION's own paragraphs don't cite themselves -- but
+        # any OTHER section of this same file (e.g. step 8) is NOT exempt:
+        # the rule is "outside the source section", not "outside the
+        # source file".
+        _dep_paras = [
+            _dep_text[_s:_e] for _s, _e in _dep_paragraph_spans(_dep_text)
+            if not (_s >= _dep_source_start and _e <= _dep_source_end)
+            and _dep_is_declaring(_dep_text[_s:_e])
+        ]
+    else:
+        _dep_paras = [p for p in _bar_paragraphs(_dep_text) if _dep_is_declaring(p)]
+    if _dep_paras:
+        _dep_declaring[_dep_rel] = _dep_paras
+
+_dep_declaring_surfaces_hit = sorted(
+    s for s, pred in _DEP_SURFACES.items() if any(pred(r) for r in _dep_declaring))
+
+check(f"deploy-evidence: declaring population is non-empty, spans "
+      f"{_dep_declaring_surfaces_hit}, and has "
+      f"{sum(len(v) for v in _dep_declaring.values())} paragraphs across "
+      f"{len(_dep_declaring)} files: {sorted(_dep_declaring)}",
+      bool(_dep_declaring))
+
+# (f) anti-erasure floor (IC directive (i), narrow reading -- precedent:
+# check 13's own `agents/dcs-commander.md` pin, cited by symbol because a
+# line range is a derived fact about one tree and the first version of this
+# comment carried one that was already wrong in the tree it was written in,
+# in a file that grew 384 lines this period): the ONE authorised file
+# literal beyond the source
+# itself. A structural non-emptiness assertion plus this named floor keeps
+# the halt-2 site from silently dropping out of the declaring population --
+# NOT a population source (the population above is entirely walked).
+check("deploy-evidence: declaring population includes "
+      "dcs/templates/REGISTER.md (the halt-2 anti-erasure floor)",
+      "dcs/templates/REGISTER.md" in _dep_declaring,
+      f"declaring population: {sorted(_dep_declaring)}")
+
+# (d) Rule A (citation), one named check per population file (idiom of
+# check 14(d)'s combined per-file comparator) so a NEW site fails by name.
+#
+# Rule B (disposition equality -- "and states no disposition contradicting
+# it") is REMOVED as of halt 3 (Officer 3), not merely re-tuned. It was a
+# per-class substring-and-window comparator: find a step-7 class name
+# (e.g. "Differing or repo-only") inside the paragraph, then look within a
+# fixed +-100/150 character window for a disposition token. Officer 3
+# forged four contradictions that stayed green under it, and each is a
+# different way the comparator's premise fails, not one bug with one fix:
+#   - the one live declaring paragraph (dcs/templates/REGISTER.md) never
+#     mentions ANY of step 7's four resolved class names at all -- it uses
+#     different words ("green", "stale-extras-only") -- so on the unforged
+#     tree the comparator matches zero times and contributes NO binding;
+#   - when a class name IS injected (F1), REGISTER.md's own paragraph
+#     structure (six state descriptions concatenated with no blank lines,
+#     so they are ONE paragraph to this check's blank-line-delimited unit)
+#     places the class name 180+ characters from the paragraph's own
+#     `DEPLOYED` label -- wider than the fixed window regardless of the
+#     backtick fix directly above, so widening the window to fit this one
+#     file's shape is fitting the check to a single population member,
+#     exactly the kind of narrow-surface assumption this halt is about;
+#   - a paragraph can restate step 7's OLD, superseded rule (F2: "the
+#     project's deployed version string advanced") while citing step 7's
+#     live number correctly and mentioning NONE of its four class names --
+#     a comparator keyed on recognising class-name vocabulary cannot see
+#     this by construction, no matter how the window is tuned, because
+#     there is nothing class-shaped in the text to anchor on. This is the
+#     same root failure this check exists to guard against (a prose
+#     restatement using vocabulary a recogniser does not expect), now
+#     inside the recogniser itself.
+# A version of the comparator DOES work -- REGR_flip below (a class name
+# placed directly beside a backticked `DEPLOYED` via an arrow) reproduces
+# Rule B's original green-to-red behaviour under the unfixed code, proving
+# it was never inert by construction. But "works when the contradiction
+# happens to sit inside a fixed character window and happens to name a
+# recognised class" is exactly the shape of guard this incident opened
+# over, and F2 shows even a maximally generous window cannot close the
+# gap. Per the Owner's ruling on this halt (a guard that under-claims
+# truthfully beats one that over-claims greenly): removed, and the PASS
+# line below claims only what Rule A does -- the citation, not the
+# content. Disposition-content agreement between a declaring paragraph and
+# step 7 is NOT CHECKED MECHANICALLY ANYWHERE -- it relies on review. Said
+# that way deliberately: an earlier draft said "a human read at merge/close
+# time", which names a control that does not exist, since close.md step 1a
+# runs this suite and stops. Honest about the delta is not the same as
+# honest about the state (Safety advisory, verdict 5).
+_DEP_CITE_RE = re.compile(r"`dcs/workflows/deploy\.md`\s+step\s+(\d+)")
+
+
+def _dep_paragraph_problems(paragraph, step_num):
+    _problems = []
+    _norm_p = _ws_norm(paragraph)
+    _cites = list(_DEP_CITE_RE.finditer(_norm_p))
+    if not _cites:
+        _problems.append("missing a `dcs/workflows/deploy.md` step N citation")
+    else:
+        for _cm in _cites:
+            _n = int(_cm.group(1))
+            if _n != step_num:
+                _problems.append(f"cites step {_n}, live step is {step_num}")
+    return _problems
+
+
+for _dep_rel in sorted(_dep_declaring):
+    _dep_problems = []
+    for _dep_para in _dep_declaring[_dep_rel]:
+        _dep_problems += _dep_paragraph_problems(_dep_para, _dep_step_num)
+    check(f"deploy-evidence rule A: {_dep_rel} -- every declaring paragraph "
+          f"cites `dcs/workflows/deploy.md` step {_dep_step_num} by number "
+          f"(disposition-content agreement beyond the citation is a human "
+          f"read, not checked here -- see the Rule B removal note above)",
+          not _dep_problems, "; ".join(_dep_problems))
+
+# (d) Rule C: at most one declaring paragraph per file OUTSIDE THE SOURCE
+# FILE -- tree-wide over the whole population, never narrowed to one file
+# (check 14's bare-census rule stops at one file; this does not repeat
+# that gap). This is criterion 10 mechanised, and it is what would catch a
+# reintroduced halt-2 phrasing-independently even if its wording dodged
+# Rule A entirely (Rule B, which this comment used to also name, was
+# removed at halt 3 -- see the note above the rule-A loop).
+_dep_rule_c_bad = {r: len(ps) for r, ps in _dep_declaring.items()
+                    if r != _DEP_SOURCE_REL and len(ps) > 1}
+check(f"deploy-evidence rule C: at most one declaring paragraph per file "
+      f"outside the source file, tree-wide ({len(_dep_declaring)} declaring "
+      f"files total)",
+      not _dep_rule_c_bad, f"files with >1 declaring paragraph: {_dep_rule_c_bad}")
+
+# --- 16. shared exclusion constants (criterion 12) ---------------------------
+# tests/payload_check.py's EXCLUDED_DIRS / BYTECODE_SUFFIXES are reused
+# verbatim from this module's own (its own header comment says so) --
+# assert they STAY textually identical, never re-derive or re-import them:
+# importing test_doctrine_integrity.py runs its own checks and calls
+# sys.exit() at module scope (see this module's own header), which would
+# hijack whatever imported it, and importing payload_check.py under a test
+# runner is its own hazard (argv parsing, __main__ side effects). Both
+# sides are read as source TEXT instead -- payload_check.py via its path,
+# this module via Path(__file__).read_text(). A missing file or a
+# non-matching extraction is RED, never skipped.
+_PAYLOAD_CHECK_PATH = REPO / "tests" / "payload_check.py"
+_THIS_MODULE_SOURCE = Path(__file__).read_text(encoding="utf-8")
+_EXCLUDED_DIRS_ASSIGN_RE = re.compile(r"^EXCLUDED_DIRS\s*=\s*(\{[^\n]*\})", re.M)
+_BYTECODE_SUFFIXES_ASSIGN_RE = re.compile(r"^BYTECODE_SUFFIXES\s*=\s*(\([^\n]*\))", re.M)
+
+_self_excl_m = _EXCLUDED_DIRS_ASSIGN_RE.search(_THIS_MODULE_SOURCE)
+_self_byte_m = _BYTECODE_SUFFIXES_ASSIGN_RE.search(_THIS_MODULE_SOURCE)
+
+if _PAYLOAD_CHECK_PATH.is_file():
+    _payload_check_source = _PAYLOAD_CHECK_PATH.read_text(encoding="utf-8")
+    _pc_excl_m = _EXCLUDED_DIRS_ASSIGN_RE.search(_payload_check_source)
+    _pc_byte_m = _BYTECODE_SUFFIXES_ASSIGN_RE.search(_payload_check_source)
+    check("shared constants: tests/payload_check.py EXCLUDED_DIRS is "
+          "textually identical to this suite's own",
+          bool(_pc_excl_m) and bool(_self_excl_m)
+          and _pc_excl_m.group(1) == _self_excl_m.group(1),
+          f"payload_check.py: {_pc_excl_m.group(1) if _pc_excl_m else 'NOT FOUND'}; "
+          f"this suite: {_self_excl_m.group(1) if _self_excl_m else 'NOT FOUND'}")
+    check("shared constants: tests/payload_check.py BYTECODE_SUFFIXES is "
+          "textually identical to this suite's own",
+          bool(_pc_byte_m) and bool(_self_byte_m)
+          and _pc_byte_m.group(1) == _self_byte_m.group(1),
+          f"payload_check.py: {_pc_byte_m.group(1) if _pc_byte_m else 'NOT FOUND'}; "
+          f"this suite: {_self_byte_m.group(1) if _self_byte_m else 'NOT FOUND'}")
+else:
+    check("shared constants: tests/payload_check.py exists", False,
+          f"not found at {_PAYLOAD_CHECK_PATH}")
 
 print(f"\n{checks - len(failures)}/{checks} passed")
 sys.exit(1 if failures else 0)

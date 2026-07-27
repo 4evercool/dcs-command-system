@@ -1,9 +1,9 @@
 <purpose>
 The deploy train (v0.3): a serialized, Owner-gated ship of every incident
 that has merged to main but not yet shipped. Runs only from the always-
-clean main checkout, verifies the project's own deployed-version marker
-actually advanced before declaring victory, and is the only place
-`REGISTER.md` rows reach `DEPLOYED` — nothing else in DCS ships code.
+clean main checkout, verifies the deployed payload actually matches what
+was merged before declaring victory, and is the only place `REGISTER.md`
+rows reach `DEPLOYED` — nothing else in DCS ships code.
 Never called by `/dcs-loop` (doctrine's automation-layer hard rule 2 is
 unchanged by this command's existence).
 </purpose>
@@ -76,33 +76,44 @@ project-specific gates.
 
 ## 4. List what's about to ship — reconcile against prod FIRST (v0.4.1)
 
-**DCS is not the only thing that ships.** Other sessions, other people,
-and CI can deploy the integration branch at any time, and any such deploy
-carries every merged incident underneath it — so a `MERGED` row may
-already be live without DCS ever having shipped it (field lesson
-2026-07-23: an unrelated hotfix deploy transitively shipped a whole
-incident; the register still claimed it pending).
+**DCS is not the only thing that ships.** Other sessions, people, and CI
+can deploy the integration branch any time, carrying every merged
+incident underneath it — so a `MERGED` row may already be live without
+DCS ever having shipped it (field lesson 2026-07-23: an unrelated hotfix
+deploy transitively shipped a whole incident; the register still claimed
+it pending).
 
-Before listing anything, read the project's deployed-version marker
-(step 7's mechanism — e.g. `.deployed_sha` over SSH) and, for **every**
-`MERGED` row, check whether its merge commit is already an ancestor of
-what's deployed:
+Before listing anything, read what the project documents for checking
+deployed state and reconcile every `MERGED` row against it, using the
+same shapes step 7 classifies a marker into — see step 7 for what each
+shape IS; this step only differs in running **before** step 6 rather
+than after, and in what it DOES with the result:
 
-```bash
-git merge-base --is-ancestor <row merge commit> <deployed marker sha>
-```
-
-- **Ancestor (already live):** move the row to `DEPLOYED` with a note
-  saying it shipped **out-of-band** (naming the deployed sha that carried
-  it), delete its `dcs/*` branch, and EXCLUDE it from this train. Never
-  re-ship what is already deployed, and never record it as if DCS shipped
-  it — that is the facts-only rule applied to the register.
-- **Not an ancestor:** it genuinely needs shipping; include it.
-- **Marker unreadable** (no SSH, no documented marker): skip the
-  reconciliation, say so plainly, and treat every `MERGED` row as
-  unshipped — but flag that this train may re-ship already-live work.
+- **Commit-ish marker:** ancestor of the marker sha → already live,
+  reconciles away below; not an ancestor → include it.
+- **Content witness:** run it once against this checkout, the
+  integration-branch tip C (`esg_root`). Identical or installed-only
+  only reconciles every row whose merge commit is an ancestor of C,
+  same as an ancestor commit-ish marker (a payload-inert merge —
+  `vault/`, `.dcs/`, docs only — counts as already shipped). Differing
+  or repo-only attests to **bytes**, not to which merge introduced them,
+  so the difference **cannot be attributed to individual rows**: treat
+  **every** `MERGED` row as unshipped, include them all, and name the
+  differing/missing files. A witness environment error folds into
+  "unreadable" below.
+- **Readable-but-neither, or unreadable:** skip reconciliation, say so
+  plainly, and treat every `MERGED` row as unshipped — flag that this
+  train may re-ship already-live work. (Step 7 gives these same two
+  shapes different post-deploy dispositions.)
 - **Every row reconciles away:** report "nothing to ship — all merged
   rows already live (shipped out-of-band)", release the lock, and stop.
+
+Rows that reconcile away move to `DEPLOYED` per `dcs/workflows/deploy.md`
+step 7's disposition, noting they shipped **out-of-band** (naming the
+sha or witness result that carried them), delete their `dcs/*` branch,
+and are EXCLUDED from this train — never re-ship what's already
+deployed or record it as if DCS shipped it (facts-only rule applied to
+the register).
 
 Then list the remaining `MERGED` rows — these are what this deploy will
 ship. Separately warn about any `dcs/*` branch from
@@ -169,26 +180,74 @@ refused; that refusal is the standard). Instead:
 That turns a hard block into a loop the Owner closes, with DCS still
 doing every part it is allowed to do.
 
-## 7. Verify the deployed-version marker actually advanced
+## 7. Verify the deployed content actually matches what was merged
 
-Facts-only rule (same discipline as `close.md`'s AAR facts-only rule,
-field lesson 2026-07-22): **do not** report success because the deploy
-command exited 0. Check the project's own deployed-version marker (e.g. a
-`.deployed_sha` file, a `/version` endpoint, whatever the project
-documents) **before and after** running the deploy command in step 6, and
-confirm it actually advanced to (or past) the merge commit(s) from step
-4. If it didn't advance, or advanced to something unexpected: **stop**,
-report the discrepancy exactly as observed, and do **not** proceed to
-step 8 — do not mark anything `DEPLOYED` on the strength of an exit code
-alone.
+**This step is the single source of every disposition in this
+workflow** (`DEPLOYED` / stop / stays `MERGED (deploy pending)`, by
+shape) — nothing else in the package states one; every other declaring
+statement cites this step by name.
+
+Facts-only rule (same discipline as `close.md`'s AAR rule, field lesson
+2026-07-22): **do not** report success because the deploy command
+exited 0. Read what the project documents for checking deployed state
+(the same discovery step 4 used from `CLAUDE.md`), and verify **after**
+step 6, by the same shape step 4 already sorted it into:
+
+- **Commit-ish marker** (e.g. a sha in `.deployed_sha`): read the
+  marker's sha after step 6 and run `git merge-base --is-ancestor <row
+  merge commit> <deployed marker sha>` for every row about to ship. All
+  ancestors → `DEPLOYED`. Any row not an ancestor → **stop**; name the
+  row(s) the marker doesn't yet reflect, and do not proceed to step 8.
+- **Content witness** (the project's own deployed-content witness,
+  discovered from `CLAUDE.md`, same discipline as step 6): run it
+  **before** step 6 — this captures the deployed side's starting state,
+  and **a red (differing/repo-only) before run is expected input to the
+  ship, never a stop: it's the reason this deploy is happening, not a
+  discrepancy to resolve first.** Run it again **after** step 6,
+  recording the integration-branch sha (`git rev-parse HEAD` at `esg_root`)
+  each time. **Why the checkout stands in for "what was merged":** the
+  witness compares the deployed side against this checkout, not a named
+  merge commit — step 3 already confirmed its payload paths are clean,
+  and the sha pins exactly which commit that clean checkout equals, so
+  the two are the same fact. **That holds only if nothing wrote into the
+  payload paths between step 3 and this after run** — a deploy writing
+  into its own payload paths breaks it, so re-confirm step 3's
+  cleanliness before trusting what follows. The **after** run decides:
+  - **Identical** → `DEPLOYED`. A marker (version string or otherwise)
+    that didn't move is explicitly **not** a stop condition —
+    before-green/after-green is a legitimate no-op ship, not a
+    discrepancy.
+  - **Differing or repo-only** → **stop**. Name the files from the
+    witness's own report and do **not** proceed to step 8 — never mark
+    anything `DEPLOYED` on the strength of step 6's exit code alone.
+  - **Installed-only only** → `DEPLOYED`, **with a mandatory flag
+    naming the stale files** (step 10) so the Owner can delete them —
+    the merged payload is fully live, the extras are pre-existing installer
+    debris, not caused by this train. **IC ruling, binding:** stopping here
+    would recreate the stop-fires-on-a-correct-ship defect this incident exists
+    to fix; stop is reserved for differing/repo-only above.
+- **Readable, but neither a commit-ish nor a content witness** (e.g. a
+  bare version string with nothing to run against it): say so, and give
+  it **step 6's harness-refusal shape, not a permanent stop with no
+  remedy** — rows stay `MERGED (deploy pending)`, and the Owner is told
+  the remedy: document a deploy-evidence witness (commit-ish or content)
+  in the project's own `CLAUDE.md`, then re-run `/dcs-deploy`. **Never an
+  override, never a substituted check** — that is the trained-to-override
+  behaviour this incident opened over.
+- **Marker unreadable** (no SSH, no documented marker, or a content
+  witness environment error above): report it and **stop**. This is
+  **deliberately stricter than step 4's own "cannot check" case**:
+  before the deploy, treating an unreadable marker's rows as unshipped
+  and re-shipping them is the safe direction (over-shipping); after the
+  deploy, recording an unproven ship as `DEPLOYED` is not — nothing may
+  resolve to `DEPLOYED` unproven.
 
 ## 8. Update rows and delete shipped branches
 
 For every `MERGED` row confirmed shipped in step 7: move it to
 `DEPLOYED` in `REGISTER.md`, then `git branch -D dcs/<slug>` — the branch
 was kept exactly until this point as the rollback reference (`close.md`
-step 5a.4); once the deployed-version marker confirms it shipped, it has
-no further job to do.
+step 5a.4); once step 7 confirms it shipped, it has no further job to do.
 
 **Intake-closure linkage:** `close.md` step 5's intake-source-closure
 rule (flag for the Owner, or delegate to a project-documented routine
@@ -207,9 +266,10 @@ the turn so a future `/dcs-deploy` isn't blocked by this run's own lock.
 
 ## 10. Report
 
-Summarize: which rows shipped (id, title, merge commit, confirmed
-deployed-version marker value), which `dcs/*` branches were deleted, any
-worktree-audit findings from step 2 still needing an `/dcs-esg` decision,
-and any intake sources now actionable per step 8's linkage note.
+Summarize: which rows shipped (id, title, merge commit, step 7's
+verification evidence and any stale-extras flag), which `dcs/*` branches
+were deleted, any worktree-audit findings from step 2 still needing an
+`/dcs-esg` decision, and any intake sources now actionable per step 8's
+linkage note.
 
 </process>

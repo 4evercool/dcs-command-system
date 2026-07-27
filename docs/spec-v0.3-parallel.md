@@ -124,8 +124,10 @@ project's own preflight hook keeps working — main never carries WIP now)
 → list `MERGED` rows about to ship + warn about any unmerged `dcs/*`
 branches → Owner confirms → run the project's documented deploy command
 (discovered from the project's CLAUDE.md — never invented) → verify the
-project's deployed-version marker actually advanced (facts-only rule) →
-rows → `DEPLOYED`, delete their `dcs/*` branches → release the lock.
+project's deployed-version marker actually advanced (facts-only rule;
+**superseded in 0.6.10 — see `dcs/workflows/deploy.md` step 7 for the
+shape-dependent evidence this now requires**) → rows → `DEPLOYED`,
+delete their `dcs/*` branches → release the lock.
 Intake-closure linkage (v0.2 close.md rule) keys off DEPLOYED, not MERGED.
 
 ## No dangling worktrees (the Owner's standing pain)

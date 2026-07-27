@@ -62,9 +62,10 @@ verdict copied verbatim from `SAFETY.md`.
 a deploy that hadn't happened and lessons that were never written):**
 
 - Every "written / deployed / verified / done" claim MUST cite an artifact
-  the IC checked at write time (a diff shown, a file read back, a deployed
-  version marker compared). An intention is written as an intention
-  ("pending", "to be done by X"), never in the past tense.
+  the IC checked at write time (a diff shown, a file read back, a witness
+  result checked per `dcs/workflows/deploy.md` step 7, the deploy-evidence
+  discipline). An intention is written as an intention ("pending", "to be
+  done by X"), never in the past tense.
 - **Deviation history comes from `214-LOG.md`, not from memory** — list
   every halt, deviation, and command correction the log records. "None"
   is only writable when the log shows none.
@@ -73,10 +74,9 @@ a deploy that hadn't happened and lessons that were never written):**
   what). Close may proceed with UAT pending only if the Owner explicitly
   says so — record that decision.
 - **Deploy status is a mandatory AAR field** when the fix requires deploy
-  to take effect: verify the project's deployed-version marker (e.g. a
-  `.deployed_sha`) rather than assuming; "not deployed — loop completes
-  after deploy" is an honest and acceptable state, a false "deployed" is
-  not.
+  to take effect: verify per `dcs/workflows/deploy.md` step 7's deploy
+  evidence rather than assuming; "not deployed — loop completes after
+  deploy" is an honest and acceptable state, a false "deployed" is not.
 - Timestamps in `214-LOG.md` entries use the real clock (check the actual
   time), never copied from earlier entries.
 

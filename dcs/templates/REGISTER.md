@@ -36,9 +36,13 @@ a write, not to serialize normal usage.
                   manual removal, see Worktree column) its worktree.
                   Shipped only once a deploy train (/dcs-deploy) confirms
                   it -- "deploy pending" until then.
-     DEPLOYED  -- /dcs-deploy verified the project's deployed-version
-                  marker advanced past this incident's merge commit; its
-                  dcs/<slug> branch has been deleted.
+     DEPLOYED  -- /dcs-deploy verified, per `dcs/workflows/deploy.md` step
+                  7's shape-dependent disposition, that this incident
+                  shipped -- an ancestry check for a commit-ish marker, or
+                  a green (or stale-extras-only) witness run against the
+                  integration tip for a content marker (a bare version
+                  label is never sufficient on its own) -- and deleted its
+                  dcs/<slug> branch.
      PARKED    -- intentionally not running now (e.g. /dcs-loop's hard
                   rule 1 parking a Type 1 it will not run unattended,
                   reason "awaits Owner"; or an ESG hygiene decision).
@@ -52,13 +56,14 @@ a write, not to serialize normal usage.
      was VERIFIED, never what was intended or attempted. "branch deleted"
      only after `git branch --list` shows it gone; "worktree removed"
      only after it is off disk (removal refused for modified/untracked
-     files is a NOT-removed, and never force it); DEPLOYED only after the
-     project's deployed marker was read and the merge commit confirmed an
-     ancestor of it. A row may reach DEPLOYED because someone ELSE's
+     files is a NOT-removed, and never force it); DEPLOYED only per the
+     deploy-evidence disposition defined above -- a row never restates
+     that condition. A row may reach DEPLOYED because someone ELSE's
      deploy carried it (DCS is not the only shipper) -- record that as
-     out-of-band, naming the deployed sha, rather than implying DCS
-     shipped it. Field lesson 2026-07-23: rows claimed a deleted branch
-     that was still on disk and a pending deploy that was already live. -->
+     out-of-band, naming the sha or witness result that carried it,
+     rather than implying DCS shipped it. Field lesson 2026-07-23: rows
+     claimed a deleted branch that was still on disk and a pending
+     deploy that was already live. -->
 
 
 | ID | Title | Type | Priority | State | Worktree | Branch | Territory | Intake source | Opened | Closed | Outcome |

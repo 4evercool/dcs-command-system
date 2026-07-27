@@ -56,6 +56,18 @@ contents.** If you installed 0.6.9, take 0.6.10 — see below.
   `test_dcs_gate.py` and `test_dcs_intake.py` are untouched by this
   change: 100/100 (`python tests/test_dcs_gate.py`) and 10/10 (`python
   tests/test_dcs_intake.py`).
+- **`tests/payload_check.py`, an in-repo witness for "did the deploy
+  actually land."** Invoked `python tests/payload_check.py [--repo PATH]
+  [--installed PATH]` (defaults: repo root, `~/.claude`), it walks the
+  same three roots both installers walk (`dcs/`, `agents/dcs-*.md`,
+  `skills/dcs-*/`) and reports the installed payload against the repo
+  file-by-file into four classes — identical, differing, repo-only,
+  installed-only — exiting `0` all identical, `1` differing or
+  repo-only, `3` installed-only only, `2` on an environment error.
+  Installed-only-only debris (files an installer copied and never
+  purges — neither `robocopy /E` nor `rsync -a` deletes on its own)
+  resolves `DEPLOYED` with a mandatory flag naming the stale files,
+  never a stop.
 
 ### Changed
 
@@ -75,6 +87,97 @@ contents.** If you installed 0.6.9, take 0.6.10 — see below.
   check 13 (schema citation anchors) now verifies each citation in the
   shipped package against the section title it actually names. The walk
   covers `*.md` and excludes `.dcs/` and `vault/`, neither of which ships.
+- **`/dcs-deploy` stops trusting `~/.claude/dcs/VERSION` alone as proof
+  of a ship.** The marker is a version label the installer copies from
+  `dcs/VERSION`; DCS permits shipping without a bump while a release is
+  unpublished, so a correct ship can leave it unchanged — it did, three
+  times in a row (`schemas-md-trim` 0.6.9→0.6.9, `schema-citation-guard`
+  0.6.10→0.6.10, `safety-halt-functional-scope` 0.6.10→0.6.10), each
+  requiring an Owner-authorised hand-built sha256 comparison in its
+  place. Step 4 now branches on the marker's own shape: commit-ish keeps
+  the ancestry check unchanged; a content witness resolves rows green
+  against the integration tip and treats red as every row unshipped;
+  anything readable but neither shape is treated as unshipped and
+  flagged. **`dcs/workflows/deploy.md` step 7 is now the single source
+  of every disposition this workflow reaches** (`DEPLOYED` / stop /
+  stays `MERGED (deploy pending)`) — shape-aware the same way step 4 is,
+  not witness-only: a commit-ish marker gets an ancestry check against
+  every row about to ship; a content witness runs once **before** step
+  6, to capture the deployed side's starting state (a red before-run is
+  expected input to the ship, never a stop — it's the reason the deploy
+  is happening), and again **after**, read into its four classes. The
+  after run's "the checkout equals what was merged" argument holds only
+  because step 3 already confirmed the payload paths clean and step 7
+  pins the sha that checkout equals — a deploy that writes into its own
+  payload paths between step 3 and the after run breaks that
+  equivalence, so step 7 says to re-confirm step 3's cleanliness first.
+  A shape that's readable but neither a commit-ish marker nor a content
+  witness no longer stops outright — an earlier draft of this entry said
+  it did, which was wrong: it gets step 6's harness-refusal shape
+  instead, staying `MERGED (deploy pending)` with a named remedy
+  (document a witness in the project's `CLAUDE.md`, then re-run
+  `/dcs-deploy`), never an override and never a substituted check. Only
+  an unreadable marker or a witness environment error stops. Every other
+  prose surface now cites step 7 by number rather than restating its
+  dispositions — rebuilt from `git diff --stat` at end state, that
+  surface list is `CLAUDE.md`'s Deploy table, `dcs/templates/REGISTER.md`'s
+  `DEPLOYED` definition, `dcs/workflows/close.md`'s AAR facts-only and
+  deploy-status paragraphs, and `skills/dcs-deploy/SKILL.md`'s
+  frontmatter description and `<objective>` — `close.md` is the surface
+  an earlier draft of this entry omitted.
+- **`test_doctrine_integrity.py` checks 15 and 16.** Check 15 walks
+  `dcs/`, `agents/`, `skills/`, `CLAUDE.md` and `README.md` (never
+  `CHANGELOG.md` or `docs/` — both are dated records, and holding a
+  dated record to live text would rewrite history) for every paragraph
+  that binds `DEPLOYED` in a rule shape — a definitional dash, an `only
+  after/once/when/if` conditional, or an arrow resolution — rather than
+  merely narrating an action ("marks rows `DEPLOYED`" doesn't count,
+  so `SKILL.md`'s and `REGISTER.md`'s facts-only deferrals don't
+  false-positive). Every paragraph the walk finds must cite
+  `dcs/workflows/deploy.md` step 7 by its live number; and, in every file
+  but `deploy.md` itself, must be the only such paragraph. The citation
+  rule binds `deploy.md`'s own paragraphs outside step 7 too — only the
+  duplication rule exempts the source file whole. A
+  per-class disposition comparator (rule B) was built and withdrawn at
+  halt 3, not merely re-tuned: on the live tree it matched zero times —
+  `dcs/templates/REGISTER.md`'s own declaring paragraph names none of
+  step 7's class tokens — so it bound nothing there, and two forged
+  contradictions (a class name placed outside any fixed comparison
+  window, and a paragraph restating step 7's superseded rule while
+  citing its live number and naming no class) survived it regardless of
+  how the window was tuned. It was removed rather than repaired,
+  because a contradiction can cite step 7 correctly while naming none
+  of its classes, which a vocabulary-anchored comparator can never see
+  by construction. What check 15 enforces now is narrower: the citation
+  to the live step number, at most one declaring paragraph per file
+  outside `deploy.md`, and a named anti-erasure floor
+  (`dcs/templates/REGISTER.md`) so the halt-2 site cannot silently drop
+  out of the declaring population — erasing it does not buy green.
+  Disposition-content agreement between a declaring paragraph and step 7
+  is **not checked mechanically anywhere** — it relies on review. Worth
+  saying that way rather than "a human read at merge/close time", which
+  would name a control that does not exist: `close.md` step 1a runs this
+  suite and stops. Check 16 holds `tests/payload_check.py`'s
+  `EXCLUDED_DIRS` and `BYTECODE_SUFFIXES` textually identical to
+  `test_doctrine_integrity.py`'s own (read as source text on both sides,
+  never imported), so the two never quietly diverge on what "the
+  package" means. `python tests/test_doctrine_integrity.py`:
+  **82/82 passed**, up from 73/73 before this incident.
+- **`docs/spec-v0.3-parallel.md`'s deploy-train walkthrough now carries a
+  supersession annotation** on its old "verify the project's
+  deployed-version marker actually advanced" line, pointing at
+  `dcs/workflows/deploy.md` step 7 for the shape-dependent evidence that
+  line no longer states on its own. The doc itself stays as written — a
+  dated design record, outside step 7's citation requirement by the same
+  reasoning as this file — only the pointer is new.
+- **Rejected alternative: an installer-written hash marker
+  (`~/.claude/dcs/.deployed`).** Considered and dropped — an aggregate
+  hash cannot produce the per-file report the witness needs (so it
+  would be additive to a real witness, not a replacement for one), a
+  marker the installer writes attests to what it believes it copied
+  rather than to what is actually on disk, and a witness living outside
+  the payload has zero bootstrap and leaves no rollback residue. Both
+  installers are deliberately untouched by this change.
 
 ### Fixed
 
