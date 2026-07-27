@@ -148,7 +148,15 @@ No incident directory, no `ACTIVE` file, no gate involvement at all.
    wrong, what changed, what was verified. This is not written to any
    file — Type 5 explicitly has no incident directory per doctrine's
    typing table.
-5. Done. No `/dcs-plan`, no `/dcs-execute`, no `/dcs-close` — the
+5. **Update the register, if one already knows this incident.** Resolve
+   `esg_root` as step 7b substep 4a does. If
+   `<esg_root>/.dcs/esg/REGISTER.md` exists and holds a row for this
+   incident, set that row's state to `RESOLVED`, fill Closed and
+   Outcome, and leave Worktree and Branch as the em-dash the row
+   template already prescribes for an incident that never opened one.
+   Otherwise — no register, or no matching row — do nothing and report
+   nothing.
+6. Done. No `/dcs-plan`, no `/dcs-execute`, no `/dcs-close` — the
    incident never opened a gate to begin with.
 
 ## 7b. Type 3 / Type 1 — open a gated incident
