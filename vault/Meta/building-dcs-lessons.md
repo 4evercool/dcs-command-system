@@ -709,6 +709,47 @@ actual branching** — the intent is true of `.dcs/**` specifically, and
 the Dispatcher generalised it to "post-pass paperwork changes are
 unenforced," which the source does not say and does not do.
 
+## 19. A regeneration command must be able to establish the fact it sits beside
+
+*From `criterion-unmeasured-fact`, 2026-07-28 — the incident that added
+lint 4a check 3b (measured claims), one period, zero halts, zero
+deviations. The lesson is not the fix; it is what the Safety Officer found
+while verifying it.*
+
+**The fourth field instance of the class was found by the fix's own
+verifier, in a store the fix cannot reach.** Verifying check 3b, the
+officer ran the establishing command itself — `npm view
+dcs-command-system versions` — and found
+`vault/Decisions/fable-review-roadmap.md:24-25` asserting "0.6.10 remains
+unpublished (registry at 0.6.9)" while the registry already held 0.6.10.
+That line even carried a "regeneration command" — *read the row's State
+cell and `git log main..dcs/direct-resolution-lane`* — which **reads
+in-tree state to back an out-of-tree claim**. It looks principle-15
+compliant (a command sits beside the fact), and it can never establish
+the fact. The test is not "is there a command beside it" but **"can this
+command, run now, make this sentence true or false"** — check 3b's (i)
+encodes exactly that for 202 criteria (`the command that establishes the
+fact`), and reviewers of vault/register prose should apply the same test
+by hand.
+
+**The lint guards the lifecycle path only.** Check 3b fires at tasking
+lint on 202 criteria; the MEASURED CLAIM template block fires at
+authoring; the chief's charter fires at plan review. Vault notes,
+register cells and sitreps stay unguarded — their stale external claims
+get corrected only when someone next runs a live measurement, as happened
+here. That boundary is honest and should be stated, not papered over: an
+unguarded store accumulates exactly the claims the guarded path now
+rejects.
+
+**Dogfooding is a cheap false-positive test.** The incident applied its
+own rule to its own paperwork before landing it: the 202's five criteria
+contain zero unmeasured external facts (the one external-looking
+criterion carries `grep -n "^## Unreleased" CHANGELOG.md`, an in-tree
+read), and the verification plan bound the trigger's reach at "at most
+one of five may fire" — the officer measured 0 of 5. A new
+classification rule should always be pointed at the incident that ships
+it; it is the one corpus guaranteed to be fresh.
+
 ## Links
 
 - [[Post-mortems/energy-cost-model-rework]] — the incident behind v0.5.12
