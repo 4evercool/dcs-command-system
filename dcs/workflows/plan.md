@@ -113,7 +113,7 @@ From the Planning Chief: `objectives_feedback`, `tactics[]`, `taskings[]`,
 
 ### 4a. Tasking lint — mechanical, run BEFORE the command point (v0.5.1)
 
-These five checks are arithmetic on the chief's structured return, not
+These checks are arithmetic on the chief's structured return, not
 judgment. Run them yourself; a failure is **yours to fix or re-spawn the
 chief over — never a reason to spend a command point.** Field lesson
 2026-07-23: an entire IAP review cycle (the IC's second REJECT on one
@@ -150,6 +150,25 @@ was that both were *Dispatcher transcription errors, not the chief's*.
    Safety halts** on one objective, each closing the named instances and
    revealing another of the same class, because the criterion enumerated
    sites instead of asserting an invariant.
+3b. **Claims about state outside the tree must be measured.** A
+   criterion — or a waiver inside one — asserting anything the working
+   tree does not contain (a registry version, whether something is
+   published, an installed or deployed copy, another repository, a
+   remote ref, a live service) is a **measured claim**; size is
+   irrelevant, one external boolean counts as much as a population.
+   Mirror 3a: **(i)** the 202 names the **command that establishes the
+   fact** (`npm view <pkg> version`, `git ls-remote`, a witness script),
+   not prose and not a reading carried over from an earlier artifact;
+   **(ii)** the criterion is phrased as *that command's result* ("`npm
+   view <pkg> version` returns < X"), never as a bare assertion ("X is
+   unpublished"); **(iii)** you run it yourself **now** and record the
+   actual output in `214-LOG.md`. A fact settled by reading or grepping
+   this project's own files is not in scope — that is ordinary evidence
+   (check 5), and a tree-wide sweep is 3a. A label on an old reading
+   ("measured during the last deploy") is provenance, not truth. Field
+   lesson 2026-07-26: a criterion waived a version bump on "0.6.9 is
+   unpublished" — the Owner had published it 75 minutes before this lint
+   ran, and the version shipped twice with different contents.
 4. **Territory disjointness** — verify the globs actually don't intersect
    rather than trusting `partition_ok: true` (it is a claim, not a fact).
 5. **Evidence executability** — each `evidence_required` command must be
