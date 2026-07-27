@@ -15,8 +15,11 @@ never touches, in any release:
 
 Entries below are written from the repository's own artifacts — merge
 commits, incident AARs, and each suite's own `N/M passed` output — not
-from recollection. Releases before 0.6.5 are recorded only in
-`git log --format='%h %ad %s' --date=short -- dcs/VERSION`.
+from recollection. 0.6.0–0.6.4 predate the incident-AAR trail —
+self-hosting starts at 0.6.3, and the first release shipped by a
+self-hosted incident is 0.6.7 — so those five are sourced from the
+release commit's own message instead:
+`git log --format='%B' v0.5.12..v0.6.4 -- dcs/VERSION`.
 
 ---
 
@@ -367,3 +370,143 @@ no deviations and no Safety halts.
   reserved. Stale counts, rough wording and missing cross-references are
   now `advisories[]` on a passing verdict, fixed by the IC and folded into
   the integration commit rather than costing an execute-and-verify cycle.
+
+---
+
+## 0.6.4 — 2026-07-25
+
+### Added
+
+- **A maintainer-only Obsidian vault (`vault/`), never shipped.** DCS
+  already had a memory system — doctrine for rules, the appendix for
+  their provenance — so the risk in adding a vault was a second store
+  that competes with it and rots. The split: package docs ship to
+  *users* of DCS; the vault holds what only a *maintainer* of DCS needs,
+  and is absent from `package.json`'s `files` whitelist, so `npm pack`
+  excludes it. `CLAUDE.md` now routes a lesson three ways: does it
+  change how DCS *behaves* (doctrine), explain *why* a rule exists
+  (appendix), or would it only ever be read while improving DCS itself
+  (vault)?
+- **Seeded with real content rather than scaffolding**: `Post-mortems/`
+  (the 31-hour `energy-cost-model-rework` incident, its three causes,
+  and what today's rules would have changed), `Metrics/` (comparative
+  numbers across all eight incidents to date, plus
+  `vault/_scripts/incident_metrics.py` to regenerate them — principle 15
+  applied to the vault itself — including the hot-path size history:
+  42.2 kB → 31.7 kB after the v0.5.0 diet → 40.5 kB as of 0.6.3),
+  `Meta/building-dcs-lessons.md` (recurring patterns in building DCS),
+  `Decisions/distribution-and-scheduling.md` (npm over a plugin, guarded
+  postinstall, scheduler-agnostic by design, and what self-hosting does
+  *not* buy), and a five-item `Backlog.md`, headed by the hot-path trim.
+- `vault/**` is unguarded like `docs/`, so a close can write lessons
+  without holding territory; `.obsidian/` per-user UI state is
+  gitignored, the notes themselves are tracked.
+
+---
+
+## 0.6.3 — 2026-07-25
+
+DCS begins governing changes to itself. Three pieces, all pre-incident
+setup — the bootstrap cannot itself be an incident.
+
+### Added
+
+- **`CLAUDE.md`**, the protocols DCS discovers at runtime for this
+  repo: deploy command and marker, the merge-time guard, the
+  verification suite, where lessons route, and the self-hosting rules —
+  chief among them, never run `install.ps1` while an incident is
+  active, since a session reads its workflows from the *installed*
+  copy while an incident edits the *repo*, and that gap is what makes
+  self-hosting safe.
+- **An explicitly guarded `.dcs/config.json`**, in place of the default
+  template. The template's `unguarded_paths` included `*.md`, and the
+  gate matches with `fnmatch`, where `*` also matches `/` — so every
+  markdown file at any depth was exempt: 48 of ~57 tracked files,
+  including all doctrine, every workflow, every agent charter. The
+  guarded set is now explicit (`dcs/**`, `agents/**`, `skills/**`,
+  `tests/**`, `bin/**`, `install.*`, `package.json`); `docs/`, `README`,
+  `CLAUDE.md` and `.dcs/` stay deliberately unguarded. Verified
+  empirically: a `doctrine.md` edit is denied during an active incident,
+  a `docs/` edit is allowed, and the gate stays silent with none open.
+- **`tests/test_doctrine_integrity.py`, 12 checks**, making prose
+  mechanically verifiable: version sync, principle numbering (unique,
+  contiguous, matching any stated count), `@`-include resolution,
+  agent/template references, doctrine sections referenced by name, the
+  hot-path size budget, and encoding. Its first run found a real
+  defect: three files cited a doctrine *section*, "A command point is
+  never a silent wait," that existed only as a bolded paragraph
+  (introduced in v0.5.10 and never resolvable) — promoted to a heading.
+  It also measured hot-path regrowth: doctrine + schemas back to
+  **40.5 kB** from the **31.7 kB** the v0.5.0 diet achieved. Budget set
+  at **42 kB** as a ratchet rather than a ceiling — the trim it invites
+  is 0.6.7, named in this same commit as "the natural first
+  self-hosted incident."
+
+---
+
+## 0.6.2 — 2026-07-25
+
+### Added
+
+- **`plan.md` lint check 8: an incident's territory can never leave its
+  own project.** Raised while planning DCS self-hosting: every artifact
+  already resolves relative to the project root holding `.dcs/`
+  (config, `ACTIVE`, incidents, register, delegation, worktrees), so two
+  onboarded repos never share state on their own. The gap was a session
+  rooted in the *wrong* repo — the approval gate deliberately allows
+  targets outside its own project, since it cannot judge a tree it has
+  no `.dcs/` for, which left cross-project territory silently ungated.
+  The check resolves every territory and forbidden glob against the
+  incident's own project root; an absolute path into another repo, or a
+  `../` climb, is now a lint defect. Doctrine principle 6 states the
+  rule.
+
+---
+
+## 0.6.1 — 2026-07-25
+
+### Fixed
+
+- **Model availability is per-spawn, not session-scoped.** Field
+  observation: a session hit the Fable quota at command points 1 and 2
+  of an operational period, then kept taking the opus seat at every
+  later command point on the grounds that the Fable quota was
+  exhausted — hours after it had restored. Doctrine said which fallback
+  to use but never said when to re-test, so the reasonable reading
+  cached the fallback for the rest of the incident. Rule now: try the
+  preferred tier first at *every* command point, never cache the
+  fallback, log a failure as scoped to that attempt rather than as a
+  blanket claim. An instance of principle 15 — a derived fact ("Fable is
+  exhausted") has a lifetime, and an append-only log makes it easy to
+  misread as a standing condition.
+
+---
+
+## 0.6.0 — 2026-07-25
+
+### Added
+
+- **`dcs/hooks/dcs_intake.py`, a `UserPromptSubmit` hook that offers DCS
+  instead of waiting to be remembered.** Until now DCS engaged only when
+  someone typed a `/dcs-*` command; the approval gate stays deliberately
+  silent with no incident active, which keeps non-incident work free of
+  overhead but also meant nothing ever surfaced that an incident was an
+  option. The hook injects one short note on the first prompt of a
+  session in an onboarded project: with no active incident, it tells the
+  session to *ask*, in one line, whether to open a bug or feature as an
+  incident, and to just proceed for questions, exploration, trivial or
+  single-file changes, docs and tooling; with an active incident, it
+  reports the slug, type and phase. Classification is left to the model
+  rather than keyword matching — phrasing and language vary too much for
+  a keyword rule, which would either nag constantly or stay silent when
+  it mattered.
+- Advisory by design: cannot deny a tool call, fires once per session
+  (marker keyed by session + project, in the system temp dir, never
+  inside the project), fails open.
+- `dcs/workflows/init.md` now copies both hooks and presents both
+  settings blocks together, stating plainly that one can deny a tool
+  call and the other can only add context.
+- **`tests/test_dcs_intake.py`: 10 cases** (silent outside DCS projects,
+  nudge content, once-per-session dedupe, per-project independence,
+  active-incident reporting, malformed input). `npm test` now runs both
+  suites.
