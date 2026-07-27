@@ -1,6 +1,6 @@
 ---
 tags: [dcs, backlog]
-updated: 2026-07-25
+updated: 2026-07-27
 ---
 
 # Backlog
@@ -349,7 +349,36 @@ observable unit of cost.
 `/dcs-esg`, and it pairs naturally with §10 as one "cost of the process"
 agenda item.
 
-## 12. The deployed-version marker is blind to a same-version ship
+## 12. The deployed-version marker is blind to a same-version ship ✅ DONE
+
+> **Closed 2026-07-27 by incident `deploy-marker-blind`** (Type 1,
+> integration commit `916bebc`). **Candidate fix (2) was chosen** — the
+> permanent content gate — and **not** fix (1), the installer-written hash
+> marker. Both chiefs recommended (2) independently, and the reasoning was
+> sharper than "less invasive": an aggregate hash **cannot produce the
+> per-file report** the criterion required, so (1) is (2) *plus* installer
+> edits *plus* a redundant marker; and a marker the installer writes
+> attests to what it **believes it copied**, not to what is on disk. Fix
+> (3), a mandatory bump every deploy, stayed rejected on this item's own
+> merits.
+>
+> Delivered: `tests/payload_check.py` (the witness, payload set derived by
+> walking, exits 0/1/3/2); `deploy.md` steps 4 and 7 shape-aware with step
+> 7 the single source of every disposition; integrity checks 15 and 16
+> (suite 73 → 82); `CLAUDE.md`'s Deploy table restated. Both installers
+> untouched, so `install.*` never entered territory.
+>
+> **What this item asked for and did NOT get — recorded rather than
+> quietly dropped:** a mechanism holding *disposition content*. Three
+> attempts were defeated in succession — **vocabulary, then token, then
+> markup** — and the Owner ruled the guard's claim be narrowed to what it
+> demonstrably enforces. Carried forward as `check-15-role-coverage`.
+>
+> Cost: 1 period, 2 stamped attempts, **5 Safety Officer spawns, 4 halts**
+> (three of them one class), three escalations. Full account in
+> `.dcs/incidents/2026-07-27-deploy-marker-blind/AAR.md`.
+
+### As originally filed
 
 **Found by running the deploy train, 2026-07-26**, shipping
 `schemas-md-trim`. Not a hypothesis — it happened, and it broke two separate
@@ -620,3 +649,64 @@ two are only the same thing once (a) is implemented.
 **Queued** as register row `check-14-hardening` at that incident's close.
 Related but distinct: [[Backlog]] item 15 is check **13**'s population
 boundary; this is check **14**'s predicate.
+
+## 17. Check 15 holds the deploy contract's citations, not its content — and cannot reach `CLAUDE.md`
+
+**Registered at the close of `deploy-marker-blind`, 2026-07-27**, from two
+things that incident tried three times and could not make a mechanism hold.
+Both are recorded as **unmet aims**, not as oversights: the Owner ruled at
+the third-halt escalation that the guard's claim be narrowed to what it
+demonstrably enforces, and check 15 now says exactly that.
+
+**(a) Disposition content is not checked anywhere.** A per-class comparator
+(rule B) was built and withdrawn. The reason it is not merely
+under-engineered: a contradiction can **cite step 7 correctly while naming
+none of its classes**, in superseded vocabulary — so a class-name
+comparator cannot see it *by construction*. Measured during that incident:
+on the live tree rule B matched **zero** times, because
+`dcs/templates/REGISTER.md`'s declaring paragraph names none of step 7's
+four class tokens. Regenerate the class map with `python
+tests/test_doctrine_integrity.py` and read check 15's own PASS line.
+
+**(b) `CLAUDE.md` is outside the predicate and cannot be brought in by
+widening the token match.** `grep -n DEPLOYED CLAUDE.md` → **zero hits**:
+it states dispositions entirely in exit-code vocabulary (*"exit `1` … and
+exit `2` … are step 7's stop dispositions"*), which is a contract
+declaration **by role** with none of the token the predicate keys on. An IC
+directive held rule C tree-wide *expressly* to cover `CLAUDE.md`; that aim
+is unmet, and it is defeated by the predicate rather than by the
+population. A specialist widened the token match to accept a bare
+`DEPLOYED`, re-checked the population, and correctly **reported non-entry
+rather than bending the predicate to force it**.
+
+**Why this is worth its own row rather than a fix-tasking.** The pattern
+across that incident is the finding: **three detectors, each defeated by a
+narrower surface assumption than the last — vocabulary → token → markup.**
+Whoever takes this should start from that, not from patching the regex. The
+honest question is whether a role-defined population is reachable by a
+recognizer at all in this suite's idiom, or whether it needs a different
+mechanism; answering *"no, and here is why"* in `vault/Decisions/` would be
+a legitimate outcome. **Territory collision:**
+`tests/test_doctrine_integrity.py`, shared with `check-14-hardening`
+(rank 3), `schemas-contract-format` and `json-examples-unparsed`.
+
+## 18. The ~250-line workflow budget is a rule no suite enforces
+
+**Registered at the close of `deploy-marker-blind`, 2026-07-27.**
+`CLAUDE.md` sets a ≤ ~250-line budget for workflow files. **Nothing checks
+it** — `tests/test_doctrine_integrity.py`'s size budget covers
+`doctrine.md` + `schemas.md` only, so a workflow may overrun silently.
+
+Not theoretical: it needed an **IC ruling twice in one incident**.
+`dcs/workflows/deploy.md` hit exactly 265 (the first ruling's ceiling), then
+landed at exactly **275** under a pre-authorised band. Both times a
+specialist compressed prose under a hard ceiling, and both times the IC had
+to name the step-4 / step-7 asymmetry as a **protected** element, because
+that nuance is precisely what a line squeeze deletes.
+
+Regenerate: `wc -l dcs/workflows/*.md`. Decide whether the budget becomes a
+check (with a per-file ratchet like the hot path's) or is retired as
+advice. **Either is defensible; the current state — a rule enforced only by
+whoever remembers to measure — is the one that is not.** Territory:
+`tests/test_doctrine_integrity.py` (same collision as item 17), or
+`CLAUDE.md` alone if retired.
