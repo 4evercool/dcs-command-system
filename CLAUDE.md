@@ -27,13 +27,19 @@ change the plan.md the session is currently following.
 | | |
 |---|---|
 | **Deploy command** | `powershell -ExecutionPolicy Bypass -File C:\DCS\install.ps1` (POSIX: `./install.sh`) |
-| **Deployed-version marker** | `~/.claude/dcs/VERSION` — must equal `dcs/VERSION` after deploy |
+| **Deployed-version marker** | `~/.claude/dcs/VERSION` — a version label the installer copies from `dcs/VERSION`; it moves only when the version string itself changes, so on its own it is **not proof of a ship** (a correct release can ship unpublished with no bump). This project's content witness (`dcs/workflows/deploy.md` step 7's content-witness shape) is `python tests/payload_check.py [--repo PATH] [--installed PATH]`, which walks the payload (`dcs/`, `agents/dcs-*.md`, `skills/dcs-*/`) and diffs installed against repo file-by-file into four classes — identical, differing, repo-only, installed-only — exiting `0` all identical, `1` differing or repo-only, `3` installed-only only, `2` environment error. |
 | **Release (registry)** | `npm publish` — **Owner only**, requires a 2FA OTP; never attempted by a session |
 | **Registry marker** | `npm view dcs-command-system version` |
 
-`/dcs-deploy` runs the deploy command and verifies the marker advanced.
-An `npm publish` is a separate, Owner-performed act; a session prepares
-the release (version sync, `npm pack --dry-run` review) and stops there.
+`/dcs-deploy` runs the deploy command, then this witness, and resolves
+every exit code per `dcs/workflows/deploy.md` step 7: exit `0`
+(identical) and exit `3` (installed-only only — stale installer debris a
+`robocopy`/`rsync` copy never purges, not something the deploy caused)
+are step 7's identical / installed-only-only dispositions; exit `1`
+(differing or repo-only files) and exit `2` (environment error) are
+step 7's stop dispositions. An `npm publish` is a separate,
+Owner-performed act; a session prepares the release (version sync, `npm
+pack --dry-run` review) and stops there.
 
 ## Merge-time guard
 

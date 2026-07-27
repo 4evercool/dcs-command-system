@@ -1,6 +1,6 @@
 ---
 tags: [dcs, meta, lessons]
-updated: 2026-07-25
+updated: 2026-07-27
 ---
 
 # Meta: lessons about building DCS
@@ -480,6 +480,92 @@ clock and ran roughly 53 minutes ahead of the truth, anchored against
 recorded as a correction rather than tidied away — which is what append-only is
 for. `close.md` step 3's rule about the real clock exists for precisely this,
 and it was broken by the seat that transcribes the log.
+
+## 14. A detector keyed on surface form cannot enumerate a population defined by role — and each narrowing looks like progress from inside
+
+**Evidence: `deploy-marker-blind`, 2026-07-27. Five Safety Officer spawns,
+four halts, three of them one class.** The diff is nine files; the cost was
+not in the diff.
+
+The incident's defect was *two statements of one contract disagreeing*. Three
+detectors were built to catch that class, and **each was defeated by a
+narrower surface assumption than the last**:
+
+| Attempt | Detector | Defeated by |
+|---|---|---|
+| 1 | criterion 5's enumerator | **vocabulary** — the halting line read *"deployed marker was read"* and matched none of its four patterns |
+| 2 | check 15's declaring predicate | **token** — `CLAUDE.md` states dispositions in exit-code words and contains **zero** `DEPLOYED` tokens |
+| 3 | check 15's rule B comparator | **markup** — it required a *backticked* `` `DEPLOYED` `` in its window, and the site wrote it bare as a table label |
+
+**The trap is that each narrowing is locally reasonable and looks like
+progress.** Attempt 2 was a deliberate *tightening*, adopted for a good
+reason (the loose predicate produced false positives) and defended with real
+evidence — the specialist proved the tightened version still reddened
+against the pre-incident tree. It was still one step further from role and
+one step closer to form.
+
+**What actually resolved it was not a fourth attempt.** The Owner ruled:
+*narrow the guard's claim to what it demonstrably enforces.* Rule B was
+removed rather than repaired, because a contradiction can **cite the source
+correctly while naming none of its classes** — unreachable by a class-name
+comparator *by construction*, not merely under-engineered.
+
+**The transferable rule:**
+
+> **A guard that under-claims truthfully is worth more than one that
+> over-claims greenly.** The harm is never the missing coverage — it is the
+> green PASS line telling the next maintainer the coverage exists.
+
+Three of the final verdict's five advisories were that same defect one level
+down: a PASS line printing *"plus the named root files"* while both were
+deleted; a docstring merging two rules with different scopes; a CHANGELOG
+sentence stating one rule two ways in one paragraph. **The class recurs in
+the prose describing the fix as readily as in the thing being fixed.**
+
+**When you next reach for a recognizer:** ask what the population is defined
+*by*. If the answer is a role and your predicate is a string, you are
+choosing how far the gap will be, not whether there is one. Answering
+*"this is not reachable by a recognizer in this idiom"* in
+`vault/Decisions/` is a legitimate outcome. Carried forward as
+[[Backlog]] item 17.
+
+## 15. Split one contract across two owners and the defect lands on the seam
+
+Same incident, and it is almost too clean. Revision 1 partitioned the
+contract's prose surfaces across two specialists: one held
+`dcs/workflows/deploy.md`, the other held `dcs/templates/REGISTER.md` and
+the rest. Both did their taskings correctly.
+
+**Halt 2 landed exactly on the seam.** One widened `REGISTER.md`'s
+`DEPLOYED` definition to admit a new route and left the facts-only block
+*thirteen lines below it* stating the old route as a necessary condition;
+the other's `deploy.md` cited that un-widened rule as authority. Neither
+specialist could see the other's return — that is the design — so neither
+could see the contradiction they jointly created.
+
+Revision 2 gave **all six declaring files to one hand**, and the Planning
+Chief said plainly why it was spending three of four specialists rather than
+four: *the only credible fourth is a second prose owner, and that is the
+failure mode.*
+
+**Two corollaries worth keeping:**
+
+- **The IC used the fourth slot anyway — read-only.** A reconciliation pass
+  with **no territory**, running after the editors and before Safety, doing
+  the officer's own manual read early. It earned it: it re-implemented the
+  declaring predicate itself to enumerate the nine paragraphs a tightening
+  had excluded, and reproduced the baseline result rather than reading about
+  it. **A fourth pair of eyes is safe; a fourth pair of hands on one
+  contract is not.**
+- **Sequencing was the fix, not a performance compromise.** The guard had to
+  be written *after* the prose it parses. Building the two against different
+  snapshots of one contract is the same failure at a different scale.
+
+**Partition by file is necessary and not sufficient.** Disjoint territories
+prevent write conflicts; they do nothing about a *semantic* seam running
+through a contract that spans them. When the artifact being changed is one
+contract, the question is not "are these globs disjoint" but "does this
+contract have one author this period".
 
 ## Links
 
