@@ -39,6 +39,23 @@ release commit's own message instead:
   <sha> --stat`) first since its facts are reported rather than
   observed. `python tests/test_doctrine_integrity.py`: **82/82 passed**,
   unchanged.
+- **A criterion asserting state outside the working tree now has to carry
+  its own proof, front to back.** `dcs/templates/202-OBJECTIVES.md`'s
+  acceptance-criteria comment gains a MEASURED CLAIM paragraph, the same
+  genre as the OWNERSHIP TAG paragraph beside it: a criterion about a
+  registry version, whether something is published, an installed or
+  deployed copy, another repository, a remote ref or a live service must
+  write the command that establishes it and phrase itself as that
+  command's result, never as a bare claim. `agents/dcs-planning-chief.md`
+  step 2 has the Planning Chief classify this at plan time, before any
+  lint runs: an outside-the-tree claim with no such command goes into
+  `objectives_feedback` as unmeasured. `dcs/workflows/plan.md` lint 4a
+  gains check 3b, mirroring check 3a: it runs the criterion's own
+  command and records the output, the second line of defence behind the
+  Chief's read. Field lesson 2026-07-26: a criterion waived a version
+  bump on "0.6.9 is unpublished"; 0.6.9 had been published 75 minutes
+  earlier, and the version shipped twice with different contents.
+  `python tests/test_doctrine_integrity.py`: **82/82 passed**, unchanged.
 
 ---
 

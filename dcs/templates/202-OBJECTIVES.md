@@ -43,7 +43,21 @@ file itself.
      criterion nobody can execute surfaces as a false Safety halt at the
      END of the period, after all the execution cost is spent (field
      lesson 2026-07-24: a criterion required editing IAP.md, a file no
-     tasking may touch by construction). -->
+     tasking may touch by construction).
+
+     MEASURED CLAIM: if a criterion asserts anything outside this working
+     tree -- a registry version, whether something is published, an
+     installed or deployed copy, another repository, a remote ref, a live
+     service -- write the command that establishes it inside the
+     criterion, and phrase the criterion as that command's result
+     ("`npm view <pkg> version` returns < X"), never as a bare claim ("X
+     is unpublished"). Classify while writing: plan.md lint 4a check 3b
+     is the second line of defence, not the first, and it will run the
+     command and record the output. An in-tree fact needs no such
+     command -- `grep -n "^## Unreleased" CHANGELOG.md` settles itself.
+     Field lesson 2026-07-26: a criterion waived a version bump on
+     "0.6.9 is unpublished"; it had been published 75 minutes earlier,
+     and the version shipped twice with different contents. -->
 
 1. {{criterion 1 -- verifiable}}
 2. {{criterion 2 -- verifiable}} {{[IC] | [Owner] | [deploy period] -- omit if specialist work}}

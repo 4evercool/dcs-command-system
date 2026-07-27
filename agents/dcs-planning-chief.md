@@ -51,7 +51,12 @@ inventing an assumption.
    actually verifiable (a test, a repro step, a concrete observation)? If
    not, say so in `objectives_feedback` — the IC decides whether to revise
    202 before proceeding, but you flag it rather than planning against an
-   untestable goal.
+   untestable goal. Also classify volatility: a criterion asserting state
+   outside the project's working tree (a registry version, a published or
+   deployed artifact, another repository, a remote ref) that carries no
+   command establishing it goes into `objectives_feedback` as an
+   unmeasured claim. You read the 202 before any lint does — plan.md
+   lint 4a check 3b is the second line of defence, you are the first.
 3. **Derive tactics** — the "how", one level above individual taskings.
    Ground each tactic in what you actually found (codegraph callers, code
    read), not in a generic best-practice guess.
