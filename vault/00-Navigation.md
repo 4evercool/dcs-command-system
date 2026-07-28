@@ -1,6 +1,6 @@
 ---
 tags: [dcs, vault, navigation]
-updated: 2026-07-25
+updated: 2026-07-27
 ---
 
 # DCS vault — maintainer's knowledge base
@@ -31,6 +31,7 @@ only ever be read while improving DCS itself, it belongs here.
 - [[Metrics/incident-metrics|Incident metrics]] — comparative numbers across every incident, with the command that regenerates them
 - [[Meta/building-dcs-lessons|Meta: lessons about building DCS]] — the patterns that keep recurring in the *construction*, not the doctrine
 - [[Decisions/distribution-and-scheduling|Decision: distribution and scheduling]] — choices deliberately kept out of doctrine
+- [[Decisions/fable-review-roadmap|Decision: reform roadmap from the third-party review]] — the 2026-07-27 phase plan (proportionality lanes, structured register, deviation route), recovered from the cleared session
 - [[Backlog]] — known gaps, with evidence
 
 ## Conventions

@@ -467,6 +467,16 @@ claims" item.
 
 ## 13. An acceptance criterion may rest on a fact nobody is required to measure
 
+**CLOSED by incident `criterion-unmeasured-fact`, merged 2026-07-28
+(`35c3507`):** candidate fix (1) landed as `plan.md` lint 4a check 3b
+("Claims about state outside the tree must be measured"), plus the
+MEASURED CLAIM authoring block in the 202 template and a volatility-
+classification step in the Planning Chief's charter. Candidate (2)
+deliberately not taken — the step-7 pre-stamp zone is left to
+`revision-preservation-map` (register rank 5); candidate (3) remains open
+as its own potential row. Register row `criterion-unmeasured-fact` is
+`MERGED (deploy pending)`.
+
 **Cost 2026-07-26: a version published twice with different contents, and a
 0.6.10 spent to correct it.** Not a near miss — it shipped.
 
@@ -497,8 +507,12 @@ lint sat in the middle of that window and ran commands. The gap is that
 **the fact was never classified as measurable at all.** It read as prose
 inside a criterion, so no step owned running anything.
 
-That is what makes this distinct from §10 (a count done by ambiguous grep)
-and §11 (a historical measurement recomputed instead of labelled). Here the
+That is what makes this distinct from Meta §10 (a count done by ambiguous
+grep) and Meta §11 (a historical measurement recomputed instead of
+labelled) — `vault/Meta/building-dcs-lessons.md` sections, not this file's
+items 10/11, which are about unrelated matters (citation style fixed
+2026-07-28; the same slip had propagated into the register row's prose).
+Here the
 measurement was never attempted, and the artefact that would normally catch
 it — lint 3a — only triggers on criteria whose scope is a *population*
 ("all", "every", "no remaining"). Criterion 10's scope was a single external
@@ -716,6 +730,52 @@ a legitimate outcome. **Territory collision:**
 `tests/test_doctrine_integrity.py`, shared with `check-14-hardening`
 (rank 3), `schemas-contract-format` and `json-examples-unparsed`.
 
+## 19. A narrow revision has no required check that it preserved every other criterion
+
+**Registered at the close of `register-field-repair-path`, 2026-07-27.**
+That incident's period 1 halted twice: once on a stale external fact
+(another field measurement for item 13/`criterion-unmeasured-fact`), and
+once because **fixing the first halt's `IAP.md` silently dropped a
+different, already-Safety-verified criterion's answer** — not
+contradicted, just omitted, because the rewrite's whole attention was on
+the one criterion being fixed.
+
+Nothing mechanical could have caught it. The plan's own protection for
+already-verified work was a pinned sha256 of the *payload* files; the
+dropped criterion's deliverable was IAP *prose*, `[IC]`-tagged and
+`.dcs/**`, outside both the pin's pathspec and `dcs_gate.py`'s reach (the
+same file family item 17 found the gate cannot police for a different
+reason). The false claim that the pin covered "criteria 1-5" rode through
+the rewrite, an IC self-review, and an Owner approval before a Safety
+Officer's full re-read caught it.
+
+**A second, smaller instance in the same incident's own repair**: told the
+dropped text was "fully recoverable verbatim," the IC restored it and
+reported a verbatim recovery. It was a faithful reconstruction, not a
+literal copy — a tree-wide grep found the phrasing nowhere but the
+just-written file. Same shape as the first halt: an unverified assertion
+standing in for a checked fact, this time about the fix itself rather than
+about the registry.
+
+### Candidate fix
+
+A narrow revision (one criterion rewritten, others "unchanged") should be
+required to produce a **preservation map** before re-stamping: every 202
+acceptance criterion, paired with the section of the revised artifact that
+satisfies it. Cheap to require, and it converts "I only touched criterion
+N" from a claim about intent into a checked claim about the result — the
+same move item 13's candidate fix (1) makes for external facts, applied to
+internal document structure instead.
+
+**Related, same incident, worth deciding together:** this is a second,
+sharper field measurement for item 11 (`deviation-path-proportionality`)
+— the fix here was one paragraph, IC-authored, `.dcs/**`-only, and still
+had no route cheaper than a full replan-and-reapprove cycle.
+
+**Not queued** — an ESG act. Full account:
+`.dcs/incidents/2026-07-27-register-field-repair-path/AAR.md` and
+[[Meta/building-dcs-lessons]] §18.
+
 ## 18. The ~250-line workflow budget is a rule no suite enforces
 
 **Registered at the close of `deploy-marker-blind`, 2026-07-27.**
@@ -730,6 +790,11 @@ specialist compressed prose under a hard ceiling, and both times the IC had
 to name the step-4 / step-7 asymmetry as a **protected** element, because
 that nuance is precisely what a line squeeze deletes.
 
+Third measurement, Safety advisory 3 on `criterion-unmeasured-fact`
+(2026-07-28): `plan.md` went 403 → 422 lines (IAP-bounded at ≤ 425, held),
+against the same unenforced ~250 — the officer's wording: *"a written
+budget nothing measures is itself a principle-15 defect."*
+
 Regenerate: `wc -l dcs/workflows/*.md`. Decide whether the budget becomes a
 check (with a per-file ratchet like the hot path's) or is retired as
 advice. **Either is defensible; the current state — a rule enforced only by
@@ -737,7 +802,131 @@ whoever remembers to measure — is the one that is not.** Territory:
 `tests/test_doctrine_integrity.py` (same collision as item 17), or
 `CLAUDE.md` alone if retired.
 
-## 19. The per-attempt halt ceiling re-anchors on every re-stamp, including a mechanical IC re-stamp with no fresh Owner approval
+## 20. `doctrine.md` is reloaded once per phase within a single incident, not once per incident
+
+**Raised by a situation analyst on the `automation-layer-eager-reading` stem,
+2026-07-28.** Objective 1 and the hot-path ratchet govern `doctrine.md`'s
+*size* (currently 23,387 B, healthy, 1,205 B of slack under the 37 kB
+ceiling). This item is a different axis: how often that size gets paid.
+`new.md`, `plan.md`, `execute.md` and `close.md` each declare their own
+`<required_reading>` `@`-include of `doctrine.md`, and there is no documented
+convention for a later phase to treat it as already loaded. Summing the four
+phase workflows' own `required_reading` blocks for one ordinary lifecycle
+(stem → plan → execute → close, as four separate command invocations) gives
+150,062 B total, of which `doctrine.md` alone contributes **23,387 × 4 =
+93,548 B (62.3 %)**. Regenerate:
+`wc -c dcs/references/doctrine.md dcs/references/typing.md dcs/references/schemas.md dcs/references/forms.md dcs/workflows/{new,plan,execute,close}.md`,
+then sum each phase file's own named `@`-includes from its
+`<required_reading>` block.
+
+**Why this is not `esg-artifact-bloat` (rank 8) or the hot-path work under a
+different name.** `esg-artifact-bloat` is about `REGISTER.md`/`STRATEGY.md`
+growing without bound. The hot-path ratchet is about `doctrine.md`'s
+*absolute size*, and it already has a working mechanical guard. This item is
+about *re-read frequency* within a single incident's lifecycle — a
+healthy-sized file, paid for repeatedly.
+
+**Why this is not a clean cut, and is filed here rather than queued
+directly.** Doctrine principle 5: *"Operational period = context window. Any
+session, even after a full reset, resumes losslessly by reading the files."*
+The repeated per-phase read may be load-bearing for exactly that guarantee —
+a session that skips re-reading `doctrine.md` because "an earlier phase this
+incident already loaded it" is a session assuming continuity that a context
+reset would break. A fix here trades resilience for token savings, which is
+the kind of call `CLAUDE.md`'s "without harming the system effectiveness"
+framing exists to guard against, and it is sharper than a Planning Chief's
+territory-partition judgment — closer to a STRATEGY-level design question
+than a Type 3 fix.
+
+**Not queued** — an ESG act, and only after weighing whether any candidate
+preserves principle 5's resilience guarantee rather than quietly trading it
+away. Candidate framing for that discussion: distinguish "same session,
+same incident, no reset occurred" (plausibly safe to skip re-reading) from
+"fresh spawn, possibly post-reset" (must re-read) — but no mechanism today
+tells a workflow which case it is in, so the candidate fix may itself be
+nontrivial. Related: `esg-artifact-bloat` (rank 8) is the same "read
+repeatedly, at every X" shape one layer up, in the ESG's own files rather
+than the hot path.
+
+## 21. Migrate `REGISTER.md` (and other structured-enough files) to SQLite — proposed, not adopted
+
+**Raised by the Owner during the `token-economy` stem, 2026-07-28**, on the
+reasoning that moving anything table-shaped to a real database would let
+agents retrieve exactly the row they need without reading surrounding
+context, which should be both simpler and cheaper. Worth recording as a
+live proposal even though the Dispatcher's assessment below argues against
+it — the disagreement itself is the ESG-relevant fact.
+
+**Where the reasoning holds.** Selective retrieval instead of whole-file
+reads is exactly right, and three of `token-economy`'s six items
+(`automation-layer-eager-reading`, `log-read-scoping-incomplete`,
+`esg-artifact-bloat`) already chase that same goal by other means. The
+question is whether a database is the mechanism that gets there in this
+package, not whether the goal is worth pursuing.
+
+**Against, five separate points:**
+
+1. **Selective reads already work on text, without a database.** `grep -n`
+   for an ID, or `Read` with an offset, already returns one row without
+   loading the rest of the file — this session did exactly that against
+   `REGISTER.md` repeatedly. A `SELECT * WHERE id=...` returns the same
+   underlying cell content (the same multi-paragraph Territory/Outcome
+   prose), just delimited differently. Storage format does not shrink the
+   answer; it changes how reliably a narrow query can be aimed — a real
+   difference, but a smaller one than "reads unnecessary context" implies.
+2. **`.dcs/incidents/**` is git-tracked and merged `--no-ff` at close —
+   a database breaks under exactly that model.** `214-LOG.md` (this
+   incident's own item 2) is append-only text: two worktrees each adding
+   lines in disjoint time ranges merge cleanly under git's line-based
+   algorithm almost every time. A binary SQLite file has no line-based
+   merge — two independently-modified copies differ at the byte/page
+   level almost everywhere, so the first parallel incident touching the
+   same database file conflicts outright. This is not an inconvenience to
+   engineer around; it is incompatible with the worktree-isolation model
+   `doctrine.md`'s "Parallel operation" section describes.
+3. **`REGISTER.md` itself (`.gitignore`d, single copy, courtesy-locked —
+   no git-merge issue) still doesn't gain what the measurement shows is
+   missing.** The 169,571 B `esg-artifact-bloat` measured is free-text
+   cell content (Territory, Intake source, Outcome), not absence of
+   schema — the table already has 12 well-defined columns. A `TEXT`
+   column holds the same paragraph at the same length; the fix for
+   unbounded prose is a content bound, independent of storage engine.
+4. **The migration's own footprint is large.** Every workflow file that
+   currently reads or edits `REGISTER.md` via `Read`/`Edit`/`grep`
+   (`new.md`, `plan.md`, `execute.md`, `close.md`, `esg.md`, `deploy.md`,
+   `status.md`, `loop.md`, `run.md` — effectively the whole package) would
+   need rewriting to issue SQL instead, every touching agent charter would
+   need the same, and `tests/test_doctrine_integrity.py`'s regex/glob-based
+   checks would need a parallel database-aware implementation.
+   `references/typing.md` names "a database schema migration" as the
+   textbook Type 1 trigger — this migration is plausibly larger than the
+   six items already bundled into `token-economy`.
+5. **Current scale does not need indexed lookup.** The register holds on
+   the order of three dozen rows across this project's entire self-hosted
+   history to date. A full-text `grep` over a file this size is
+   sub-second; the "databases win at scale" argument is true in general
+   and not load-bearing here.
+
+**A cheaper mechanism already exists in the package and gets most of the
+stated benefit.** `DELEGATION.md` embeds one fenced `delegation-bounds`
+JSON block inside an otherwise prose file — `schemas.md` itself calls it
+"the only part workflows parse." Applied to `REGISTER.md`, the same pattern
+(a small structured block per row, or one at the file level for
+state/territory, with Notes/Outcome staying free prose under a length
+bound) would give reliable, schema-checked field access without losing
+git-diffability or breaking the merge model. It would also have caught, at
+write time, the one concrete failure already on record: an `Edit` call
+that embedded literal newlines into a table cell and silently broke the
+table into stray paragraph text, with nothing to flag it mechanically
+(`REGISTER.md`'s own Notes, eighth `/dcs-esg` session).
+
+**Not queued** — an ESG-level architectural question, and the Dispatcher's
+assessment above disagrees with the proposal as stated. If the Owner still
+wants a database after weighing points 1–5, that is the Owner's call to
+make at `/dcs-esg`, not something to decide inside an already-open
+incident.
+
+## 22. The per-attempt halt ceiling re-anchors on every re-stamp, including a mechanical IC re-stamp with no fresh Owner approval
 
 **Measured in `deviation-path-proportionality`, 2026-07-28** (IC-requested
 ESG activation at its own command point 4, trigger e). `dcs_gate.py`'s
@@ -769,10 +958,10 @@ or accept the current design on the grounds that the doctrinal triggers
 are the intended backstop and the gate-level counter was only ever meant
 to catch the case nobody escalates. Candidate for the next `/dcs-esg`.
 
-## 20. A fix-tasking's validation fixtures should not be authored by the same agent that authored the fix
+## 23. A fix-tasking's validation fixtures should not be authored by the same agent that authored the fix
 
 **Measured in `deviation-path-proportionality`, 2026-07-28** (IC-requested
-ESG activation, same command point as item 19). Three consecutive
+ESG activation, same command point as item 22). Three consecutive
 fix-taskings on one incident each closed the specific defect a Safety
 halt named, and each opened or re-exposed a different one in the same
 boundary — not because the fixes were careless, but because the same
@@ -797,15 +986,9 @@ fix. Costed honestly: this adds authoring work at exactly the command
 point already busiest (verdict disposition), and the one data point
 available is a single incident's own self-referential repair, not a
 controlled comparison. **Not queued** — an ESG act, worth deciding
-alongside item 19 as one "verification methodology" agenda item.
+alongside item 22 as one "verification methodology" agenda item.
 
-**Numbering note (principle 15):** these two items are numbered relative
-to this incident's own branch point (`4fe3312`), whose `vault/Backlog.md`
-ends at item 18. The main checkout may hold further uncommitted items
-past 18 not visible from this worktree — if so, this pair may need
-renumbering at merge time; the content is what matters, not the number.
-
-## 21. `doctrine.md`'s per-phase reread cannot be safely reduced with tools available today
+## 24. `doctrine.md`'s per-phase reread cannot be safely reduced with tools available today
 
 **Found and closed as infeasible in `token-economy`, 2026-07-28** (Type 1,
 one period, one attempt, Safety pass, zero refutations). The 201 framed
@@ -866,7 +1049,7 @@ the next `/dcs-esg`:
 
 1. `dcs/workflows/run.md`'s new `doctrine.md` carve-out ("re-read it
    only where there is real doubt it is still in context") reintroduces
-   the exact self-report judgment item 21 above was just closed for
+   the exact self-report judgment item 24 above was just closed for
    being unsafe. Replace with the unconditional fact that `doctrine.md`
    is `@`-included at the top, so it loads regardless.
 2. `dcs/templates/204-TASKING.md`'s worked example still models
@@ -882,3 +1065,12 @@ the next `/dcs-esg`:
    and its own placeholder wraps to 6 physical lines until filled in.
 
 Full verdict text: `.dcs/incidents/2026-07-28-token-economy/SAFETY.md`.
+
+**Merge note (principle 15):** this file was reconciled from two
+independent sessions' uncommitted work landing on `vault/Backlog.md` at
+the same time — `criterion-unmeasured-fact`'s close (items 19-23,
+already numbered against the pre-existing 1-18) and `token-economy`'s
+own close (originally drafted as item 21). Renumbered to 24 at merge
+time, definitively (both sides were visible during reconciliation, so
+this is not a provisional numbering like the note it replaces) — no
+content from either side was dropped.
