@@ -776,7 +776,21 @@ had no route cheaper than a full replan-and-reapprove cycle.
 `.dcs/incidents/2026-07-27-register-field-repair-path/AAR.md` and
 [[Meta/building-dcs-lessons]] §18.
 
-## 18. The ~250-line workflow budget is a rule no suite enforces
+## 18. The ~250-line workflow budget is a rule no suite enforces ✅ DONE
+
+**CLOSED by incident `workflow-budget-enforcement`, integration commit
+`ce8ad1a` on its branch, 2026-07-28 (register row will read `MERGED
+(deploy pending)` once this close's merge step completes — sha not yet
+known at write time, not invented here):** built as a check, not
+retired as advice — `tests/test_doctrine_integrity.py` gained a
+per-file line-count check (`WORKFLOW_BUDGET_LINES` = 250,
+`WORKFLOW_GRANDFATHERED_LINES` for the four files already over budget,
+pinned at zero headroom rather than a ratchet with slack — see
+`vault/Meta/building-dcs-lessons.md` §24 for why zero headroom was
+chosen over a ratchet). `CLAUDE.md`'s rule corrected to name the
+mechanism explicitly. Trimming the four grandfathered files back toward
+~250 is deliberately not part of this close — tracked as its own
+follow-up row below.
 
 **Registered at the close of `deploy-marker-blind`, 2026-07-27.**
 `CLAUDE.md` sets a ≤ ~250-line budget for workflow files. **Nothing checks
