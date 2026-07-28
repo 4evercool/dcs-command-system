@@ -42,6 +42,21 @@ release commit's own message instead:
 - **`CLAUDE.md`'s "File size" rule is corrected to name the mechanism
   explicitly**, instead of reading as advisory prose.
 
+### Config
+
+No new keys.
+
+### Verified at release
+
+`test_doctrine_integrity.py` **86/86 passed**, `test_dcs_gate.py`
+**100/100 passed**, `test_dcs_intake.py` **10/10 passed** (each re-run at
+this bump: `python tests/test_doctrine_integrity.py`, `python
+tests/test_dcs_gate.py`, `python tests/test_dcs_intake.py`).
+`dcs/hooks/dcs_gate.py` is untouched since `v0.6.11` — `git diff --stat
+v0.6.11..HEAD -- dcs/hooks/dcs_gate.py` prints nothing. This release's
+own file, `tests/test_doctrine_integrity.py`, is the one named above —
+not restated here, see "Added".
+
 ---
 
 ## 0.6.11 — 2026-07-28
