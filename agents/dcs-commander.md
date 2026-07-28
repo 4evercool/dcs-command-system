@@ -54,13 +54,18 @@ Decide the disposition. Return:
 
 `disposition`: `"replan"` (the plan's premise is wrong — back to
 /dcs-plan), `"amend_tasking"` (mechanical correction, one 204 fixed, no
-premise change — still voids the IAP hash, which is correct), or
+premise change — still voids the IAP hash, which is correct; ratified at
+`plan.md` step 6c when 6c's own boundary conditions hold for this
+specific fix, the full steps-1-9 path otherwise), or
 `"escalate_owner"` (genuine scope change — frame the exact question).
 
 **4. `verdict_disposition`** — inputs: the Safety Officer's verdict
 (verbatim), 202 acceptance criteria, period history from 214-LOG.md.
 On `halt`: choose `"fix_taskings"` (refutation is narrow — supply the
-fix-tasking directives) or `"replan"` (refutation reveals a planning
+fix-tasking directives; a re-stamp this cycle needs — because a fix
+touched `IAP.md`'s own content, not just a `204-TASKING/*.md` file —
+routes through `plan.md` step 6c when 6c's own boundary conditions hold)
+or `"replan"` (refutation reveals a planning
 defect). On `pass`: choose `"close"` (goal fully met) or `"next_period"`
 (state what remains). **`close` is the default on a pass, including when
 the 201's goal is only partly met (v0.5.12)** — a passed period holds

@@ -23,7 +23,7 @@ release commit's own message instead:
 
 ---
 
-## Unreleased
+## 0.6.11 — 2026-07-28
 
 ### Added
 
@@ -37,8 +37,9 @@ release commit's own message instead:
   item (g) surfaces Owner-reported field repairs each sweep, and step 4
   originates the post-hoc row, verifying the commit reference (`git show
   <sha> --stat`) first since its facts are reported rather than
-  observed. `python tests/test_doctrine_integrity.py`: **82/82 passed**,
-  unchanged.
+  observed. `python tests/test_doctrine_integrity.py`: **82/82 passed**
+  as of this item's own close — see "Verified at release" below for this
+  bump's own count.
 - **A criterion asserting state outside the working tree now has to carry
   its own proof, front to back.** `dcs/templates/202-OBJECTIVES.md`'s
   acceptance-criteria comment gains a MEASURED CLAIM paragraph, the same
@@ -55,7 +56,63 @@ release commit's own message instead:
   Chief's read. Field lesson 2026-07-26: a criterion waived a version
   bump on "0.6.9 is unpublished"; 0.6.9 had been published 75 minutes
   earlier, and the version shipped twice with different contents.
-  `python tests/test_doctrine_integrity.py`: **82/82 passed**, unchanged.
+  `python tests/test_doctrine_integrity.py`: **82/82 passed** as of this
+  item's own close — see "Verified at release" below for this bump's own
+  count.
+- **A bounded amendment path, `plan.md`'s new `## 6c`, for a change that
+  stays inside a set of boundary conditions instead of costing a full
+  steps-1-9 re-plan.** Reachable only from three already-logged
+  command-point entries, each cited by its own timestamp rather than
+  re-litigated: `execute.md` step 6's `command: deviation ->
+  amend_tasking` / `-> replan` / `-> escalate_owner` (command point 3),
+  step 9's `command: verdict -> fix_taskings` (command point 4) when the
+  fix also changes `IAP.md`'s own content, and step 9's
+  advisories-on-a-pass paragraph when an advisory's own fix touches
+  `IAP.md` — a case that paragraph previously left with no route once
+  "fix it now" would leave the approval marker stale. The boundary
+  conditions decide reachability, never the disposition label by itself
+  — see `plan.md` `## 6c` for their current text rather than a paraphrase
+  here, which would be a second copy of a fast-moving contract (this
+  incident's own period revised the boundary conditions four times
+  before they held under adversarial verification). Inside it, `## 6c`
+  still terminates at the unmodified steps 7-8 (step 7 gains a bounded
+  exception naming the already-logged decision as the pre-stamp
+  checklist's `command: iap_review`, in place of a fresh one), so the
+  sha256 recompute, the `IAP-APPROVED` rewrite and the sentinel append
+  are identical regardless of path — `marker_valid()`
+  (`dcs_gate.py:515-528`) stays satisfied and trigger (c)'s attempt
+  tally stays accurate by construction.
+
+### Changed
+
+- **Doctrine principles 8 and 15 each gained a dated `(v0.6.11)`
+  clause.** Principle 8 (deviation doctrine) now points to `plan.md`'s
+  bounded amendment path as the proportionate route inside its stated
+  limits, full path outside them. Principle 15 (no derived facts in
+  durable artifacts) extends "write the derivation, not the result" to
+  the handoff between seats: a fact a prior seat already established
+  moves into a later artifact by file reference or regenerating command,
+  never by a later seat retyping it from memory.
+- **Two `execute.md` command-point spawn prompts now cite sources
+  instead of retyping them.** Step 6 (command point 3, deviation
+  arbitration) passes the commander any fact an earlier seat already
+  established by its source — file path and line range, or the command
+  that regenerates it — instead of a summary from memory. Step 9
+  (command point 4, verdict handling) sources its ESG-state line
+  directly from the register row instead of paraphrasing it.
+
+### Config
+
+No new keys.
+
+### Verified at release
+
+`test_doctrine_integrity.py` **83/83 passed**, `test_dcs_gate.py`
+**100/100 passed**, `test_dcs_intake.py` **10/10 passed** (each re-run at
+this bump: `python tests/test_doctrine_integrity.py`, `python
+tests/test_dcs_gate.py`, `python tests/test_dcs_intake.py`).
+`dcs/hooks/dcs_gate.py` and `tests/` are untouched this release —
+`git diff --stat -- dcs/hooks/dcs_gate.py tests/` prints nothing.
 
 ---
 
