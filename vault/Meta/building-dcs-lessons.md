@@ -827,6 +827,68 @@ a fix inside the same incident that ships it is not always available,
 but here it was forced by circumstance rather than chosen, and it is the
 sharpest confirmation the fix's own field measurements got.
 
+## 21. The verifier's own record is not exempt from the rule it just wrote
+
+*From `token-economy`, 2026-07-28 — Type 1, one period, one attempt, zero
+specialist deviations, Safety verdict pass with zero refutations, six
+advisories. The fix shipped is
+[[Backlog#21|criterion 4's by-reference citation mechanism]] itself; the
+lesson is what happened the very first time that mechanism's own
+precondition was tested for real.*
+
+**Criterion 4 built a rule that a Safety Officer may cite a prior
+same-period verdict's `checked[]` entry by reference instead of
+re-deriving it, but only for a subject it has independently reconfirmed
+unchanged with a named command — never trusted from the written record
+alone.** In the same period that rule was designed, wired end to end,
+and dry-run tested against a past incident's `SAFETY.md`, the verdict
+*this period's own Safety Officer wrote* contained a `checked[]` entry
+that was simply false: "confirmed `new.md` and `plan.md` are absent from
+`git status`" — `plan.md` was one of the period's 15 modified files,
+legitimately edited by a different specialist for an unrelated criterion.
+The Safety Officer did not catch its own error (self-review is not what
+adversarial verification means), and no specialist was positioned to —
+the claim was about the *union* of the diff, not any one territory.
+
+**What caught it was `dcs-commander` applying the Safety Officer's own
+standard one level up, at the very next command point.** Command point 4
+does not exist to rubber-stamp a `pass`; this incident's own commander
+re-ran all three guards independently, then read `plan.md`'s actual diff
+because the verdict's own claim was checkable in one command. It found
+the claim false, then checked whether the *invariant the claim was
+defending* — that criterion 3's territory-glob-writing logic in
+`plan.md` step 5a was untouched — still held. It did, because the
+specialist's edits sat at unrelated line numbers. The false clause was
+therefore a **record defect, not a deliverable defect**: the pass stands
+on its merits, re-verified directly, not on the strength of the sentence
+that happened to be wrong.
+
+**Why this is not a near miss to shrug off.** Had a *second* Safety
+Officer spawn existed this period (it did not — one clean pass, no
+fix-tasking cycle), and had it cited this exact `checked[]` entry by
+reference under the very rule shipped this period, it would have
+propagated a false claim into a new verdict without re-checking it —
+compounding the error under the label of the mechanism built to prevent
+exactly that. The rule's own text already forbids citing anything in a
+fix-tasking's `files_touched`; it says nothing about a citation source
+that is itself wrong through simple author error, because nobody had
+tested that path yet. This period did, by accident, on its first day.
+
+**Candidate hardening, not built here:** either (a) a by-reference
+citation must itself be accompanied by the officer re-running the one
+command that would falsify it (turning "cite" into "cite and spot-check",
+which partially defeats the savings the rule exists for), or (b) treat
+this as evidence that verification records need a cheap, mechanical
+cross-check — not a re-derivation, just confirming a stated file-absence
+claim against `git status` — before any later reader may rely on it by
+reference. Option (b) costs one grep per citation, not a full re-run, and
+targets exactly the failure mode observed: a false *absence* claim, which
+is the cheapest kind of claim to mechanically check and the kind this
+incident's own record got wrong. **Not queued as its own row** — folded
+into the follow-up incident `token-economy` registered at close for its
+four remaining one-line advisory fixes; this is a fifth, and the only one
+that touches a mechanism rather than a phrasing.
+
 ## Links
 
 - [[Post-mortems/energy-cost-model-rework]] — the incident behind v0.5.12
