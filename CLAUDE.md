@@ -53,8 +53,9 @@ python tests/test_doctrine_integrity.py
 It checks what is mechanically checkable about prose: version sync,
 principle numbering (unique, contiguous, matching any stated count),
 `@`-include resolution, agent/template references, doctrine sections
-referenced by name, the hot-path size budget, and encoding. Every check
-in it exists because that defect shipped at least once.
+referenced by name, the hot-path size budget, the workflow line-count
+budget, and encoding. Every check in it exists because that defect
+shipped at least once.
 
 ## Verification suite
 
@@ -129,8 +130,20 @@ territory, and it costs zero runtime latency because nothing
   any project outside this one.
 - **Version sync is atomic**: `dcs/VERSION` and `package.json` change in
   the same commit. The guard fails otherwise.
-- **File size**: workflows ≤ ~250 lines. `doctrine.md` is the exception
-  (it is the constitution) but is budgeted — see the guard.
+- **File size**: workflows ≤ ~250 lines, enforced by the merge-time
+  guard's workflow line-count budget (`WORKFLOW_BUDGET_LINES` /
+  `WORKFLOW_GRANDFATHERED_LINES` in `tests/test_doctrine_integrity.py`)
+  as a hard ceiling now, not an advisory one — cross it and the merge
+  guard goes red. Four files predate the check and run under a
+  documented, temporary grandfather ceiling instead of full ~250-line
+  compliance — `close.md`, `deploy.md`, `execute.md`, `plan.md`; current
+  values are `WORKFLOW_GRANDFATHERED_LINES` in
+  `tests/test_doctrine_integrity.py`, not restated here since that dict,
+  not this sentence, is what the guard actually reads — recorded debt
+  pending a trim, not a new normal. Every other workflow holds the plain
+  ceiling; regenerate current margins with `wc -l dcs/workflows/*.md`.
+  `doctrine.md` is a separate exception (it is the constitution) with its
+  own hot-path budget, also enforced by the guard.
 
 ## Self-hosting notes for incidents in this repo
 

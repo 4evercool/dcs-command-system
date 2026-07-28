@@ -23,6 +23,27 @@ release commit's own message instead:
 
 ---
 
+## 0.6.12 — 2026-07-28
+
+### Added
+
+- **A `dcs/workflows/*.md` file exceeding its allowed line-count
+  ceiling is now caught mechanically at merge time, every time.** A new
+  check in `tests/test_doctrine_integrity.py` enumerates every workflow
+  file and compares its line count against a per-file ceiling: the
+  existing ~250-line policy ceiling for the six files already inside
+  it, and a deliberate, documented, finite grandfather ceiling — set at
+  each file's own current size — for the four files already over
+  budget (`plan.md`, `execute.md`, `deploy.md`, `close.md`). The
+  grandfather ceiling exists so those four neither pass silently
+  forever nor immediately redden the merge-time guard; trimming their
+  content back toward the 250-line policy is deferred to a future
+  incident.
+- **`CLAUDE.md`'s "File size" rule is corrected to name the mechanism
+  explicitly**, instead of reading as advisory prose.
+
+---
+
 ## 0.6.11 — 2026-07-28
 
 ### Added
