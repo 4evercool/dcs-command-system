@@ -23,6 +23,33 @@ release commit's own message instead:
 
 ---
 
+## 0.6.13 — 2026-07-29
+
+### Added
+
+- **A defect a stem decomposes, or new intake an ESG sweep finds, that
+  falls below a concrete priority bar now routes to a project-documented
+  lightweight surface instead of automatically becoming a first-class
+  `REGISTER.md` row.** `new.md` step 4a's decomposition check now
+  assigns each split-out defect a proposed Priority (`H`/`M`/`L`,
+  matching `REGISTER.md`'s own vocabulary); a defect at `L` routes to
+  the project's own `CLAUDE.md`-documented backlog-style surface when
+  one is documented, and registers exactly as before when none is. The
+  same disposition mirrors into `esg.md` step 2's cluster (b) (new
+  intake found during a sweep), offered as an `AskUserQuestion` option
+  alongside queueing. `doctrine.md` principle 4 states the bar as a
+  standing rule in place (no new principle; numbering/count unchanged),
+  and restores a pre-existing missing word ("defects") in the same
+  amended sentence. The package itself never names a specific project's
+  surface — this project's own `vault/Backlog.md` is one instance, not
+  a shipped default.
+
+### Config
+
+No new keys.
+
+---
+
 ## 0.6.12 — 2026-07-28
 
 ### Added

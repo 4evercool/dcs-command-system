@@ -78,12 +78,18 @@ incident, and the only place that is free.** Read the Symptom you just
 wrote and count the *independent* defects in it. Independent means: it
 has its own root cause, and fixing it could ship on its own.
 
-- **More than one → decompose now.** Register every defect as its own
-  row in `<esg_root>/.dcs/esg/REGISTER.md` (`QUEUED`), then open **one**
-  of them as this incident — the one on the critical path, usually the
-  one actively causing harm. The others are follow-ups with the same
-  evidence already gathered; nothing is lost, and each can then ship the
-  day it is fixed.
+- **More than one → decompose now.** Give each a proposed Priority
+  (`H`/`M`/`L`, the register template's vocabulary). Register every
+  defect at `H`/`M` as its own row in `<esg_root>/.dcs/esg/REGISTER.md`
+  (`QUEUED`), then open **one** — the one on the critical path, usually
+  the one actively causing harm. The others are follow-ups with the
+  evidence already gathered; each can ship the day it is fixed.
+- **(v0.6.13) `L` is below the bar.** It goes to the project's own
+  lightweight backlog-style surface instead of a register row, if its
+  `CLAUDE.md` documents one (doctrine's "Relationship to
+  project-specific protocols"); documenting none, the row is written as
+  before, so no portfolio loses visibility by omission. Harm is never
+  `L`.
 - **A "rework" / "rethink" / "redesign" goal is a program, not an
   incident.** If the goal names a *model* rather than a *defect*
   ("rethink how X is accounted"), the incident to open is the first

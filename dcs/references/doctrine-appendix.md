@@ -128,6 +128,29 @@ mistake survives being caught, it just gets caught expensively. The
 fixable defect, exactly the shape of goal that keeps growing scope no
 matter how tightly the incident is typed.
 
+**Principle 4 — the missing bar between "decompose" and "register" (field
+lesson 2026-07-28, v0.6.13, incident `decomposition-backlog-routing`).**
+This principle's own text told step 4a to register *every* split-out
+defect, unconditionally — the rule that prevents scope creep inside one
+incident said nothing about the portfolio-level creep that follows: a
+register absorbing every decomposed defect and every ESG-swept intake
+item as a first-class row regardless of size. A third-party review of a
+different project (bread_bot), recorded during `direct-resolution-lane`'s
+own stem, 2026-07-27, found the gap and split it into two readings — one
+on the *triviality* axis, one on the *priority* axis — before either was
+typed. Both named the same two call sites (`new.md` step 4a, `esg.md`
+step 2's sweep) for the same complaint, and were folded into one row at
+the sixth `/dcs-esg`, 2026-07-27, on the reading that a missing bar is one
+defect, not two, no matter how many axes describe its absence. Deciding
+*where* the bar sits was itself measured, not assumed: the incident's own
+three live-symptom register rows were all Type 3 at priority `L`, so a
+Type-5-shaped triviality test — the more intuitive-sounding bar — would
+have caught none of them, and priority is what shipped instead. The fix
+keeps the rule inside this package's own "ship no project facts"
+constraint by routing through "the project's own `CLAUDE.md`" rather than
+a hardcoded surface, with unconditional registration preserved as the
+fallback for a project that documents no lighter one.
+
 **Principle 6 — one session, one project, in full.** The mechanism behind
 "territory never leaves its own project": every DCS artifact — config,
 `ACTIVE`, incidents, register, delegation, worktrees — resolves relative

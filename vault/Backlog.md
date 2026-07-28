@@ -1099,3 +1099,61 @@ own close (originally drafted as item 21). Renumbered to 24 at merge
 time, definitively (both sides were visible during reconciliation, so
 this is not a provisional numbering like the note it replaces) — no
 content from either side was dropped.
+
+## Follow-up registered at `decomposition-backlog-routing`'s close, 2026-07-28
+
+Three package-text findings surfaced as Safety advisories on period 1,
+none rising to a refutation, deliberately **not** folded into the
+period's integration commit — `dcs/workflows/new.md` closed the period
+at 248/250 lines and `dcs/references/doctrine.md` + `schemas.md` at
+37,735/37,888 bytes, and a same-commit fix for wording nuances would
+have spent the last of either budget on prose already Safety-passed as
+correct. Full verdict text and the IC's resolution of every advisory:
+`.dcs/incidents/2026-07-28-decomposition-backlog-routing/SAFETY.md`.
+
+1. **`new.md` step 4a's rewritten first bullet loses the all-`L` case.**
+   The pre-incident text read "...then open **one** *of them*", where
+   "them" was every defect just decomposed; the rewrite reads "...then
+   open **one**", implicitly scoped to the `H`/`M` set the same bullet
+   just introduced. If a stem decomposes into defects that are *all*
+   `L`, no row is written and the bullet no longer names a set to open
+   the incident from. Bounded in practice — a stem is normally opened
+   because something in scope already warrants acting on now, and step
+   4a's third bullet ("say plainly ... where they went") makes a silent
+   drop Owner-visible rather than silent — but real. Candidate fix, one
+   clause: "...then open **one** — the one on the critical path; where
+   every defect is `L`, open the one the Owner came for and route the
+   rest."
+2. **"Harm is never `L`." exists in only one of the three hunks this
+   incident wrote.** `new.md` carries it; the `doctrine.md` principle 4
+   amendment and the `esg.md` cluster-(b) mirror both omit it, so the
+   constitution — which wins on conflict in this project — is silent on
+   the guard that stops a harm-causing defect being demoted below the
+   bar. Risk is partly bounded on the `esg.md` side because routing
+   there is an `AskUserQuestion` option, Owner-decided, not automatic.
+   Candidate fix: carry the clause into principle 4's parenthetical, or
+   formally accept the asymmetry as stem-only.
+3. **`new.md`'s new bullet calls `H`/`M`/`L` "the register template's
+   vocabulary"**, but `dcs/templates/REGISTER.md`'s own Priority
+   placeholder is `{{H|M|L or rank}}` — a superset. Nothing is
+   un-followable (the step mandates one of `H`/`M`/`L`, and this
+   project's live register already writes both letter tiers and ranks),
+   but the parenthetical slightly overstates what the referenced file
+   says. Optional wording: "(`H`/`M`/`L`, the register template's letter
+   tiers)".
+
+**Also recorded, not a Backlog item — a live budget fact from the same
+close, principle 15's regenerating command attached rather than a bare
+number:** both files this incident enlarged are now within a few
+lines/bytes of their hard ceilings. Regenerate:
+
+```bash
+python -c "from pathlib import Path;d=Path('dcs/references/doctrine.md').read_bytes().replace(b'\r\n',b'\n');s=Path('dcs/references/schemas.md').read_bytes().replace(b'\r\n',b'\n');print('hot path', len(d)+len(s), 'of', 37*1024)"
+python -c "from pathlib import Path;r=Path('dcs/workflows/new.md').read_bytes().replace(b'\r\n',b'\n').replace(b'\r',b'\n');print('new.md lines', r.count(b'\n')+(0 if r.endswith(b'\n') else 1), 'of 250')"
+```
+
+At close time this read 37,735 of 37,888 B and 248 of 250 lines — treat
+both files as budget-blocked for the next incident that touches them
+until a trim lands (see item 7's ratchet history for the shape such a
+trim takes, and the still-open `workflow-file-trim-grandfathered`
+register row for the grandfathered-file half of the same problem).
