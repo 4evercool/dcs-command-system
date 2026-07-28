@@ -750,6 +750,83 @@ one of five may fire" — the officer measured 0 of 5. A new
 classification rule should always be pointed at the incident that ships
 it; it is the one corpus guaranteed to be fresh.
 
+## 20. A fix's own author should not author its own acceptance fixtures
+
+*From `deviation-path-proportionality`, 2026-07-28 — one period, one
+attempt (four stamps), three Safety halts, one escalation
+(triggers b/c/e folded into one Owner decision), zero specialist
+deviations, final verdict pass with zero refutations. The fix shipped is
+[[Backlog#11|the deviation-arbitration cheap route]] itself; the lesson
+is what it took three tries to notice about how DCS verifies its own
+fixes.*
+
+**Three consecutive fix-taskings each closed the specific hole a halt
+named and opened a different one in the same admission boundary, because
+the same agent that wrote the fix also wrote the test that passed it.**
+Halt 1 found two independent scoping defects in `plan.md`'s new `## 6c.`
+boundary. The fix-tasking closed both — and, in the same pass, widened a
+third clause to admit a case it never constructed a fixture for. Halt 2
+caught that. The Owner sanctioned a "raised-altitude" retry: one
+per-artifact invariant instead of an enumerated branch list, with
+mandatory validation against both cited field measurements before the
+fix-tasking could report `done`. It followed the instruction faithfully,
+validated exactly what it was told to validate, passed — and had, in
+widening the boundary to admit one real case, silently admitted a second
+one nobody had reviewed (a brand-new tasking file, for which the
+boundary's own "provably didn't change" claim was vacuously false). Halt
+3 caught that too. Same class, three times: not a wording bug repeating,
+but a structural blind spot — a fixture set designed by the same
+reasoning that designed the boundary inherits that reasoning's blind
+spots by construction, and no amount of "validate more thoroughly this
+time" instruction closes a gap the drafter cannot see is there.
+
+**What actually broke the pattern was two changes at once, not a fourth
+guess at the wording.** First, the fixture population moved from
+specialist-authored to IC-authored — eleven must-admit / must-reject /
+must-catch-by-execution cases, specified before the fix-tasking was
+spawned, which the specialist could extend but not substitute, weaken,
+or drop. Second, and this is the sharper finding: **the recurring
+"these three lint checks are provably unneeded here, skip them" claim
+was deleted outright**, once it was noticed that running the checks
+costs nothing under the incident's own success metric — its acceptance
+criterion counted only agent spawns and Owner round-trips, and lint
+execution is neither. Three of the incident's four refutations were, in
+different clothes, that same skip-claim being wrong about a case its
+author hadn't considered. A check that always executes cannot be
+vacuously skipped; there was no economic reason to keep the optimization
+once someone asked what it was actually buying.
+
+**The mechanical halt-ceiling counter and the doctrinal escalation
+triggers protect against the same runaway loop from two different
+distances, and only one of them held up under this incident's own
+weight.** Every `## 6c.` re-stamp is a fresh `IAP-APPROVED:` sentinel,
+and `dcs_gate.py`'s `halt_cycles()` re-anchors on that sentinel — so a
+halt → fix → re-stamp → halt cycle never approached the per-attempt
+ceiling on its own; this incident's own live tally read `0`–`1`
+throughout, against three real halts. What actually fired, correctly,
+both times, was doctrine's log-wide accounting that no re-stamp resets:
+trigger (b) (second halt on the same objective, counted across the whole
+`214-LOG.md`) and trigger (c) (cumulative `IAP-APPROVED:` count against
+`esg.max_periods_before_review`, which this incident's four stamps
+reached exactly). Both escalated to the Owner as designed, and the
+Owner's "continue" at round 2 was logged as a decision, not treated as a
+reset — doctrine's own stated distinction, exercised for real. The gap
+this surfaces is narrow but real: the *cheap route's own* re-stamp
+undercuts the *mechanical* ceiling that is supposed to bound cheap
+iteration, even though the *doctrinal* ceiling still holds. Flagged for
+`/dcs-esg`, not fixed here — this incident's own standing constraint
+forbade touching `dcs_gate.py`.
+
+**A "post-pass advisory correction that touches `IAP.md`" was not a rare
+edge case this incident merely fixed — it happened repeatedly inside the
+incident's own execution.** Every one of the IC's four bookkeeping
+re-stamps (recording a corrected criterion-3 table, three times over)
+was exactly the case `register-field-repair-path` first surfaced and
+this incident's criterion 1 was widened mid-flight to cover. Dogfooding
+a fix inside the same incident that ships it is not always available,
+but here it was forced by circumstance rather than chosen, and it is the
+sharpest confirmation the fix's own field measurements got.
+
 ## Links
 
 - [[Post-mortems/energy-cost-model-rework]] — the incident behind v0.5.12

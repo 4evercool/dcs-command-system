@@ -320,7 +320,33 @@ a halt is mechanizable; making the halt advisory is not.
 **Not queued by the close** — putting a row in the register is an ESG act.
 Candidate for the next `/dcs-esg`.
 
-## 11. `amend_tasking` has no cheap route — the deviation path has no proportionality
+## 11. `amend_tasking` has no cheap route — the deviation path has no proportionality ✅ DONE
+
+> **Closed 2026-07-28 by incident `deviation-path-proportionality`**
+> (Type 3, integration commit `e285108`). `plan.md` gained `## 6c.`, a
+> bounded route reachable only from an already-logged command-point
+> decision: 0 agent spawns, at most 1 Owner round-trip (a Delegation
+> delta-screen, never the whole plan), terminating at the unmodified
+> steps 7-8 so `marker_valid()` and trigger (c)'s attempt tally stay
+> exactly as accurate as the full path — "cheap but still-counted," the
+> direction this item's own text guessed at. Also shipped: backlog Rec 2
+> (transcription by reference), folded in at typing by explicit Owner
+> decision — doctrine principle 15 extended to seat-to-seat transfer, two
+> `execute.md` command-point spawn prompts rewritten to cite sources.
+>
+> **Not a clean first pass — three Safety halts, all one class**, fixed
+> by a structural change (IC-authored validation fixtures; deleting a
+> recurring "these checks are provably unneeded" claim rather than
+> re-wording it a fourth time) rather than by narrowing the fix. Full
+> account: `.dcs/incidents/2026-07-28-deviation-path-proportionality/AAR.md`
+> and [[Meta/building-dcs-lessons]] §20 — the lesson worth carrying
+> forward is about how DCS verifies its own fixes, not about this
+> boundary condition specifically. Two follow-ups queued below (items 19,
+> 20) rather than absorbed into this incident. Owner-UAT: no distinct UAT
+> section — all 9 acceptance criteria were agent-verifiable (tests, byte
+> counts, greps), no browser/manual observation involved. Deploy pending.
+
+### As originally filed
 
 **Measured in `halt-loop-unbounded`, 2026-07-26.** S3 returned a
 `deviation` whose fix was: add one derived regex built by concatenation
@@ -710,3 +736,71 @@ advice. **Either is defensible; the current state — a rule enforced only by
 whoever remembers to measure — is the one that is not.** Territory:
 `tests/test_doctrine_integrity.py` (same collision as item 17), or
 `CLAUDE.md` alone if retired.
+
+## 19. The per-attempt halt ceiling re-anchors on every re-stamp, including a mechanical IC re-stamp with no fresh Owner approval
+
+**Measured in `deviation-path-proportionality`, 2026-07-28** (IC-requested
+ESG activation at its own command point 4, trigger e). `dcs_gate.py`'s
+`halt_cycles()` resets on any `IAP-APPROVED:` sentinel — by design, since
+a genuine re-plan should reset the tally. But the same sentinel is also
+what the new `plan.md` `## 6c.` amendment path writes on a purely
+mechanical re-stamp (recording IC bookkeeping, no fresh chief spawn, no
+fresh Owner approval). Measured directly: this incident ran three real
+Safety halts on one objective, and its own live `--halt-count` read `0`
+or `1` throughout, never approaching the ceiling of 3 — because each halt
+was followed by a re-stamp before the next verification pass.
+
+**The doctrinal backstop held regardless** — trigger (b) (second halt on
+the same objective, counted log-wide across `214-LOG.md`, never reset)
+and trigger (c) (cumulative `IAP-APPROVED:` count against
+`esg.max_periods_before_review`) both fired correctly and both escalated
+to the Owner, per [[Meta/building-dcs-lessons]] §20. So nothing shipped
+unsafe. The gap is that `dcs_gate.py`'s own mechanical ceiling — the one
+piece of this machinery that is gate-*enforced* rather than prose-*relied
+upon* — is nearly unreachable in exactly the cycle `## 6c.` makes cheap.
+
+**Not queued by the close** — this incident's own typing carried a
+standing constraint against touching `dcs/hooks/dcs_gate.py`
+(`command: typed 3`, 2026-07-28), so the fix, if one is wanted, is a
+future Type 1 by `CLAUDE.md`'s own rule. Candidate shape: distinguish a
+stamp that followed a fresh Owner approval from one that didn't (a
+mechanical re-stamp), and have `halt_cycles()` reset only on the former —
+or accept the current design on the grounds that the doctrinal triggers
+are the intended backstop and the gate-level counter was only ever meant
+to catch the case nobody escalates. Candidate for the next `/dcs-esg`.
+
+## 20. A fix-tasking's validation fixtures should not be authored by the same agent that authored the fix
+
+**Measured in `deviation-path-proportionality`, 2026-07-28** (IC-requested
+ESG activation, same command point as item 19). Three consecutive
+fix-taskings on one incident each closed the specific defect a Safety
+halt named, and each opened or re-exposed a different one in the same
+boundary — not because the fixes were careless, but because the same
+agent that wrote each fix also wrote the fixture set that validated it,
+so the fix's own blind spots propagated into its own test. Full account
+in [[Meta/building-dcs-lessons]] §20.
+
+**What broke the pattern, on the fourth attempt**: the IC (not the
+fix-tasking specialist) pre-authored the validation fixture population —
+must-admit, must-reject, and must-catch-by-execution cases, specified
+before the specialist was spawned, extensible but not substitutable. It
+held on the first try. One incident is not proof the mechanism
+generalizes, but the contrast (three same-class recurrences under
+specialist-authored fixtures, zero under IC-authored ones, in the same
+incident) is a clean natural experiment.
+
+**Candidate doctrine change**: a general rule that any fix responding to
+a Safety refutation — not just this incident's amendment-path repair —
+carries its acceptance fixtures from the command point that dispositions
+it (the IC, via `dcs-commander`), not from the specialist executing the
+fix. Costed honestly: this adds authoring work at exactly the command
+point already busiest (verdict disposition), and the one data point
+available is a single incident's own self-referential repair, not a
+controlled comparison. **Not queued** — an ESG act, worth deciding
+alongside item 19 as one "verification methodology" agenda item.
+
+**Numbering note (principle 15):** these two items are numbered relative
+to this incident's own branch point (`4fe3312`), whose `vault/Backlog.md`
+ends at item 18. The main checkout may hold further uncommitted items
+past 18 not visible from this worktree — if so, this pair may need
+renumbering at merge time; the content is what matters, not the number.
