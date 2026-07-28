@@ -64,7 +64,14 @@ Present to the Owner:
 
 (a) **Portfolio state** — active/queued/parked incidents from
     `REGISTER.md`, with ages (days since opened or queued).
-(b) **New intake found** this sweep, each with a proposed type + priority.
+(b) **New intake found** this sweep, each with a proposed type +
+    priority. **(v0.6.13)** An item proposed at the lowest tier (`L`) is
+    below the bar (`new.md` step 4a): when the project's own `CLAUDE.md`
+    documents a lightweight backlog-style surface (doctrine's
+    "Relationship to project-specific protocols"), offer routing it
+    there — instead of a `REGISTER.md` row — as one of step 3's options
+    alongside queueing it. With none documented, queueing is the only
+    option, exactly as today.
 (c) **Stale items** worth parking or killing — the Owner's call, never
     automatic.
 (d) **Pending 209 sitreps** in `SITREPS/` — any file whose `Decision`
