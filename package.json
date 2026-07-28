@@ -1,6 +1,6 @@
 {
   "name": "dcs-command-system",
-  "version": "0.6.12",
+  "version": "0.6.13",
   "description": "DCS - Development Command System. An installable Claude Code skill package that adapts the ICS Planning P to the software development cycle: typed incidents, a hook-enforced plan-approval gate, Opus section chiefs, Sonnet specialists, an adversarial Safety Officer with a binding halt, and a strategic layer with a written Delegation of Authority.",
   "repository": {
     "type": "git",
