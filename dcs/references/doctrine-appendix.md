@@ -218,6 +218,25 @@ which leaves the disagreement with nothing to regenerate it from. The
 other four figures have no artifact left to regenerate from post-close and
 carry the annotation instead.
 
+**Principle 15 — transfer between seats, not only durable artifacts (field
+lesson 2026-07-28, v0.6.11, incident `deviation-path-proportionality`).**
+Principle 15 already forbade a derived fact surviving, unregenerated, inside
+a durable artifact; this incident found the same failure one step earlier,
+inside a single period, between seats that write nothing themselves — a fact
+a prior seat had already established was retyped from memory by the next
+seat relaying it forward, instead of being cited by file reference or
+regenerating command. A third-party review of DCS, recorded 2026-07-27 — the
+day before this incident opened — identified the seat most exposed to that
+pattern, the Dispatcher, which relays between nearly every spawn, as the
+dominant defect source: "9 of `prod-tools-drift`'s 10 halts were not about
+the code" (**as of the incident's own close — it moves**). That is a
+different predicate — "not about the code" — from the eight-of-ten figure
+just above ("no functional defect"), independently counted over the same ten
+halts; `prod-tools-drift` is itself a different project's incident, with no
+regenerating command this repo can run against it, so the two counts
+disagreeing by one is not a discrepancy to chase down here — it is a small,
+live case of the exact drift this principle exists to stop.
+
 **Principle 13 — the sentinel threat model (v0.6.9 revision 2).**
 Revision 1 of this ceiling used a bare-substring match and failed in
 both directions the same class of bug can fail: **T1**, false reset —

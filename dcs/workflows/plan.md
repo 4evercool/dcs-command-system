@@ -21,9 +21,13 @@ cat "<project>/.dcs/ACTIVE"
 Parse `<slug>|<type>|<phase>`. If no `ACTIVE` file: stop, tell the Owner
 there's no open incident — run `/dcs-new` first. If `phase` is
 `execution`: this incident already has (or had) an approved IAP for the
-current period; ask the Owner whether they mean to revise the plan
-(counts as a re-plan — proceed, but flag that this will void the current
-approval once IAP.md changes) or actually meant `/dcs-status` /
+current period. **First check whether this is a `## 6c.` amendment:** if
+`214-LOG.md` holds a qualifying command-point-3/4 entry and `## 6c.`'s own
+boundary conditions hold for the intended change, go there now instead of
+proceeding to step 2 — `## 6c.` states its own entry types and conditions,
+not restated here. Otherwise, ask the Owner whether they mean to revise
+the plan (counts as a re-plan — proceed, but flag that this will void the
+current approval once IAP.md changes) or actually meant `/dcs-status` /
 `/dcs-execute`.
 
 Determine the operational period number `N` — 1 if this is the first pass
@@ -347,6 +351,222 @@ failed bound(s) — then ask: approve / request changes / reject.
   signals the Type or the whole premise needs rethinking, not just the
   plan.
 
+## 6c. The proportionate amendment path
+
+A cheaper route to step 7, for a change that is genuinely narrow — never
+a way to keep a real re-plan away from the Owner's eyes (see the
+symmetric fallback below).
+
+**Entry — who may reach it, and only from here:**
+- from `execute.md` step 6, with an already-logged `command: deviation ->
+  amend_tasking` / `-> replan` / `-> escalate_owner` entry (command point
+  3), cited by its timestamp;
+- from `execute.md` step 9's `halt` branch, with an already-logged
+  `command: verdict -> fix_taskings` entry (command point 4), cited by
+  its timestamp;
+- from `execute.md` step 9's advisories-on-a-pass paragraph, when an
+  advisory's own fix touches `IAP.md`'s content, with that pass's
+  already-logged `command: verdict -> close` / `-> next_period` entry
+  (command point 4), cited by its timestamp.
+
+None of the three is self-authorizing — each still has to clear every
+boundary condition below before it may take this path. Each cited entry
+must also postdate the `IAP-APPROVED` stamp currently in force — an
+entry from an earlier attempt or revision ratifies nothing here, the
+same freshness step 7's own bounded exception already requires of its
+own ratifying entry (which likewise refuses the period's first-pass
+`command: iap_review` entry as a stand-in for a fresh one).
+
+**Halt-ceiling clamp.** `## 6c.` may not be used to re-stamp while the
+halt tally (`dcs_gate.py --halt-count <incident_dir>`) stands at
+`esg.max_halts_per_attempt` — at the ceiling, the route is trigger
+(b)/(c) escalation, never a cheap re-stamp. A re-stamp's own
+`IAP-APPROVED:` sentinel is itself a reset anchor for that tally
+(`dcs_gate.py`'s `halt_cycles()`), so letting 6c fire at the ceiling
+would let a lightweight approve/reject clear a wall the doctrine put
+there on purpose; only an Owner decision at escalation may authorize
+continuing past it, never a re-stamp on its own. Because that same
+re-anchoring happens on every 6c re-stamp, this clamp rarely binds in the
+exact halt/fix/re-verify cycle it governs — a run of halts each followed
+by a re-stamp keeps the tally low even after several halts. It is not
+the load-bearing ceiling: trigger (b) (counted log-wide, across the whole
+objective, never reset by a stamp) and trigger (c) (the cumulative
+`IAP-APPROVED:` count against `esg.max_periods_before_review`) are what
+actually stop an unbounded same-class loop, and both already run
+independently of this clamp.
+
+**Boundary — all four, or it's the full path:**
+1. **A single per-artifact invariant, not a branch choice.** Evaluate the
+   amendment's whole real touched set — every file it actually touches,
+   from the triggering command-point entry through to any
+   `IAP.md`/`203-ORG.md` bookkeeping it necessitates — against one test,
+   applied per artifact. An amendment is admissible on this axis **iff
+   every touched artifact is one of**:
+   - a `204-TASKING/*.md` file the triggering logged commander decision
+     itself names (one or several — a single deviation/verdict decision
+     may legitimately touch more than one tasking; no "exactly one"
+     cap);
+   - this incident's own `IAP.md`;
+   - this incident's own `203-ORG.md`, where the tasking-count or
+     execution-mode change makes its bookkeeping a consequence of the
+     same amendment;
+
+   **and none of**:
+   - `.dcs/esg/**` (any file — `DELEGATION.md`, `REGISTER.md`, or
+     anything else under it);
+   - `.dcs/config.json`;
+   - `201-BRIEF.md`;
+   - `202-OBJECTIVES.md`;
+   - any acceptance-criterion text, whether in `202-OBJECTIVES.md` or in
+     `IAP.md`'s own summary of it — "criterion" means both copies, never
+     only the 202-side one.
+
+   **Mandatory bookkeeping the path itself writes is not part of this
+   screened set at all** — it is the process's own required side effect,
+   never an artifact being evaluated for planning-shaped content, so it
+   needs to satisfy neither the "iff every touched artifact is one of"
+   list above nor the "none of" exclusions, even where it physically
+   sits under `.dcs/`. This includes, but is not limited to: `214-LOG.md`
+   appends; the `IAP-APPROVED` marker rewrite (step 7); `<project>/.dcs/ACTIVE`'s
+   own update (step 8); a register **status** transition (e.g. `ACTIVE`
+   <-> `ESCALATED`) an escalation trigger performs; and the 209 sitrep an
+   escalation trigger files under `.dcs/esg/SITREPS/` — the other
+   mandatory half of the same escalation act whose register-status half
+   is already named. A **content** edit — `DELEGATION.md`'s bounds, or
+   `REGISTER.md`'s territory or title fields, or any register field other
+   than the status transition itself — remains excluded by the "none of"
+   list above exactly as already stated; the exemption reaches mandatory
+   process bookkeeping alone, never a planning-shaped content change,
+   however that change's file happens to be classified.
+
+   **Step 5a's register-territory refresh is a distinct case, not covered
+   by the bookkeeping exemption above, because its content is exactly
+   planning-shaped.** It is degenerate — nothing to do — whenever
+   condition 3 holds and no tasking is created, since the union of
+   territory globs is then unchanged by construction. An amendment that
+   *does* create a new tasking (condition 1's first bullet) changes that
+   union: the amendment either takes this path and the IC recomputes
+   `REGISTER.md`'s territory column as the same kind of mandatory
+   bookkeeping named above (a mechanical union, not new planning
+   content), or — if the IC does not — the amendment must take the full
+   path instead, so the portfolio-level territory check in `new.md` step
+   7b never reads a stale union.
+2. No change to any acceptance criterion — in `202-OBJECTIVES.md` or in
+   `IAP.md`'s own summary of it, "criterion" meaning both copies exactly
+   as condition 1's "none of" list already states.
+3. No change to any `204-TASKING/*.md`'s `territory` OR `forbidden` list
+   — in the tasking file itself, or in `IAP.md`'s own partition table
+   (the same copy every specialist actually receives, per `execute.md`'s
+   fan-out step): every specialist's editable set, and what it is barred
+   from touching, are exactly what the last full approval declared, in
+   whichever copy a reader consults.
+4. No premise change — the goal, the tactics, and the reasoning the Owner
+   already saw are still the ones on the table.
+
+**Symmetric fallback, stated plainly:** anything that fails even one of
+the four — most `replan` dispositions included, since "the plan's premise
+is wrong" (`agents/dcs-commander.md`'s own definition of that disposition)
+is condition 4 failing by definition — takes the full steps-1-9 path
+unchanged, from step 1. The boundary decides, never the disposition's
+label by itself; this is what keeps the cheap route unreachable for a
+genuine re-plan.
+
+**What steps 1-6 contribute here: most of it, skipped.** Steps 1-3 do not
+run — there is no new incident-state check to redo, no 202 redraft, and
+no chief to re-spawn; nothing about the amendment needs chief-level
+judgment by construction (boundary conditions 2 and 4). Step 4's command
+point 2 does not run either: 6c is ratified by the entry named under
+Entry above, not a fresh `command: iap_review` — see step 7's bounded
+exception below. **All of lint 4a still runs, unconditionally — no check
+is skipped and none is waived.** (Illustrative, not authoritative, as of
+this writing: checks 1 self-contradiction, 2 orphaned deliverables, 3/3a
+unassigned occurrences and enumeration-shaped sweeps, 3b measured claims,
+4 territory disjointness, 5 evidence executability, 6 criterion coverage,
+7 criterion satisfiability, 8 territory inside the project — step 4a
+above is the operative list; a check added there runs here too without
+this parenthetical needing an edit.) Checks 1, 4, and 8 in
+particular run over the **complete post-amendment `204-TASKING/*.md`
+set** — every tasking file as it would stand once the amendment is
+applied, including any tasking file the amendment itself creates — never
+only the file(s) condition 1 names as touched, so a new territory/
+forbidden pair is checked against every sibling that already exists
+rather than assumed safe by construction. Every check runs scoped to
+whatever the amended tasking(s), `IAP.md`, or `203-ORG.md` edit actually
+contains: an amendment can still orphan a deliverable, add an
+unenumerated sweep, cite a command that doesn't run, contradict itself,
+overlap a sibling's territory, or carry a glob that escapes the project —
+every one of those is caught by an actual check run now, none of it
+waived by a boundary condition. This costs 0 additional agent spawns and
+0 additional Owner round-trips under criterion 1's own ceremony
+accounting: the session runs lint itself, inline, exactly the way step 4a
+always has for a full pass — it is not a new spawn and not a new
+round-trip, so running the full set here is free under the very metric
+that motivated skipping part of it before.
+
+**Ceremony, as a count, not an impression:** a full `plan.md` steps-1-9
+pass costs ≥2 agent spawns (the chief at step 3, `dcs-commander` at
+command point 2) + up to 2 Owner round-trips (the 202 confirm at step 2,
+the approval at step 6b). Step 6c costs 0 agent spawns + at most 1 Owner
+round-trip — reusing step 6's own Delegation check, but **scoped to the
+amendment's own delta, never the whole plan**: `forbidden_globs` against
+the amendment's own declared `territory`/`forbidden` globs (not the
+files the amendment happens to edit — an amendment's own edits are
+always `.dcs/**` paths, which no `forbidden_globs` entry matches by
+construction, so the glob check's real object is the *territory it
+grants*, same as a full-plan pass), `forbidden_topics` against only the
+amendment's own new/changed text — never the unchanged `201-BRIEF.md` /
+`202-OBJECTIVES.md` body. This scoping is sound, not a weaker check:
+boundary conditions 2, 3, and 4 already guarantee that body is unchanged
+from what the last full approval already screened in full and the Owner
+already saw, so re-screening it again finds nothing a first screening
+didn't — noise, not a second safety check. 0 where it auto-approves the
+amendment, 1 (a lightweight approve/reject) otherwise, never more, since
+nothing here needs fresh chief-level judgment. (This count is 6c's own
+Delegation-check contact only — an escalation-trigger round-trip under
+doctrine principle 13, e.g. trigger (c)'s mandatory attempt-threshold
+review, is a separate, additional Owner contact that no path removes,
+and the field-measurement savings below never claim otherwise.)
+
+**Failed-bound inheritance.** `max_files`, `max_specialists`,
+`forbidden_globs`, and `require_tests_green` are none of them re-derived
+in full by the delta-scoped re-check above (`forbidden_globs` only
+against the amendment's own touched file(s), the other three not
+re-checked here at all) — so if any of the four failed at the last full
+approval, that failure cannot be turned into a pass by a check that never
+looks broadly enough to find it again: the amendment **inherits** it and
+takes the lightweight approve/reject path above (at most 1 Owner
+round-trip), never a silent auto-approval. `forbidden_topics` inherits
+nothing, because it isn't in that position: boundary conditions 2, 3, and
+4 guarantee the rest of the `201-BRIEF.md` / `202-OBJECTIVES.md` body is
+identical to what the last full approval already ruled on, failed bound
+or not — so a delta-clean `forbidden_topics` result means only that the
+amendment's own new/changed text introduces no **new** forbidden topic,
+not that the standing plan as a whole trips none. That is the residual
+this inheritance clause deliberately accepts: the delta screen answers a
+narrower question than the original full-plan screen did, and conditions
+2/3/4 are exactly what makes the narrower answer sufficient here — the
+broader question was already answered, by the last full approval, over
+text this amendment cannot have changed.
+
+**New-partition-line clamp.** An amendment whose touched set includes any
+`204-TASKING/*.md` file that did **not** exist at the `IAP-APPROVED`
+stamp currently in force never auto-approves under the delta-scoped
+Delegation screen above, regardless of what that screen finds — it always
+takes the lightweight Owner approve/reject round-trip (still within the
+"at most 1" ceremony count above), because a new territory/forbidden pair
+is planning-shaped content the Owner has never seen: the delta screen
+answering "clean" says only that this pass introduced no forbidden topic
+or forbidden-glob hit, never that the Owner has seen the new partition
+line itself. The Entry requirement that the triggering logged decision
+must *name* the file is unchanged by this clamp — naming the file
+authorizes creating it, not auto-approving its content.
+
+Then: proceed to **step 7** and **step 8** exactly as written below — 6c
+does not fork or restate their mechanics. The hash, the marker, and the
+`IAP-APPROVED:` sentinel are computed and written identically regardless
+of which path reached them, which is what keeps `marker_valid()` and the
+attempt tally accurate by construction.
+
 ## 7. On approval: stamp the marker
 
 **Pre-stamp checklist (hard stop):** before computing any hash, read
@@ -357,6 +577,15 @@ this is the exact drift transfer-of-command exists to prevent. **Stop, run
 the missed command point now** (spawn `dcs-commander` if not Fable, decide
 yourself if Fable), log it, and only then proceed. Never stamp an approval
 over an unlogged command chain.
+
+**Bounded exception, reached only via step 6c:** on an amendment, the
+`command: iap_review` entry above is satisfied by the command-point-3/4
+decision that 6c's Entry condition already cited by timestamp — not a
+fresh `command: iap_review`. Stated explicitly, because the checklist
+above would otherwise already be "satisfied" by the period's first-pass
+`command: iap_review` entry still sitting in `214-LOG.md` — that entry
+ratified the ORIGINAL plan, not this amendment, and accepting it here
+would stamp the amendment over a decision that never saw it.
 
 Compute the sha256 of the final `IAP.md`:
 
@@ -400,6 +629,18 @@ Append to `214-LOG.md`:
 For example (fictional hash):
 ```
 [2026-07-22T14:03:00+11:00] IAP-APPROVED: d6d1409c1234 -- phase: planning -> execution (period 1)
+```
+
+**On a `## 6c.` amendment, the phase does not change** — execution was
+already the phase every 6c Entry route requires, so the
+`phase: planning -> execution` clause above is false on this path. Use
+this form instead:
+```
+[<timestamp>] IAP-APPROVED: <first 12 hex chars of IAP.md's sha256> -- re-stamp, no phase transition (still execution, period <N>)
+```
+For example (fictional hash):
+```
+[2026-07-22T14:03:00+11:00] IAP-APPROVED: d6d1409c1234 -- re-stamp, no phase transition (still execution, period 1)
 ```
 
 This line is also a reset anchor for the halt-iteration count `dcs_gate.py`

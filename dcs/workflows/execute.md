@@ -157,7 +157,11 @@ remaining specialists beyond ones already safely completed on disjoint
 territory. This is a command point (doctrine: "Transfer of command"). **If
 this session is not running Fable**: spawn `dcs-commander` via Task (model
 `fable`) with the triggering specialist's full return, the current 202 and
-its 204, and the execution state; its `deviation` decision (schemas.md #6, commander decisions)
+its 204, and the execution state — for any fact a prior seat already
+established (what a specialist's own structured return already said it
+touched, what an earlier command point already decided), pass its source
+(the file path and line range, or the command that regenerates it), never
+a summary retyped from memory; its `deviation` decision (schemas.md #6, commander decisions)
 governs the disposition — `replan` / `amend_tasking` / `escalate_owner` —
 and is recorded in `214-LOG.md` (`command: deviation -> <disposition>
 (IC=dcs-commander)`). **If this session is Fable**, make the call yourself.
@@ -170,7 +174,11 @@ just a mechanical correction). This edit to the plan changes `IAP.md`'s content 
 **mechanically** voids the current approval; that's the deviation doctrine
 working as intended, not a bug to route around. Append to `214-LOG.md`:
 `deviation reported by <ID>: <one-line summary> -- returning to planning`.
-Tell the Owner to run `/dcs-plan` again.
+Tell the Owner to run `/dcs-plan` again — `amend_tasking`, `replan`, and
+`escalate_owner` may all reach the proportionate route at `plan.md` step
+6c, cited there by this entry's own timestamp; 6c's own boundary
+conditions decide whether this specific amendment actually qualifies, and
+the full steps-1-9 path runs unchanged for anything that doesn't.
 
 **Any `status: "blocked"`:** report the blocker to the Owner — this is an
 external obstacle (missing credential, environment issue), not necessarily
@@ -224,10 +232,13 @@ genuinely load-bearing, quote the specific entries rather than the
 file**), **the ORIGINAL goal from
 `201-BRIEF.md`** (v0.3.2 — so goal drift across periods is visible to a
 stateless judge: a `next_period` proposing objectives the 201 never asked
-for is accretion, not convergence), and **one ESG-state line** (v0.3.2 —
-whether `<esg_root>/.dcs/esg/` is founded and this incident's register
-row, or "no ESG founded / no register row"; principle 14's ESG-absence
-cue cannot fire on evidence the commander was never given). Its
+for is accretion, not convergence), and **one ESG-state line, sourced not
+summarized** (v0.3.2 — whether `<esg_root>/.dcs/esg/` is founded, plus
+this incident's own row quoted directly from
+`<esg_root>/.dcs/esg/REGISTER.md` rather than paraphrased from memory, or
+"no ESG founded / no register row" confirmed the same way; principle 14's
+ESG-absence cue cannot fire on evidence the commander was never given,
+and a retyped row is exactly the fact Rec 2 exists to keep sourced). Its
 `verdict_disposition` decision (schemas.md #6, commander decisions) selects the path below, and
 its `directives` supply the fix-tasking content where applicable. Record it
 in `214-LOG.md` (`command: verdict -> <disposition> (IC=dcs-commander)`).
@@ -244,7 +255,13 @@ the count: `python "<project>/.claude/hooks/dcs_gate.py" --halt-count
 way one learns the news**. Two paths, the IC's judgment which fits:
 - **Fix-taskings:** narrow refutation (e.g. one file's missed edge case)
   and the count leaves room: write focused `204-TASKING/*.md` entries,
-  spawn Ops Specialists, re-run the Safety Officer (step 8). If the next
+  spawn Ops Specialists, re-run the Safety Officer (step 8). A fix whose
+  content stays inside a `204-TASKING/*.md` file leaves `IAP.md` untouched
+  and needs no re-stamp at all; a fix that also changes `IAP.md`'s own
+  content (an IC-owned criterion, a partition-table line) does need one,
+  and that re-stamp routes through `plan.md` step 6c, citing this
+  `command: verdict -> fix_taskings` entry by timestamp, subject to 6c's
+  own boundary conditions. If the next
   iteration would hit the ceiling instead, this path is **unavailable** —
   only a fresh IAP stamp resets it (`plan.md` step 8); an Owner "continue"
   at trigger (b) below is a decision, not a reset.
@@ -300,6 +317,19 @@ resolution in `SAFETY.md`, and re-verify nothing — the officer already
 passed the criteria. **Never upgrade an advisory to a halt** to be
 thorough; the halt is the only lever that stops a merge and its value
 comes entirely from being reserved.
+
+**If any advisory's fix touches `IAP.md`'s own content** (not just a file
+inside a `204-TASKING/*.md` territory): folding it in still changes
+`IAP.md` the same way any edit does, and the marker goes stale the moment
+it's saved — the gate then denies every further non-`.dcs/**` edit,
+including the close-time memory-routing write into whatever memory store
+the project's `CLAUDE.md` documents, until re-stamped.
+Do not fix it "now" and move on as if nothing needs re-approval: route
+that specific fix through `plan.md` step 6c, citing this pass's
+already-logged `command: verdict -> close` / `-> next_period` entry by
+timestamp — 6c's cheap path re-stamps without re-running the Safety
+Officer, since nothing about the criteria was refuted. Advisories confined
+to territory files never touch the marker and need no re-stamp at all.
 
 ## Escalation-trigger check — after the Safety verdict (v0.2, doctrine principle 13)
 
