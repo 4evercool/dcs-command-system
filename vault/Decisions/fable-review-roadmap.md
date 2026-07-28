@@ -1,6 +1,6 @@
 ---
 tags: [dcs, decision, roadmap]
-updated: 2026-07-27
+updated: 2026-07-29
 ---
 
 # Decision: reform roadmap from the third-party review (2026-07-27)
@@ -35,11 +35,23 @@ triviality-bar and priority-bar are two readings of one missing bar in
 travel as one incident. Recommendation 2 also landed as mechanism, not
 prose: `criterion-unmeasured-fact` closed (merge `35c3507`; plan lint 4a
 check 3b — a criterion's claim about state outside the tree must carry
-and run its establishing command). Next per this roadmap: Phase 2a
-(`deviation-path-proportionality`, then `decomposition-backlog-routing`
-carrying the fold), then 2b, then Phase 3. Regenerate the register half
-from the rows' State cells; the registry half only from `npm view
-dcs-command-system versions`.
+and run its establishing command).
+**Phase 2 completed / superseded 2026-07-29 — the build phase of this
+roadmap is over.** 2a shipped as two incidents: `deviation-path-
+proportionality` (merge `f62938b`, v0.6.11, published) carried rec 2's
+by-reference doctrine in the same release, exactly as the "rides with
+whichever incident touches `schemas.md` first" clause predicted;
+`decomposition-backlog-routing` (merge `0ab8341`, v0.6.13) carried the
+Phase 1(c) fold — MERGED, deploy pending, registry at 0.6.12 at the time
+of this amendment. 2b will **not be built**: the ninth `/dcs-esg`
+(2026-07-28) declined the structured-register migration and recorded the
+reasoning, with reopen conditions, at
+[[sqlite-migration-register]] — see the superseded banner on
+that section below. What remains of this roadmap is Phase 3 plus two
+carrier-less residues of recs 6 and 8; the Phase 3 section now records
+where each lives. Regenerate the register half from the rows' State
+cells; the registry half only from `npm view dcs-command-system
+versions`.
 
 ## The review in one paragraph
 
@@ -90,6 +102,22 @@ repairs with no design ambiguity run outside, recorded post-hoc; design
 changes with failure modes run through the process with a Safety pass.**
 
 ## Decision: the register becomes structured data (SQLite or JSONL)
+
+> **Superseded 2026-07-29 — declined at the ninth `/dcs-esg`
+> (2026-07-28), recorded with reopen conditions at
+> [[sqlite-migration-register]].** The author of this roadmap reviewed
+> the decline against what shipped since and endorses it: three of the
+> four kill-targets below were resolved by other means (`token-economy`'s
+> pointer-not-copy content bound cut `REGISTER.md` + `STRATEGY.md`
+> 158,542 → 108,510 B in three sessions; the re-rank gap and silent-decay
+> classes have not recurred in this repo's diligently-ranked register),
+> and the decline adds a decisive argument this section missed: a binary
+> store cannot survive the `git worktree` + `--no-ff` merge model that
+> doctrine's "Parallel operation" section rests on. The one surviving
+> kill-target is **format breakage** (the eighth ESG's own
+> embedded-newline slip is a live instance in this repo); the named step
+> if that pain returns is the `delegation-bounds`-style fenced block per
+> row, not a database. The text below stands unedited as provenance.
 
 Recommendation 3 verbatim, recovered: bread_bot's `REGISTER.md` at 291
 KB / 803 lines / 58 data rows with multi-paragraph table cells, re-read
@@ -217,9 +245,17 @@ different root — flag, don't fold.
 
 Resume command: `/dcs-run --next` in a `C:\DCS` session.
 
-## Phase 2 — two decoupled incidents in `C:\DCS`
+## Phase 2 — two decoupled incidents in `C:\DCS` — 2a DONE, 2b DECLINED
 
-**2a — cheap, ships first:**
+**2a — cheap, ships first — DONE 2026-07-29:** the deviation route
+shipped as v0.6.11 (`plan.md` §6c, merge `f62938b`, published), rec 2
+riding in the same release; the decomposition threshold shipped as
+v0.6.13 (merge `0ab8341`, deploy pending at amendment time), carrying
+the `trivial-work-inline-lane` fold. Follow-on hardening the roadmap did
+not foresee is queued on its own evidence: `revision-preservation-map`
+(a narrow IAP revision proved able to silently drop an already-verified
+criterion) and `esg-intake-writeback-gap` (found by 2a's own stem).
+Original scope, for the record:
 - **Deviation route** (`deviation-path-proportionality`, was rank 5): a
   one-line tasking amendment currently costs a full re-plan because any
   edit voids the IAP hash; a one-line export crossing `max_files` cost a
@@ -233,39 +269,75 @@ Resume command: `/dcs-run --next` in a `C:\DCS` session.
 - Rec 2 (transcription by reference) rides with whichever incident
   touches `schemas.md` first.
 
-**2b — the hard one, later or with a migration:**
+**2b — the hard one, later or with a migration — DECLINED 2026-07-29,
+never opened:**
 - **Structured register** (SQLite/JSONL + generated markdown view, per
   the decision above) with converter, format-version marker, archive of
   terminal rows out of the hot file. Type 1, Owner-mandatory, arguably
-  semver major.
+  semver major. Declined at the ninth `/dcs-esg`; see the superseded
+  banner above and [[sqlite-migration-register]] for the reasoning and
+  reopen conditions.
 
-## Phase 3 — not code
+## Phase 3 — not code — ALL THAT REMAINS, as of 2026-07-29
+
+With Phases 0–2 closed out, this section plus two rec-6/rec-8 residues
+is the entire live remainder of the roadmap. Where each item stands:
 
 - **Queue-vs-objective re-alignment** — an ESG session decision in
   bread_bot by construction; no fixer, inside or outside, can make it
   for the Owner. Either the money rows move up or the objective changes.
+  *Still open, unexpirable — raise at the next bread_bot `/dcs-esg`.*
 - **Telemetry table** (rec 8) — can be a field repair once the
   halt-grammar row is fixed; one generated table per incident
   (wall-clock, spawns, halts, code LOC vs paper LOC) would have made
-  every observation in this review visible weeks earlier.
+  every observation in this review visible weeks earlier. *Still
+  double-gated: `halt-enumeration-grammar-drift` sits QUEUED at rank 14
+  (ninth-ESG ranking) and nothing carries the table itself.*
 - **`dcs doctor`-style upgrade check** — installed package version vs.
   project hook version vs. config keys present. Named in the review as
   probably the highest-value small feature npm distribution creates: the
   Phase 0 phantom-ceiling fix will recur in every external user's
   project on every hook-touching release (channels 2 and 3 never
   propagate). Register row `doctor-version-only-check` suggests part
-  exists and is known to be shallow.
+  exists and is known to be shallow. *Carried: that row is QUEUED at
+  rank 9 (ninth-ESG ranking) — the highest-ranked roadmap remainder.*
+- **Provisioning-script upstreaming** (rec 6 residue, added at this
+  amendment because it had silently lost its carrier): Phase 0 item 2
+  shipped bread_bot-local with its register row marked "LOCAL —
+  candidate for upstreaming," and no row, backlog item, or decision
+  anywhere carries the upstreaming question. The tenth `/dcs-esg` owes
+  it a disposition — queue, backlog line, or recorded decline. Under the
+  priority bar 2a just shipped, "backlog line" is a legitimate outcome;
+  silent drift is not. *Discharged 2026-07-29: the tenth `/dcs-esg`
+  queued it as register row `provisioning-script-upstreaming` (rank 10),
+  the Owner choosing queue over the Chief of Staff's below-the-bar
+  backlog-line recommendation.*
 
 ## Reopen / amendment conditions
 
-- If Phase 1's incident refutes the field-repair design at Safety, the
-  phase split itself stands — only the mechanism re-plans.
-- If external npm users materialize before Phase 2b, the migration
+- ~~If Phase 1's incident refutes the field-repair design at Safety, the
+  phase split itself stands — only the mechanism re-plans.~~ *Spent:
+  Phase 1 closed with the design intact.*
+- ~~If external npm users materialize before Phase 2b, the migration
   requirements harden from "arguably major" to "major, with a tested
-  converter."
+  converter."~~ *Superseded: 2b was declined; its reopen conditions now
+  live in [[sqlite-migration-register]] (a measured retrieval-cost
+  bottleneck, or a change to the worktree/merge model).*
 - Phase 3's ESG item does not expire: STRATEGY.md records the
   queue-vs-objective tension as "open, not raised for reconsideration" —
   this file exists so it *is* raised.
+
+## Amendment log
+
+- **2026-07-29 (Fable, main session):** recorded Phase 2 completion
+  (2a shipped v0.6.11 + v0.6.13) and the 2b decline; added the
+  superseded banner on the structured-register section; rewrote Phase 3
+  as the live remainder with per-item carriers, adding the rec-6
+  upstreaming residue that had no carrier anywhere; struck the two spent
+  reopen conditions. No original prose deleted — annotations only.
+- **2026-07-29 (tenth `/dcs-esg`, same day):** the rec-6 residue's owed
+  disposition delivered — queued as register row
+  `provisioning-script-upstreaming` (rank 10) by Owner decision.
 
 ## Links
 
@@ -273,4 +345,6 @@ Resume command: `/dcs-run --next` in a `C:\DCS` session.
   this review and are absorbed by Phases 1–2
 - [[Decisions/cross-project-register-view]] — earlier register-shape
   decision this roadmap does not disturb
+- [[sqlite-migration-register]] — the 2026-07-28 decline that superseded
+  Phase 2b, with its own reopen conditions
 - [[Metrics/incident-metrics]] — where rec 8's table belongs when built

@@ -1,6 +1,6 @@
 ---
 tags: [dcs, backlog]
-updated: 2026-07-27
+updated: 2026-07-29
 ---
 
 # Backlog
@@ -1061,6 +1061,50 @@ whether a reset or compaction happened since a named point. DCS cannot
 observe that today. Until then this is a known, evidenced gap, not a
 missing effort. **Not queued** — no register row; nothing here is
 actionable with tools available.
+
+## 25. The ESG Chief-of-Staff seat has no model guidance — the one judgment-dense seat with no Safety pass behind it
+
+**Raised by the Owner, 2026-07-29**, asking which model to run `/dcs-esg`
+on and noting nothing pins one. Confirmed: doctrine's model rule covers
+the **IC seat only** ("command judgment belongs to Fable"; `new.md`,
+`plan.md`, `execute.md` all spawn `dcs-commander` with `model: fable`
+when the session isn't Fable), while `esg.md` has no model clause at all
+and `dcs/templates/STRATEGY.md` says the opposite out loud: "Chief of
+Staff: main session (**any model**)". Regenerate:
+`grep -in "model" dcs/workflows/esg.md` (zero hits);
+`grep -n "any model" dcs/templates/STRATEGY.md`.
+
+**Why "any model" undersells the seat.** The implicit theory — ESG
+decisions belong to the Owner, so the model doesn't matter — ignores
+that the Chief of Staff authors the analysis the Owner's decisions rest
+on: pairwise territory-collision derivation, fold-vs-sequence arguments
+(the `trivial-work-inline-lane` merge case), re-measuring deploy
+witnesses rather than trusting them, drafting decline cases
+([[Decisions/sqlite-migration-register]]). And unlike execution, **ESG
+has no Safety Officer** — nothing adversarially verifies the CoS's
+claims before they land in `REGISTER.md` and `STRATEGY.md`. At ESG the
+model *is* the quality floor. Every sweep to date (sessions one through
+nine) ran with Fable in the main session, so the current register
+quality is evidence for that configuration, not for "any model."
+
+### Candidate fix
+
+A one-line advisory in `esg.md` step 1 — "the Chief of Staff seat
+should run the strongest available model (Fable; Opus as fallback):
+ESG has no Safety pass, so the CoS's analysis is unverified" — plus
+correcting `STRATEGY.md`'s "any model" parenthetical to match. Both
+files are guarded territory, so the edit needs a lifecycle, but it is
+Type 5-sized.
+
+**Deliberately a backlog line, not a register row** — the first live
+application of the priority bar `decomposition-backlog-routing` just
+shipped: real, evidenced, and below the bar. Fold into whichever
+incident next touches `esg.md`; `esg-intake-writeback-gap` (QUEUED,
+unranked) owns exactly that file and is the natural carrier.
+
+> **Confirmed at the tenth `/dcs-esg`, 2026-07-29:** stays a backlog
+> line; the carrier `esg-intake-writeback-gap` entered the ranks at 5,
+> and its register row now records this fold explicitly.
 
 ## Follow-up registered at `token-economy`'s close, 2026-07-28
 

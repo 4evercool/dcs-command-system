@@ -1,6 +1,6 @@
 ---
 tags: [dcs, decision]
-updated: 2026-07-28
+updated: 2026-07-29
 ---
 
 # Decision: stop reporting `C:\DCS-wt\schema-citation-guard`
@@ -9,6 +9,41 @@ updated: 2026-07-28
 **Status:** REOPENED 2026-07-28, ninth `/dcs-esg` session — see update below
 **Reopen if:** the directory acquires contents, or a *second* husk appears (one
 is an accident; two is a pattern in how worktrees are removed)
+
+## Update, 2026-07-29 (tenth `/dcs-esg`): a candidate lock-holder identified, kept alive as evidence
+
+**The transient-hold hypothesis is falsified.** A full day after the ninth
+session's failed attempt, removal of `C:\DCS-wt\token-economy` failed again
+from a session rooted in `C:\DCS` — twice, via two different API paths:
+`rmdir` (*Device or resource busy*) and PowerShell `Remove-Item -Force`
+(*being used by another process*). The directory is now completely empty
+(zero entries — even the `.dcs/CLOSED` marker the ninth session saw is
+gone), and git still holds no metadata for it. So "defer removal and a
+delay clears the hold" — one of the candidate fix directions in the
+register row — does not hold at the one-day scale.
+
+**A candidate holder was found, and the timestamps match to the minute.**
+`Get-Process` shows ~30 lingering `claude` processes started 2026-07-27
+through 2026-07-28 — orphaned Claude Code sessions that never exited.
+One of them, **PID 40876, started 2026-07-28 17:37:39** — and the husk
+directory's mtime is **2026-07-28 17:37**, the minute `token-economy`'s
+close ran. Working hypothesis, sharper than anything prior: the holder is
+the **closing session's own still-running process**, whose cwd (or an
+inherited child's cwd) remains inside the worktree; the session *ended*
+but the process never died, so its handle outlives the session, git, and
+every later removal attempt. This also retro-explains the
+`schema-citation-guard` history: six failures while its holder process
+lived, then a clean first-try `rmdir` at the ninth session — presumably
+after that process finally exited. Regenerate the process list:
+`Get-Process -Name claude | Select-Object Id, StartTime`.
+
+**Owner decision at the tenth session: keep the specimen.** PID 40876 and
+the husk are deliberately left in place as a *live instance* of the
+mechanism for `worktree-removal-self-conflict`'s stem (rank 2) — killing
+the process would likely free the directory but would destroy the one
+reproducible case the incident has. The stem should verify the
+hypothesis against the live pair (e.g. confirm the process's cwd, kill
+it, retry removal) before designing any workflow-level fix.
 
 ## Update, 2026-07-28 (ninth `/dcs-esg`): the reopen trigger fired, and one husk is gone
 
