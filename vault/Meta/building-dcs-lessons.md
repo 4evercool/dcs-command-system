@@ -1,6 +1,6 @@
 ---
 tags: [dcs, meta, lessons]
-updated: 2026-07-27
+updated: 2026-07-28
 ---
 
 # Meta: lessons about building DCS
@@ -958,6 +958,60 @@ immediately before it is acted on, not merely at sweep time. The session
 that hit this treated it correctly: withdrawn from its own agenda rather
 than quietly corrected and moved past, so the pattern is visible to the
 next reader instead of erased.
+
+## 24. A budget that only prose enforces gets overrun by the very mechanism meant to hold it
+
+*From `workflow-budget-enforcement`, 2026-07-28.*
+
+`CLAUDE.md` stated a ~250-line workflow-file budget from early in this
+project's self-hosted life. Nothing measured it. The gap survived **two
+`/dcs-esg` declines** (5th and 6th sessions, 2026-07-27 — sharper
+evidence each time, still not queued), then cost two ad hoc IC rulings
+in one incident (`deploy-marker-blind`: a 265-line ceiling, then a
+pre-authorised band to 275) — and the file **still drifted past that
+ruling** to 282 in the very next commit that touched it, because the
+ruling was prose too, just prose with a number in it. Only a mechanical
+check stopped the drift; the third and fourth ad hoc measurements
+(`criterion-unmeasured-fact`'s Safety advisory, this incident's own
+stem) were the same lesson landing a third and fourth time before it
+was acted on. Directly confirms Meta 1 ("prose fails; mechanisms
+hold") against a rule this project wrote about *itself* and still did
+not mechanize for two ESG cycles.
+
+**Two design choices worth carrying forward, both counter-intuitive on
+first look:**
+
+- **Zero headroom, not slack, when grandfathering existing debt.** The
+  instinct when a check would otherwise redden four already-over-budget
+  files is to grant a little room to breathe. That instinct is exactly
+  what produced the defect this incident fixes — `deploy.md`'s ceiling
+  drifted 265 → 275 → 282 through two successive small grants, each one
+  individually reasonable. Pinning the grandfather ceiling at each
+  file's *exact* current size, with the comment stating it is debt (not
+  a new normal), removes the slack that a future well-intentioned "just
+  a little more" would otherwise consume.
+- **A check that has only ever been seen green is not yet trusted.** The
+  Planning Chief mandated two demonstrated red-path failures in the
+  implementing tasking (not merely "the check exists and passes") before
+  the Safety Officer would treat criterion 1 as met — and the Officer
+  went further, independently reddening the check **eight ways**,
+  including two nobody had asked for (a *compliant* file crossing 250; a
+  grandfathered file growing by exactly one line). This project's own
+  suite had already paid for the alternative twice — a Rule B removed at
+  a halt for over-claiming coverage it couldn't deliver, a comparator
+  built only after someone thought to forge a mapping past it. Green
+  proves the code runs; only an engineered red proves the comparator
+  points the right way.
+
+**A secondary, process-level finding:** the Logistics Chief's plan
+named a deliverable (an atomic version bump, since the new check ships
+inside `tests/`, which npm's `files` whitelist includes) that mapped to
+no tasking — both existing ones explicitly forbade the files it
+touched. Caught at the mechanical tasking-lint pass (`plan.md` 4a check
+2, orphaned deliverables) before it reached command point 2, not
+discovered mid-execution. The lint step existed for exactly this shape
+of gap and worked on the first incident to produce one since it was
+written down.
 
 ## Links
 

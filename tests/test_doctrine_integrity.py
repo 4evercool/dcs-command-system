@@ -76,6 +76,18 @@ away:
       imported -- importing this module runs its own checks), must stay
       textually identical to this module's own, so the two never quietly
       diverge on what "the package" means
+  17. workflow line-count budget: every dcs/workflows/*.md file (from
+      workflows(), never a second enumerator) stays within its effective
+      ceiling -- WORKFLOW_BUDGET_LINES (250) for a compliant file, or its
+      WORKFLOW_GRANDFATHERED_LINES entry for one of the files already over
+      budget when this check was introduced, each value pinned to a
+      comment recording it as documented, temporary debt rather than a
+      silent permanent exception. The same check also catches the
+      grandfather table itself going stale: an entry naming a file that no
+      longer exists, or an entry whose file has since shrunk back to (or
+      under) the 250-line policy ceiling -- debt nobody discharged by
+      deleting the entry -- and it does not pass vacuously if
+      dcs/workflows/ is ever empty
 
 Run standalone, or as the merge-time guard named in CLAUDE.md (doctrine:
 close.md step 1a) so it runs before every incident merge.
@@ -1222,6 +1234,94 @@ if _PAYLOAD_CHECK_PATH.is_file():
 else:
     check("shared constants: tests/payload_check.py exists", False,
           f"not found at {_PAYLOAD_CHECK_PATH}")
+
+# --- 17. workflow line-count budget -----------------------------------------
+# A dcs/workflows/*.md file exceeding its allowed line count is now caught
+# mechanically at merge time, every time. Six of the ten files hold the
+# plain policy ceiling; the four already over budget when this check was
+# introduced get a named, dated, finite exemption instead of silently
+# blocking every merge -- each one below is documented, temporary debt,
+# not a bespoke permanent ceiling for that file. This check also fails the
+# moment an exemption goes stale: its file no longer exists, or its file
+# has shrunk back into policy and nobody deleted the entry.
+WORKFLOW_BUDGET_LINES = 250
+
+WORKFLOW_GRANDFATHERED_LINES = {
+    # 273 lines measured at incident workflow-budget-enforcement
+    # (2026-07-28), 23 over the 250-line policy ceiling. Documented,
+    # temporary debt pending a follow-up trim -- not a bespoke permanent
+    # ceiling for this file.
+    'close.md': 273,
+    # 282 lines measured at incident workflow-budget-enforcement
+    # (2026-07-28), 32 over the 250-line policy ceiling. Documented,
+    # temporary debt pending a follow-up trim.
+    'deploy.md': 282,
+    # 424 lines measured at incident workflow-budget-enforcement
+    # (2026-07-28), 174 over the 250-line policy ceiling. Documented,
+    # temporary debt pending a follow-up trim.
+    'execute.md': 424,
+    # 666 lines measured at incident workflow-budget-enforcement
+    # (2026-07-28), 416 over the 250-line policy ceiling -- and NOT a
+    # settled state being formalised: plan.md was 422 lines as recently as
+    # commit 623582f (2026-07-28), then reached 666 via e285108 and
+    # 807edb8 the same day. This entry records a same-day 244-line growth
+    # as accepted debt, pending a follow-up trim.
+    'plan.md': 666,
+}
+
+
+def _workflow_line_count(path):
+    """Line count, not newline count: read_bytes(), collapse CRLF -> LF,
+    then collapse any surviving lone CR -> LF (old Mac-style, or a stray
+    mid-file CR), count LF occurrences, and add 1 if the result is
+    non-empty and does not end in LF. This deliberately diverges from
+    `wc -l`, which counts NEWLINES, not lines -- a file with content after
+    its last LF (no trailing newline) has one more line than it has
+    newlines, and `wc -l` under-counts it by exactly one there."""
+    _raw = path.read_bytes().replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    _n = _raw.count(b"\n")
+    if _raw and not _raw.endswith(b"\n"):
+        _n += 1
+    return _n
+
+
+_wb_files = workflows()
+_wb_counts = {_p.name: _workflow_line_count(_p) for _p in _wb_files}
+_wb_offenders = []
+
+# (i) every file within its effective ceiling: the grandfather value if it
+# has one, else the plain policy constant.
+for _wb_name, _wb_count in _wb_counts.items():
+    _wb_ceiling = WORKFLOW_GRANDFATHERED_LINES.get(_wb_name, WORKFLOW_BUDGET_LINES)
+    if _wb_count > _wb_ceiling:
+        _wb_offenders.append(f"{_wb_name}: {_wb_count} lines > ceiling {_wb_ceiling}")
+
+# (ii) no grandfather entry names a file that no longer exists.
+for _wb_name in WORKFLOW_GRANDFATHERED_LINES:
+    if _wb_name not in _wb_counts:
+        _wb_offenders.append(f"{_wb_name}: grandfathered but no longer exists in dcs/workflows/")
+
+# (iii) no grandfather entry has gone slack -- its file back at or under
+# the plain policy ceiling means the debt is discharged, and the entry
+# left in place would just silently accumulate as dead exemption.
+for _wb_name, _wb_ceiling in WORKFLOW_GRANDFATHERED_LINES.items():
+    _wb_count = _wb_counts.get(_wb_name)
+    if _wb_count is not None and _wb_count <= WORKFLOW_BUDGET_LINES:
+        _wb_offenders.append(
+            f"{_wb_name}: grandfathered at {_wb_ceiling} lines but now "
+            f"{_wb_count}, at or under the {WORKFLOW_BUDGET_LINES}-line "
+            "ceiling -- debt discharged, delete the entry")
+
+# (iv) the population itself must be non-empty, or (i)-(iii) pass vacuously.
+if not _wb_files:
+    _wb_offenders.append("dcs/workflows/*.md population is empty")
+
+check("workflow budget: every workflow is within its effective ceiling, "
+      "every grandfather entry names a file that still exists, no "
+      "grandfather entry has gone slack (fallen to or under "
+      f"{WORKFLOW_BUDGET_LINES} lines), and the workflow population is "
+      "non-empty",
+      not _wb_offenders, "; ".join(_wb_offenders))
 
 print(f"\n{checks - len(failures)}/{checks} passed")
 sys.exit(1 if failures else 0)
