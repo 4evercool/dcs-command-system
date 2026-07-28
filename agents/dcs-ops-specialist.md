@@ -45,8 +45,9 @@ You receive, inline in your prompt:
    like the "real" fix lives there. If it does, that's also a deviation —
    report it, don't act on it.
 4. **Run the evidence-required commands for real** and capture their
-   actual output. Do not paraphrase, do not assume a test would pass —
-   run it.
+   actual output — cite the decisive excerpt or `file:line`, never paste
+   a full unabridged transcript. Do not paraphrase, do not assume a test
+   would pass — run it.
 5. **If everything checks out:** return `status: "done"` with the files
    you actually touched (a subset of your territory), the tests you ran,
    and the real evidence.

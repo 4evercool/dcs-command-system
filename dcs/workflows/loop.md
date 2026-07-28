@@ -99,7 +99,9 @@ bounds.**
    explicitly: the Owner is being asked to convene `/dcs-esg`, not just
    answer a prompt.
 2. Confirm the pause state is genuinely on disk (the incident directory,
-   `.dcs/ACTIVE`'s phase, `214-LOG.md`) — the underlying workflows are
+   `.dcs/ACTIVE`'s phase, and `214-LOG.md`'s recent entries — `tail -n 20
+   "<incident_dir>/214-LOG.md"`, or a targeted `grep` for the entry this
+   pause just wrote, never the whole file) — the underlying workflows are
    already paper-based (doctrine principle 5), so this is a check, not
    extra writing: don't end the turn on an assumption.
 3. **End the loop turn.** Do not proceed to the next register item while

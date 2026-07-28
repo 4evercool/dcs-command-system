@@ -45,7 +45,7 @@ Returned by `dcs-planning-chief` (and, for deploy/env/migration concerns only, `
 | `task` | string | Specific, references a 202 acceptance criterion by number |
 | `territory` | string[] | Glob(s) this specialist may edit — disjoint from every other tasking's territory unless staged sequentially |
 | `forbidden` | string[] | Explicit "do not touch" globs — usually the other specialists' territories |
-| `evidence_required` | string[] | Concrete command(s) whose real output the specialist must include in its return |
+| `evidence_required` | string[] | Concrete command(s) whose real output the specialist must include in its return; cite the decisive excerpt or `file:line`, never paste a full unabridged transcript |
 
 ## 3. Logistics-chief plan (Type 1 only — feeds IAP.md's deploy section)
 
@@ -72,7 +72,7 @@ Deviation shape (`status: "deviation"`), which needs the nested `deviation` obje
 | `status` | `"done"` \| `"blocked"` \| `"deviation"` | `blocked` = external obstacle (missing credential, flaky env); `deviation` = the plan itself doesn't fit reality |
 | `files_touched` | string[] | Must be a subset of the tasking's `territory` — anything outside is a violation, not evidence |
 | `tests_run` | string[] | Commands actually executed, not commands that should be run |
-| `evidence` | string | Real output, not a paraphrase — the Safety Officer will refuse to trust and check again anyway |
+| `evidence` | string | Real output, not a paraphrase — the Safety Officer will refuse to trust and check again anyway; cite the decisive excerpt or `file:line`, never paste a full unabridged transcript |
 | `deviation` | object \| null | Present only when `status: "deviation"`; keys `found` / `why_plan_wrong` / `proposal`. `proposal` is a recommendation, not an action — the specialist never improvises the fix itself |
 
 ## 5. Safety-officer verdict (feeds SAFETY.md)
@@ -99,7 +99,7 @@ Halt shape, showing the `refutations` object:
 | `verdict` | `"pass"` \| `"halt"` | Binding on the IC — a `halt` cannot be argued past, only resolved (fix-tasking or re-plan) |
 | `refutations` | object[] | Empty on `pass`. Each has `claim` (what was asserted) and `evidence` (what the Safety Officer independently found). **Reserved for the acceptance criteria and the behaviour of the code** — the only findings that justify stopping a merge |
 | `advisories` (v0.6.5) | object[], optional | Artifact-hygiene findings that do **not** block: `finding` + `fix`. Principle-15 issues in docstrings, comments, logs and AARs live here unless they clear one of the three bars in `agents/dcs-safety-officer.md` step 6. The IC folds them into the integration commit |
-| `checked` | string[] | Everything the Safety Officer actually did — diff inspected, tests re-run itself, manual repro. Specialist self-reports are never listed here as the check itself, only as the claim being checked |
+| `checked` | string[] | Everything the Safety Officer actually did — diff inspected, tests re-run itself, manual repro. Specialist self-reports are never listed here as the check itself, only as the claim being checked. Same for `refutations`/`advisories`: cite the decisive excerpt or `file:line`, never paste a full unabridged transcript |
 
 **Charter reminder:** the Safety Officer's job is to *attempt to refute* completion. When uncertain, it refutes — a `pass` is earned by failing to find a hole, not by finding no obvious one.
 

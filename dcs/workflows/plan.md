@@ -35,17 +35,18 @@ through this step for this incident, else increment from the last period
 recorded in `214-LOG.md`.
 
 **Command-chain check (entry gate — do this before drafting anything):**
-read `214-LOG.md` and confirm a `command: typed` entry exists (command
-point 1). If it is missing, the Dispatcher in `/dcs-new` typed the
-incident itself — a doctrine violation observed repeatedly in the field
-(three times on day one, always by the weakest-model dispatcher, always
-in its own voice: "this is clearly a Type N"). Repair NOW, before any
-202 work: run command point 1 properly (spawn `dcs-commander` with the
-201 text if this session is not Fable; decide yourself if it is), log
-the decision, and if the commander's type differs from what the 201
-recorded, correct the 201 and re-confirm with the Owner. Do not carry an
-unratified typing decision into planning — the whole activation level
-(chiefs, ceremony, approval requirements) hangs off it.
+confirm a `command: typed` entry exists (command point 1) via
+`grep -n "command: typed" <incident_dir>/214-LOG.md`. If it returns
+nothing, the Dispatcher in `/dcs-new` typed the incident itself — a
+doctrine violation observed repeatedly in the field (three times on day
+one, always by the weakest-model dispatcher, always in its own voice:
+"this is clearly a Type N"). Repair NOW, before any 202 work: run
+command point 1 properly (spawn `dcs-commander` with the 201 text if
+this session is not Fable; decide yourself if it is), log the decision,
+and if the commander's type differs from what the 201 recorded, correct
+the 201 and re-confirm with the Owner. Do not carry an unratified typing
+decision into planning — the whole activation level (chiefs, ceremony,
+approval requirements) hangs off it.
 
 ## 2. Draft 202-OBJECTIVES.md
 
@@ -569,14 +570,16 @@ attempt tally accurate by construction.
 
 ## 7. On approval: stamp the marker
 
-**Pre-stamp checklist (hard stop):** before computing any hash, read
-`214-LOG.md` and confirm it contains a `command: typed` entry (command
-point 1, from `/dcs-new`) and a `command: iap_review` entry (command point
-2, step 4 above). If either is missing, the command points were skipped —
-this is the exact drift transfer-of-command exists to prevent. **Stop, run
-the missed command point now** (spawn `dcs-commander` if not Fable, decide
-yourself if Fable), log it, and only then proceed. Never stamp an approval
-over an unlogged command chain.
+**Pre-stamp checklist (hard stop):** before computing any hash, confirm
+`214-LOG.md` contains a `command: typed` entry (command point 1, from
+`/dcs-new`) and a `command: iap_review` entry (command point 2, step 4
+above) via `grep -n "command: typed" <incident_dir>/214-LOG.md` and
+`grep -n "command: iap_review" <incident_dir>/214-LOG.md`. If either
+returns nothing, the command points were skipped — this is the exact
+drift transfer-of-command exists to prevent. **Stop, run the missed
+command point now** (spawn `dcs-commander` if not Fable, decide yourself
+if Fable), log it, and only then proceed. Never stamp an approval over an
+unlogged command chain.
 
 **Bounded exception, reached only via step 6c:** on an amendment, the
 `command: iap_review` entry above is satisfied by the command-point-3/4

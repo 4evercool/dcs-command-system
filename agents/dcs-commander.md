@@ -60,7 +60,9 @@ specific fix, the full steps-1-9 path otherwise), or
 `"escalate_owner"` (genuine scope change — frame the exact question).
 
 **4. `verdict_disposition`** — inputs: the Safety Officer's verdict
-(verbatim), 202 acceptance criteria, period history from 214-LOG.md.
+(verbatim), 202 acceptance criteria, period history from `214-LOG.md`
+(entries for the CURRENT period plus the last ~20 lines, never the whole
+file).
 On `halt`: choose `"fix_taskings"` (refutation is narrow — supply the
 fix-tasking directives; a re-stamp this cycle needs — because a fix
 touched `IAP.md`'s own content, not just a `204-TASKING/*.md` file —

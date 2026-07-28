@@ -245,9 +245,16 @@ step 6, by the same shape step 4 already sorted it into:
 ## 8. Update rows and delete shipped branches
 
 For every `MERGED` row confirmed shipped in step 7: move it to
-`DEPLOYED` in `REGISTER.md`, then `git branch -D dcs/<slug>` — the branch
-was kept exactly until this point as the rollback reference (`close.md`
-step 5a.4); once step 7 confirms it shipped, it has no further job to do.
+`DEPLOYED` in `REGISTER.md`. Territory, Outcome, and Intake source stay
+collapsed to the ONE LINE each `close.md` step 5a.3 already wrote per
+`REGISTER.md`'s two-state rule — this step never restates them. If any
+of the three somehow reached `MERGED` uncollapsed (a row older than this
+rule), collapse it now instead: Territory to a pointer at `IAP.md`'s
+partition table, Outcome to a pointer at `AAR.md`'s Outcome section,
+Intake source to a pointer at the original intake citation. Then
+`git branch -D dcs/<slug>` — the branch was kept exactly until this
+point as the rollback reference (`close.md` step 5a.4); once step 7
+confirms it shipped, it has no further job to do.
 
 **Intake-closure linkage:** `close.md` step 5's intake-source-closure
 rule (flag for the Owner, or delegate to a project-documented routine

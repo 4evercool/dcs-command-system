@@ -108,10 +108,61 @@ a write, not to serialize normal usage.
      alone needs: verify the commit reference first (`git show <sha>
      --stat`) before the row is written. -->
 
+<!-- TERRITORY / OUTCOME / INTAKE SOURCE -- two-state column shape: each
+     of these three columns has exactly two allowed shapes, selected by
+     the row's own State, never a mix within one row.
+
+     While State is QUEUED or ACTIVE: Territory is a BARE GLOB LIST --
+     glob(s) only, no rationale prose -- because `new.md` step 7b scans
+     this column across every ACTIVE row to test for a territory
+     conflict; prose there is invisible to that scan, and unscannable to
+     a human skimming the column too. Outcome stays the template's own
+     em-dash (nothing to report yet); Intake source is whatever free text
+     names where the incident came from.
+
+     The moment a row transitions to ANY terminal state (MERGED /
+     DEPLOYED / PARKED / KILLED / RESOLVED): Territory, Outcome, and
+     Intake source EACH collapse to ONE LINE pointing into the incident's
+     own authoritative record, instead of restating it in the row --
+       Territory     -> a pointer at IAP.md's partition table (e.g. "see
+                         IAP.md partition table") -- the union this row
+                         carried while ACTIVE is already exact there. A
+                         row that reaches a terminal state before any
+                         IAP.md ever existed (QUEUED, parked or killed
+                         pre-plan) keeps its existing glob list instead --
+                         there is nothing yet to point at.
+       Outcome        -> a pointer at AAR.md's Outcome section (e.g. "see
+                         AAR.md Outcome"), for any state that wrote one. A
+                         state with no AAR (PARKED, KILLED, a field
+                         repair) keeps a one-line free-text outcome
+                         instead.
+       Intake source  -> a pointer at the original intake citation (e.g.
+                         "see 201-BRIEF.md Intake source"), never a
+                         restatement of the citation's own contents.
+     The cap is a NUMBER, not an adjective -- ONE LINE each, full stop, no
+     wrapped continuation. The collapse is part of the write that moves a
+     row into its terminal state (see `close.md` step 5a.3, `deploy.md`'s
+     MERGED -> DEPLOYED step, and `esg.md` step 4's park/kill handling) --
+     never a separate pass over rows already terminal. -->
 
 | ID | Title | Type | Priority | State | Worktree | Branch | Territory | Intake source | Opened | Closed | Outcome |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| {{slug}} | {{one-line title}} | {{5\|3\|1\|?}} | {{H\|M\|L or rank}} | {{QUEUED\|ACTIVE\|MERGED\|DEPLOYED\|PARKED\|KILLED\|RESOLVED}} | {{`<repo>-wt\<slug>` path, or "—" once removed, or "—" if never opened}} | {{`dcs/<slug>`, or "—" if never opened (Type 5 has none)}} | {{glob(s) -- 201 blast radius initially, refined to the IAP partition's union after /dcs-plan}} | {{Owner chat / audit_results id / vault tech-debt / ...}} | {{date, or "—" while still QUEUED}} | {{date the row left ACTIVE (merged/parked/killed) or was resolved, or "—"}} | {{one-line outcome, or "—" until MERGED/DEPLOYED/RESOLVED}} |
+| {{slug}} | {{one-line title}} | {{5\|3\|1\|?}} | {{H\|M\|L or rank}} | {{QUEUED\|ACTIVE\|MERGED\|DEPLOYED\|PARKED\|KILLED\|RESOLVED}} | {{`<repo>-wt\<slug>` path, or "—" once removed, or "—" if never opened}} | {{`dcs/<slug>`, or "—" if never opened (Type 5 has none)}} | {{QUEUED/ACTIVE: glob(s) -- 201 blast radius initially, refined to the IAP partition's union after /dcs-plan. Terminal: ONE LINE pointing at IAP.md's partition table}} | {{QUEUED/ACTIVE: Owner chat / audit_results id / vault tech-debt / ... . Terminal: ONE LINE pointing at the original intake citation}} | {{date, or "—" while still QUEUED}} | {{date the row left ACTIVE (merged/parked/killed) or was resolved, or "—"}} | {{"—" until terminal. Terminal: ONE LINE pointing at AAR.md's Outcome section, or a one-line free-text outcome where no AAR exists}} |
+
+## Example (illustrative -- neutral fiction, not a live row)
+
+The same incident, two moments apart, showing both Territory shapes side
+by side:
+
+| ID | Title | Type | Priority | State | Worktree | Branch | Territory | Intake source | Opened | Closed | Outcome |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| add-retry-logic | Add retry logic to the sync job | 3 | M | ACTIVE | `<repo>-wt\add-retry-logic` | `dcs/add-retry-logic` | `src/sync/**`, `tests/sync/**` | Owner chat | 2026-01-05 | — | — |
+| add-retry-logic | Add retry logic to the sync job | 3 | M | MERGED | — | `dcs/add-retry-logic` | see IAP.md partition table | see 201-BRIEF.md Intake source | 2026-01-05 | 2026-01-07 | see AAR.md Outcome |
+
+The ACTIVE row's Territory is a bare glob list, scannable by `new.md`
+step 7b. The MERGED row's Territory, Outcome, and Intake source have
+each collapsed to one line pointing elsewhere, per the two-state rule
+above.
 
 ## Notes
 
