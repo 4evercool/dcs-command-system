@@ -935,6 +935,30 @@ Cheap to check (one regex per cell, at any point something writes to
 `REGISTER.md`), and it targets the actual failure mode: not "does the
 rule exist" but "does this specific write obey it."
 
+## 23. A `.dcs/esg/` read is a derived fact with a lifetime, same as any other
+
+*From `STRATEGY.md`'s fifth `/dcs-esg` session, 2026-07-27, consolidated
+into Meta 2026-07-28 while retroactively compacting that file's Sessions
+log.*
+
+A session swept the portfolio at its start and reported to the Owner
+that a just-shipped row still awaited deploy, and that it named a branch
+`git show-ref` could not find. Neither reading was wrong when taken —
+both were **stale**: a deploy train ran in the interval between the read
+and the report, transitioning the row and deleting the branch. The
+register was correct throughout; the session's own memory of it wasn't.
+
+**The generalization is the same one principle 15 already states for
+code and prose, applied to the ESG's own state:** `REGISTER.md` and
+`STRATEGY.md` are exactly the files a *parallel* session is most likely
+to be writing while another session reads them (that is the entire
+point of v0.3's parallel-operation model), so a value read from either
+at the top of a session is a snapshot, not a fact — it needs re-reading
+immediately before it is acted on, not merely at sweep time. The session
+that hit this treated it correctly: withdrawn from its own agenda rather
+than quietly corrected and moved past, so the pattern is visible to the
+next reader instead of erased.
+
 ## Links
 
 - [[Post-mortems/energy-cost-model-rework]] — the incident behind v0.5.12
