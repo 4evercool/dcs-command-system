@@ -778,10 +778,12 @@ had no route cheaper than a full replan-and-reapprove cycle.
 
 ## 18. The ~250-line workflow budget is a rule no suite enforces ✅ DONE
 
-**CLOSED by incident `workflow-budget-enforcement`, integration commit
-`ce8ad1a` on its branch, 2026-07-28 (register row will read `MERGED
-(deploy pending)` once this close's merge step completes — sha not yet
-known at write time, not invented here):** built as a check, not
+**Queued as register row `workflow-budget-enforcement` at rank 1, ninth
+`/dcs-esg`, 2026-07-28**, on fresh measurement: `plan.md` is now 666 lines.
+
+**CLOSED by incident `workflow-budget-enforcement`, merged into `main` at
+`c73e498` (integration commit `ce8ad1a` on its own branch), 2026-07-28 —
+register row reads `MERGED (deploy pending)`:** built as a check, not
 retired as advice — `tests/test_doctrine_integrity.py` gained a
 per-file line-count check (`WORKFLOW_BUDGET_LINES` = 250,
 `WORKFLOW_GRANDFATHERED_LINES` for the four files already over budget,
@@ -816,7 +818,12 @@ whoever remembers to measure — is the one that is not.** Territory:
 `tests/test_doctrine_integrity.py` (same collision as item 17), or
 `CLAUDE.md` alone if retired.
 
-## 20. `doctrine.md` is reloaded once per phase within a single incident, not once per incident
+## 20. `doctrine.md` is reloaded once per phase within a single incident, not once per incident — ✅ RESOLVED, see item 24
+
+**Resolved inside `token-economy`, 2026-07-28** — the automation-path share
+was fixed for free, the hand-typed-lifecycle share closed as infeasible with
+today's tools. Recorded here rather than argued twice; full account at item 24
+below.
 
 **Raised by a situation analyst on the `automation-layer-eager-reading` stem,
 2026-07-28.** Objective 1 and the hot-path ratchet govern `doctrine.md`'s
@@ -862,7 +869,11 @@ nontrivial. Related: `esg-artifact-bloat` (rank 8) is the same "read
 repeatedly, at every X" shape one layer up, in the ESG's own files rather
 than the hot path.
 
-## 21. Migrate `REGISTER.md` (and other structured-enough files) to SQLite — proposed, not adopted
+## 21. Migrate `REGISTER.md` (and other structured-enough files) to SQLite — ✅ DECIDED — declining
+
+**Declined at the ninth `/dcs-esg`, 2026-07-28** — recorded at
+[[Decisions/sqlite-migration-register]] rather than queued, so it isn't
+relitigated cold. The case against below is what decided it.
 
 **Raised by the Owner during the `token-economy` stem, 2026-07-28**, on the
 reasoning that moving anything table-shaped to a real database would let

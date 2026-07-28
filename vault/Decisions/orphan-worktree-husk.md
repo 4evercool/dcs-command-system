@@ -1,14 +1,43 @@
 ---
 tags: [dcs, decision]
-updated: 2026-07-27
+updated: 2026-07-28
 ---
 
 # Decision: stop reporting `C:\DCS-wt\schema-citation-guard`
 
 **Decided:** 2026-07-27, seventh `/dcs-esg` session
-**Status:** closed — accepted boundary, no register row
+**Status:** REOPENED 2026-07-28, ninth `/dcs-esg` session — see update below
 **Reopen if:** the directory acquires contents, or a *second* husk appears (one
 is an accident; two is a pattern in how worktrees are removed)
+
+## Update, 2026-07-28 (ninth `/dcs-esg`): the reopen trigger fired, and one husk is gone
+
+**`C:\DCS-wt\token-economy` is a second husk**, same shape as this one — empty
+but for DCS's own `.dcs/CLOSED` marker, git-forgotten, and its own closing
+session's `git worktree remove` failed with `Permission denied` because that
+session's cwd sat inside it (`.dcs/incidents/2026-07-28-token-economy/214-LOG.md`,
+step 5a.4). Per this decision's own reopen condition, two is a pattern — queued
+as register row `worktree-removal-self-conflict` rather than silently
+re-applying "accepted boundary" to both.
+
+**`schema-citation-guard` itself was removed this session** —
+`rmdir "C:\DCS-wt\schema-citation-guard"` succeeded on the first attempt from a
+session rooted in `C:\DCS`, after six failures across four prior sessions. That
+part of this decision is now moot; kept here as the record rather than deleted,
+since the reopened question (why removal fails at all) is a different one.
+
+**New evidence that narrows, not confirms, the original explanation.** The same
+session that finally removed `schema-citation-guard` immediately tried
+`C:\DCS-wt\token-economy` and got `Device or resource busy` — from a cwd
+(`C:\DCS`) that was **not** inside the worktree being removed. `.git/worktrees/`
+doesn't even exist (git has no metadata left to hold a lock), so the "closing
+session's own cwd" explanation, which fit attempts 1–2 on the original husk,
+does **not** cover this failure. This matches the *unexplained* half of the
+original table below (attempts 3–6) more than the *explained* half (1–2) — the
+two husks are not necessarily one mechanism, and whoever works
+`worktree-removal-self-conflict` should treat "some other process holds a
+handle on the directory" as the open question, not "the closing session is
+rooted inside it" as a settled answer.
 
 ## The question
 

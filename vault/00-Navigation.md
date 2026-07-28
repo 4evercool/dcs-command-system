@@ -32,8 +32,9 @@ only ever be read while improving DCS itself, it belongs here.
 - [[Meta/building-dcs-lessons|Meta: lessons about building DCS]] — the patterns that keep recurring in the *construction*, not the doctrine
 - [[Decisions/distribution-and-scheduling|Decision: distribution and scheduling]] — choices deliberately kept out of doctrine
 - [[Decisions/fable-review-roadmap|Decision: reform roadmap from the third-party review]] — the 2026-07-27 phase plan (proportionality lanes, structured register, deviation route), recovered from the cleared session
-- [[Decisions/orphan-worktree-husk|Decision: stop reporting the schema-citation-guard husk]] — accepted worktree-audit boundary
+- [[Decisions/orphan-worktree-husk|Decision: stop reporting the schema-citation-guard husk]] — reopened 2026-07-28, a second husk appeared
 - [[Decisions/delegation-evolution|Decision: how DELEGATION.md reached v4]] — the full v1→v4 bound-by-bound argument, consolidated from STRATEGY.md's Sessions log
+- [[Decisions/sqlite-migration-register|Decision: decline the SQLite migration for REGISTER.md]] — the Owner's proposal and the case against it
 - [[Backlog]] — known gaps, with evidence
 
 ## Conventions
