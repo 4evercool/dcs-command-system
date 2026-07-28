@@ -128,6 +128,22 @@ timestamps unaffected) — caught and corrected before any scoped read
 relied on the wrong order; recorded plainly in `214-LOG.md` rather than
 silently fixed.
 
+## Deploy status
+
+**Deployed** 2026-07-28 by `/dcs-deploy`, under Delegation v4 deploy
+authority (1 row, 0 `forbidden_globs` hits, within `max_rows_per_train`
+— announced, not asked, per doctrine principle 12). Content witness
+`python tests/payload_check.py`: before install exit 1 (32 identical, 15
+differing — exactly this incident's own 15 payload files, the expected
+red-before-ship signal, not a discrepancy); after install exit 0 (47
+identical, 0 differing, 0 repo-only, 0 installed-only). Integration-branch
+sha `202e00a` pinned unchanged across both runs. Version marker
+`~/.claude/dcs/VERSION` stayed `0.6.11` — no bump needed or made, a
+legitimate same-version content ship per `deploy-marker-blind`'s own
+lesson (the witness is the proof, not the version string moving). Branch
+`dcs/token-economy` deleted — the witness confirmed the ship, so its
+rollback job was done.
+
 ## Memory routing
 
 This project's `CLAUDE.md` documents `vault/` (Obsidian, repo-local,

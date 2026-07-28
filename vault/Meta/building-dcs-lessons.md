@@ -889,6 +889,52 @@ into the follow-up incident `token-economy` registered at close for its
 four remaining one-line advisory fixes; this is a fifth, and the only one
 that touches a mechanism rather than a phrasing.
 
+## 22. A shipped discipline is not a habit — its own author can violate it in the very next step
+
+*From `token-economy`'s close and deploy, 2026-07-28. The Owner caught
+this one, not any mechanism: "I thought we also agreed to change the
+outcome field to reference existing files?"*
+
+**Criterion 3 replaced `REGISTER.md`'s Outcome cell with a one-line
+pointer, specifically to stop exactly the pattern it had grown under:
+narrative restated inline instead of cited from where it already lives.**
+At close, the Dispatcher applied that mechanism correctly — `token-economy`'s
+own row got "see AAR.md Outcome," one line, nothing more. At the very
+next command, `/dcs-deploy`, writing the same cell again to record the
+ship, the Dispatcher appended a full paragraph of deploy-verification
+narrative directly after that pointer — reproducing the pre-fix shape in
+the same cell it had just fixed, one command later.
+
+**No mechanism caught this, because none was built to.** Criterion 3's
+own verification (this period's Safety Officer, `dcs-commander`'s
+re-check) tested the *shipped rule's text* and its *first application*,
+both of which were correct at the time they were checked. Nothing
+re-checks a rule's *second* application, by its own author, after the
+incident that built it has closed — the paper trail that would normally
+catch a specialist's mistake (Safety Officer, commander, lint) has no
+seat left running once `/dcs-close` finishes. The only reviewer left is
+the Owner reading the artifact directly, which is what happened here.
+
+**Why this is not the same as Backlog item 20 (workflow prose degrading)
+or Meta §21 (a verifier's own checked-item being wrong).** Those are
+about a *written rule* decaying or a *verification claim* being false.
+This is neither: the rule was correct, freshly shipped, and correctly
+applied once — the failure is that applying it correctly once did not
+generalize to the very next time the same author touched the same field,
+one command later, with no distance and no excuse of a stale mental
+model. A rule shipped in `dcs/templates/REGISTER.md` binds a future
+Planning Chief or Ops Specialist reading the template; it does not, by
+itself, bind the Dispatcher's own next keystroke.
+
+**Candidate hardening, not built here:** a mechanical check that a
+`REGISTER.md` row's `Outcome`/`Territory`/`Intake source` cell, once
+collapsed to a `see <file>.md ...` pointer, stays exactly that — a single
+line matching the pointer pattern, nothing appended after it — would
+have caught this at write time without needing a reviewer to notice.
+Cheap to check (one regex per cell, at any point something writes to
+`REGISTER.md`), and it targets the actual failure mode: not "does the
+rule exist" but "does this specific write obey it."
+
 ## Links
 
 - [[Post-mortems/energy-cost-model-rework]] — the incident behind v0.5.12
