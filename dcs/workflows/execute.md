@@ -22,12 +22,13 @@ If no `ACTIVE`, or `phase` is not `execution`: stop. If `phase` is
 `planning`, tell the Owner to finish `/dcs-plan` first. If there's nothing
 active, there's nothing to execute.
 
-**Command-chain check (entry gate):** `214-LOG.md` must contain both a
-`command: typed` and a `command: iap_review` entry. If either is missing,
-the command chain was skipped somewhere upstream — **stop**, route to
-`/dcs-plan`, whose own entry gate and pre-stamp checklist will repair the
-chain. Do not fan out specialists on an unratified plan even if the
-approval marker is technically valid.
+**Command-chain check (entry gate):** confirm both entries exist —
+`grep -n "command: typed" <incident_dir>/214-LOG.md` and `grep -n
+"command: iap_review" <incident_dir>/214-LOG.md`. If either returns
+nothing, the command chain was skipped somewhere upstream — **stop**,
+route to `/dcs-plan`, whose own entry gate and pre-stamp checklist will
+repair the chain. Do not fan out specialists on an unratified plan even
+if the approval marker is technically valid.
 
 ## 2. Verify the approval marker — do this even though the hook also checks it
 
@@ -207,8 +208,14 @@ staging in the next period's 202.
 Spawn `dcs-safety-officer` via Task with: the period's acceptance criteria
 (from `202-OBJECTIVES.md`), the IAP's verification plan, the list of
 touched files, and the specialists' claims (framed explicitly as claims to
-verify, not facts). Its charter (see `agents/dcs-safety-officer.md`) is to
-attempt to refute completion using its own independent checks.
+verify, not facts). **On a re-spawn** (step 9's `halt` branch routing a
+fix-taskings iteration back here), also hand it, framed the same way —
+claims to verify, not facts: the **prior verdict (verbatim)** (this
+period's earlier Safety Officer return(s), unabridged) and a
+**changed-since manifest** (`git diff --name-only` of what the
+fix-taskings touched since that verdict) — a second officer cannot cite
+what it was never given. Its charter (see `agents/dcs-safety-officer.md`)
+is to attempt to refute completion using its own independent checks.
 
 ## 9. Handle the verdict — COMMAND POINT 4 (verdict disposition)
 

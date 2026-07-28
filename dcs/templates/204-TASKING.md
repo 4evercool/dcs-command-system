@@ -31,7 +31,8 @@ resolve by guessing.
 
 <!-- Concrete commands whose REAL output must be pasted into the
      structured return's `evidence` field -- not a description of what
-     should happen. -->
+     should happen. Cite the decisive excerpt or `file:line`, never a
+     full unabridged transcript. -->
 
 - {{e.g. "pytest tests/test_inventory_repo.py -x -- full output"}}
 

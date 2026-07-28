@@ -202,8 +202,12 @@ the main checkout) — go straight to step 6.
 3. **Register row → `MERGED` (deploy pending).** Resolve `esg_root`
    (doctrine "Parallel operation"). If `<esg_root>/.dcs/esg/REGISTER.md`
    exists: move this incident's row from `ACTIVE` to `MERGED`, filling in
-   the closed date and a one-line outcome (from `AAR.md`'s Outcome
-   section) — this supersedes the pre-v0.3 `ACTIVE → CLOSED` transition;
+   the closed date, and collapse Territory, Outcome, and Intake source to
+   ONE LINE each per `REGISTER.md`'s own two-state rule — Territory to a
+   pointer at `IAP.md`'s partition table, Outcome to a pointer at
+   `AAR.md`'s Outcome section, Intake source to a pointer at the original
+   intake citation. This is the row's collapse point, not a separate
+   archival pass; it supersedes the pre-v0.3 `ACTIVE → CLOSED` transition;
    see step 6a below. If never registered, skip silently.
 4. **Remove the worktree.** `git worktree remove <path>`. The branch
    (`dcs/<slug>`) is **kept** — it stays the rollback reference until

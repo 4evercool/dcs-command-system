@@ -11,10 +11,6 @@ of typing each phase command by hand.
 
 <required_reading>
 @$HOME/.claude/dcs/references/doctrine.md
-@$HOME/.claude/dcs/workflows/new.md
-@$HOME/.claude/dcs/workflows/plan.md
-@$HOME/.claude/dcs/workflows/execute.md
-@$HOME/.claude/dcs/workflows/close.md
 </required_reading>
 
 <process>
@@ -45,11 +41,21 @@ first. `/dcs-run` does not bypass the v0.1 single-incident constraint.
 
 Read `$HOME/.claude/dcs/workflows/new.md` and execute its `<process>`
 steps 1 through 8 verbatim, using the intake resolved in step 1 above as
-`new.md`'s `$ARGUMENTS`. Every gate applies unchanged, including the v0.2
-addition: command point 1 (typing) still spawns `dcs-commander` under the
-same rules as a standalone `/dcs-new`, and the Owner still confirms typing
-via `AskUserQuestion` — the Delegation of Authority never covers typing,
-only IAP approval (per the ESG spec), so this gate always fires.
+`new.md`'s `$ARGUMENTS`. **Also read the files `new.md`'s own
+`<required_reading>` block names** — a Read-tool read returns those `@`
+lines as literal, unresolved text, so skipping this leaves `new.md`'s own
+references silently never loaded (the same pattern step 7a below already
+follows for `deploy.md`: read only at its point of use, never eagerly
+included above). Steps 4, 5, and 7 carry the identical instruction for
+their own phase file. The one asymmetry: `doctrine.md` is already
+`@`-included above, so it needs no re-read here purely because a phase
+started — re-read it only where there is real doubt it is still in
+context (a long gap, or a resumed session). Every gate applies unchanged,
+including the v0.2 addition: command point 1 (typing) still spawns
+`dcs-commander` under the same rules as a standalone `/dcs-new`, and the
+Owner still confirms typing via `AskUserQuestion` — the Delegation of
+Authority never covers typing, only IAP approval (per the ESG spec), so
+this gate always fires.
 
 - **Type 5 short-circuits here.** `new.md` step 7a resolves it inline
   (one specialist, IC verifies, no incident directory, no gate). Report
@@ -62,8 +68,10 @@ only IAP approval (per the ESG spec), so this gate always fires.
 
 Read `$HOME/.claude/dcs/workflows/plan.md` and execute its `<process>`
 steps 1 through 9 verbatim for the current operational period, including
-its v0.2 Delegation-aware approval step (6/6b) unchanged. If bounds hold
-and `auto_approve_type3` is on, the IC approves without an Owner
+its v0.2 Delegation-aware approval step (6/6b) unchanged. Also read the
+files `plan.md`'s own `<required_reading>` block names, same reason as
+step 3 above. If bounds hold and `auto_approve_type3` is on, the IC
+approves without an Owner
 round-trip and `/dcs-run` continues straight through to step 5 in the same
 turn. Otherwise the Owner's `AskUserQuestion` approval gate pauses this
 turn exactly as it would for a standalone `/dcs-plan` — `/dcs-run` resumes
@@ -74,7 +82,9 @@ resume via `/dcs-status`.
 
 Read `$HOME/.claude/dcs/workflows/execute.md` and execute its `<process>`
 steps 1 through 10 verbatim, including its v0.2 escalation-trigger checks
-at the period boundary and after the Safety verdict. Four outcomes:
+at the period boundary and after the Safety verdict. Also read the files
+`execute.md`'s own `<required_reading>` block names, same reason as step 3
+above. Four outcomes:
 
 - **Deviation (step 6), or a `halt` verdict routed to "return to
   planning" (step 9):** loop back into step 4 above *within this same
@@ -98,15 +108,22 @@ at the period boundary and after the Safety verdict. Four outcomes:
 ## 6. Safety valve — period cap
 
 Every time this `/dcs-run` invocation is about to loop step 4 → 5 again
-for this same incident without having reached step 7 (close), read the
-count from `<incident_dir>/214-LOG.md` instead of tallying loop
-iterations locally: count IAP stamps the same way `execute.md`'s trigger
-(c) does (v0.5.12: attempts, not periods), and also read the halt count
-with `python "<project>/.claude/hooks/dcs_gate.py" --halt-count
-"<incident_dir>"` — the same runaway-loop failure, seen from the other
-axis. Reading from the log rather than a turn-local tally is what makes
-this valve hold across sessions: a multi-session incident must not reset
-to zero just because a fresh session started a new turn. If the stamp
+for this same incident without having reached step 7 (close), count IAP
+stamps with a bounded command instead of opening the log wholesale or
+tallying loop iterations locally — the same population `execute.md`'s
+trigger (c) counts (v0.5.12: attempts, not periods), recognized only
+through `dcs_gate.py`'s own published grammar (`GRAMMAR_LINE`): "An entry
+begins at column zero with a mandatory bracketed timestamp; any other
+line is a continuation, never a sentinel, and quoting a whole prior entry
+inside a body requires indenting it off column zero." (see
+`references/doctrine.md` principle 13): `grep -c -E
+'^\[[^]]*\][[:space:]]+IAP-APPROVED:' "<incident_dir>/214-LOG.md"`. Also
+get the halt count with `python "<project>/.claude/hooks/dcs_gate.py"
+--halt-count "<incident_dir>"` — the same runaway-loop failure, seen from
+the other axis. Deriving both counts from the log rather than a
+turn-local tally is what makes this valve hold across sessions: a
+multi-session incident must not reset to zero just because a fresh
+session started a new turn. If the stamp
 count would exceed 3, or the halt count is already sitting at
 `dcs_gate.py`'s own ceiling: **stop looping automatically.** File a 209
 sitrep (`$HOME/.claude/dcs/templates/209-SITREP.md`, same mechanism as an
@@ -125,8 +142,10 @@ value were ever raised or removed.
 ## 7. Run close-out — follow `close.md`
 
 Read `$HOME/.claude/dcs/workflows/close.md` and execute its `<process>`
-steps 1 through 7 (including v0.2's 6a register update) verbatim. Its
-gates are unchanged: a green Safety verdict is required before this step
+steps 1 through 7 (including v0.2's 6a register update) verbatim. Also
+read the files `close.md`'s own `<required_reading>` block names, same
+reason as step 3 above. Its gates are unchanged: a green Safety verdict is
+required before this step
 is even reachable (guaranteed by step 5 above), and the Owner-UAT check in
 `close.md` step 1 / the IAP's verification plan is a real Owner gate —
 pause here for the Owner's done / defer-with-explicit-consent answer via

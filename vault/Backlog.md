@@ -804,3 +804,81 @@ to this incident's own branch point (`4fe3312`), whose `vault/Backlog.md`
 ends at item 18. The main checkout may hold further uncommitted items
 past 18 not visible from this worktree — if so, this pair may need
 renumbering at merge time; the content is what matters, not the number.
+
+## 21. `doctrine.md`'s per-phase reread cannot be safely reduced with tools available today
+
+**Found and closed as infeasible in `token-economy`, 2026-07-28** (Type 1,
+one period, one attempt, Safety pass, zero refutations). The 201 framed
+this as a token-economy item alongside five others; the Planning Chief
+tested the actual mechanism this period and invoked the 202's own
+pre-authorized escape hatch rather than force a fix.
+
+**The mechanism, tested directly:** `doctrine.md` is `@`-included at the
+top of every phase workflow and every automation-layer file, so a
+hand-typed four-command lifecycle (stem→plan→execute→close) reads it
+four times — 95,492 B of 152,064 B total required reading (62.8%),
+per `token-economy`'s own 201-BRIEF.md. The fix this item wanted was:
+skip the reread when the session is provably the same one that already
+read it this incident, still read it in full for a fresh spawn or a
+session that may be resuming after a reset.
+
+**Why no tactic could do this safely.** Three candidates, all tested,
+all fail: (a) the harness resolves `@`-includes before the model ever
+sees the prompt — reading `dcs/workflows/run.md` this period returned
+its `@` lines as literal, unresolved text, confirming there is no point
+at which a running session could make the *inclusion itself*
+conditional on anything; (b) a disk marker recording "session X read
+doctrine.md at time T" proves only that *someone* read it once, never
+that *this* context still holds it — a post-reset session reading the
+marker and skipping the reread is precisely the failure mode; (c) a
+model self-report about its own context ("I already have this loaded")
+is exactly the "assume continuity" the criterion was written to forbid,
+and is silently wrong across an auto-compaction, which preserves
+whatever session id a hook could supply while discarding the very
+context the marker claims is still there.
+
+**Consolation finding, independently valuable and already shipped:**
+the 4× reload does not occur on the `/dcs-run` automation path at all.
+`run.md`'s own phase-file reads happen via the `Read` tool, which never
+re-resolves a nested `@`-include — so removing `run.md`/`loop.md`'s
+eager top-of-file block (this incident's item 1,
+[[Backlog#1|already the first item here]]) collects this item's
+automation-layer share for free, with no continuity assumption needed.
+What remains unaddressed is only the hand-typed four-separate-command
+lifecycle, which is the minority path.
+
+**Reopen only if the tool surface changes** — specifically, a harness
+signal that both identifies the session unambiguously and reports
+whether a reset or compaction happened since a named point. DCS cannot
+observe that today. Until then this is a known, evidenced gap, not a
+missing effort. **Not queued** — no register row; nothing here is
+actionable with tools available.
+
+## Follow-up registered at `token-economy`'s close, 2026-07-28
+
+Four one-line package-text fixes surfaced as Safety advisories, none
+rising to a refutation, deliberately **not** folded into the period's
+integration commit (an edit to a guarded workflow file riding the merge
+with no Safety pass of its own costs more auditability than any one
+sentence is worth — `dcs-commander`'s own ruling at command point 4).
+Queued as register row `token-economy-advisory-fixes`, unranked pending
+the next `/dcs-esg`:
+
+1. `dcs/workflows/run.md`'s new `doctrine.md` carve-out ("re-read it
+   only where there is real doubt it is still in context") reintroduces
+   the exact self-report judgment item 21 above was just closed for
+   being unsafe. Replace with the unconditional fact that `doctrine.md`
+   is `@`-included at the top, so it loads regardless.
+2. `dcs/templates/204-TASKING.md`'s worked example still models
+   `"-- full output"` three lines below the brevity rule it is supposed
+   to demonstrate.
+3. `agents/dcs-safety-officer.md`'s by-reference "unchanged" test does
+   not yet distinguish a derived subject (a test result, a byte budget —
+   whose *inputs* live elsewhere) from a direct one (the file itself).
+   See [[Meta/building-dcs-lessons]] §21 for why this matters more than
+   it looks.
+4. `dcs/templates/STRATEGY.md`'s Sessions-entry cap comment enumerates
+   four items under a stated 5-line cap with the fifth line unexplained,
+   and its own placeholder wraps to 6 physical lines until filled in.
+
+Full verdict text: `.dcs/incidents/2026-07-28-token-economy/SAFETY.md`.

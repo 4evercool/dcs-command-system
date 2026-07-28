@@ -103,12 +103,20 @@ at face value into step 4.
 ## 4. Record
 
 - Update `STRATEGY.md`'s ranked priorities per the Owner's decisions.
-- Update `REGISTER.md` rows per the (a)/(c)/(e)/(f) decisions above. For
-  (f) specifically: `git worktree remove <path>` for every park/kill
-  decision (write `.dcs/CLOSED` into the worktree and note manual
-  removal is owed if the removal fails, same fallback as `close.md` step
-  5a.4), `git branch -D dcs/<slug>` additionally for kill decisions only
-  (park keeps the branch).
+- Update `REGISTER.md` rows per the (a)/(c)/(e)/(f) decisions above,
+  applying its own two-state Territory rule (`dcs/templates/REGISTER.md`):
+  a BARE GLOB LIST while State is QUEUED or ACTIVE, collapsed to ONE LINE
+  each (Territory, Outcome, Intake source) the moment a row here reaches
+  a terminal state. For (f) specifically: `git worktree remove <path>`
+  for every park/kill decision (write `.dcs/CLOSED` into the worktree and
+  note manual removal is owed if the removal fails, same fallback as
+  `close.md` step 5a.4), `git branch -D dcs/<slug>` additionally for kill
+  decisions only (park keeps the branch), and apply that collapse now as
+  the row lands on `PARKED`/`KILLED`: Territory to a pointer at
+  `IAP.md`'s partition table (its existing glob list instead, if the row
+  never reached planning), Outcome to a pointer at `AAR.md`'s Outcome
+  section (a one-line reason in Notes instead, if none was written),
+  Intake source to a pointer at the original intake citation.
 - Originate a post-hoc `REGISTER.md` row for each field repair reported
   under (g), per the register template's `RESOLVED (field repair)`
   convention (`dcs/templates/REGISTER.md`) — verify the commit reference
@@ -118,9 +126,16 @@ at face value into step 4.
   `DELEGATION.md` — bump `version`, date-stamp it, and keep every prior
   version block in the file exactly as written. It is the audit trail;
   never overwrite or delete a past block.
-- Append an entry to the `## Sessions` log at the bottom of `STRATEGY.md`:
-  date, one-line summary of the decisions made, and the Delegation version
-  in force after this session.
+- Append an entry to the `## Sessions` log at the bottom of `STRATEGY.md`,
+  capped at <= 5 LINES total (`dcs/templates/STRATEGY.md`'s own cap):
+  date, a one-line summary of the decisions made, the Delegation version
+  in force after this session, and an OPTIONAL one-line pointer to the
+  project's own decision-rationale store — only if that project's own
+  `CLAUDE.md` documents one (doctrine's "Relationship to
+  project-specific protocols"). Route substantial rationale behind that
+  pointer, never inline in this entry; a project with no such store
+  documented gets no pointer line, and the rationale that would sit
+  behind it stays out of this log too.
 
 ## 5. Hand off
 

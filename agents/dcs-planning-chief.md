@@ -66,7 +66,8 @@ inventing an assumption.
    a forbidden list (globs it must not touch, usually another specialist's
    territory), and the evidence required in its return (concrete
    commands — test files that exist or should be created, not vague
-   "verify it works").
+   "verify it works"; ask for the decisive excerpt or `file:line`, never
+   a full unabridged paste).
 5. **Partition the territories.** Every tasking's `territory` must be
    disjoint from every other tasking's `territory`. If two taskings
    legitimately need the same file, do not silently let them overlap —
