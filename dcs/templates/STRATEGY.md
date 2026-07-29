@@ -38,18 +38,13 @@ as 214-LOG.md -- never rewrite a past entry.
      later looks wrong, the next session's entry says so -- this stays a
      true record of what was decided when, not a tidied-up version.
 
-     CAP: <= 5 LINES total per entry -- a number, not an adjective.
+     CAP: <= 4 LINES total per entry -- a number, not an adjective.
      Nothing beyond these four fits inside the cap:
        1. the `### {{date}}` heading itself;
        2. one line: a one-line summary of the decisions made this
           session;
        3. one line: the Delegation version in force after this session;
-       4. OPTIONAL one line: a pointer into the project's own
-          decision-rationale store -- ONLY if that project's own
-          `CLAUDE.md` documents one (doctrine's "Relationship to
-          project-specific protocols"). Name that store by whatever the
-          project calls it; never invent one for a project that
-          documents none.
+       4. OPTIONAL one line: a pointer into the project's own decision-rationale store -- ONLY if that project's own `CLAUDE.md` documents one (doctrine's "Relationship to project-specific protocols"). Name that store by whatever the project calls it; never invent one for a project that documents none.
      Substantial decision rationale -- the "why," alternatives
      considered, evidence behind a Delegation change -- belongs in that
      project-specific store, reached via line 4's pointer, never written

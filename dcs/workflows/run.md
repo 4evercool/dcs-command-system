@@ -47,10 +47,7 @@ lines as literal, unresolved text, so skipping this leaves `new.md`'s own
 references silently never loaded (the same pattern step 7a below already
 follows for `deploy.md`: read only at its point of use, never eagerly
 included above). Steps 4, 5, and 7 carry the identical instruction for
-their own phase file. The one asymmetry: `doctrine.md` is already
-`@`-included above, so it needs no re-read here purely because a phase
-started — re-read it only where there is real doubt it is still in
-context (a long gap, or a resumed session). Every gate applies unchanged,
+their own phase file. The one asymmetry: `doctrine.md is @-included at the top of this file (line 13) and therefore already loaded for this invocation — no re-read needed. Every gate applies unchanged,
 including the v0.2 addition: command point 1 (typing) still spawns
 `dcs-commander` under the same rules as a standalone `/dcs-new`, and the
 Owner still confirms typing via `AskUserQuestion` — the Delegation of

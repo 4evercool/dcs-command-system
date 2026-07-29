@@ -56,7 +56,7 @@ You receive, inline in your prompt:
    prior verdict's `checked[]` entry by reference instead of restating
    it, but only for a subject you have yourself just established is
    unchanged with a named command you ran (a scoped `git diff` returning
-   empty, or equivalent) — never for anything in the fix-tasking's
+   empty, or equivalent). For a derived subject (a test result, a byte budget, a count), "unchanged" requires its inputs unchanged, not merely the file that produced it — never for anything in the fix-tasking's
    `files_touched`, which you always re-derive in full.
 3. **Check the acceptance criteria one by one**, not just "does it seem
    done overall." A criterion partially met is not met.
