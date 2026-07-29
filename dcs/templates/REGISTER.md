@@ -65,8 +65,11 @@ a write, not to serialize normal usage.
      FACTS-ONLY (v0.4.1, same rule as close.md's AAR): a row states what
      was VERIFIED, never what was intended or attempted. "branch deleted"
      only after `git branch --list` shows it gone; "worktree removed"
-     only after it is off disk (removal refused for modified/untracked
-     files is a NOT-removed, and never force it); DEPLOYED only per the
+     only after it is off disk (removal refused or incomplete: the dir
+     remains on disk with .dcs/CLOSED — that is a partial removal, and
+     the Worktree column records the path with the qualifier shown in
+     the template row above, never "—"); never force a removal;
+     DEPLOYED only per the
      deploy-evidence disposition defined above -- a row never restates
      that condition. A row may reach DEPLOYED because someone ELSE's
      deploy carried it (DCS is not the only shipper) -- record that as
@@ -147,7 +150,7 @@ a write, not to serialize normal usage.
 
 | ID | Title | Type | Priority | State | Worktree | Branch | Territory | Intake source | Opened | Closed | Outcome |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| {{slug}} | {{one-line title}} | {{5\|3\|1\|?}} | {{H\|M\|L or rank}} | {{QUEUED\|ACTIVE\|MERGED\|DEPLOYED\|PARKED\|KILLED\|RESOLVED}} | {{`<repo>-wt\<slug>` path, or "—" once removed, or "—" if never opened}} | {{`dcs/<slug>`, or "—" if never opened (Type 5 has none)}} | {{QUEUED/ACTIVE: glob(s) -- 201 blast radius initially, refined to the IAP partition's union after /dcs-plan. Terminal: ONE LINE pointing at IAP.md's partition table}} | {{QUEUED/ACTIVE: Owner chat / audit_results id / vault tech-debt / ... . Terminal: ONE LINE pointing at the original intake citation}} | {{date, or "—" while still QUEUED}} | {{date the row left ACTIVE (merged/parked/killed) or was resolved, or "—"}} | {{"—" until terminal. Terminal: ONE LINE pointing at AAR.md's Outcome section, or a one-line free-text outcome where no AAR exists}} |
+| {{slug}} | {{one-line title}} | {{5\|3\|1\|?}} | {{H\|M\|L or rank}} | {{QUEUED\|ACTIVE\|MERGED\|DEPLOYED\|PARKED\|KILLED\|RESOLVED}} | {{`<repo>-wt\<slug>` path, "—" once fully removed (no dir on disk), "—" if never opened, or `<repo>-wt\<slug>` (partial removal — .dcs/CLOSED present, manual cleanup owed)}} | {{`dcs/<slug>`, or "—" if never opened (Type 5 has none)}} | {{QUEUED/ACTIVE: glob(s) -- 201 blast radius initially, refined to the IAP partition's union after /dcs-plan. Terminal: ONE LINE pointing at IAP.md's partition table}} | {{QUEUED/ACTIVE: Owner chat / audit_results id / vault tech-debt / ... . Terminal: ONE LINE pointing at the original intake citation}} | {{date, or "—" while still QUEUED}} | {{date the row left ACTIVE (merged/parked/killed) or was resolved, or "—"}} | {{"—" until terminal. Terminal: ONE LINE pointing at AAR.md's Outcome section, or a one-line free-text outcome where no AAR exists}} |
 
 ## Example (illustrative -- neutral fiction, not a live row)
 

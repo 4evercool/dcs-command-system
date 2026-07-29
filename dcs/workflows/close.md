@@ -209,15 +209,24 @@ the main checkout) — go straight to step 6.
    intake citation. This is the row's collapse point, not a separate
    archival pass; it supersedes the pre-v0.3 `ACTIVE → CLOSED` transition;
    see step 6a below. If never registered, skip silently.
-4. **Remove the worktree.** `git worktree remove <path>`. The branch
-   (`dcs/<slug>`) is **kept** — it stays the rollback reference until
-   `/dcs-deploy` confirms the merge shipped and deletes it. **If removal
-   fails** (locked files, a session still running inside it): write
-   `.dcs/CLOSED` into the worktree (no content required — its mere
-   presence is the signal) and tell the Owner it needs manual removal
-   once whatever's holding it releases. `dcs_gate.py`'s zombie rule makes
-   that worktree deny every guarded edit in the meantime, so it can't
-   quietly become a second life for already-merged work.
+4. **Remove the worktree.** Before removal, check whether the shell's
+   current directory is inside the worktree path — `git worktree remove`
+   of the directory you are standing in fails with a cryptic error that
+   is indistinguishable from a real lock holder (cwd self-conflict,
+   incident worktree-removal-self-conflict). If `pwd` shows you are
+   inside `<path>`: `cd` to `<esg_root>` first. Then `git worktree
+   remove <path>`. The branch (`dcs/<slug>`) is **kept** — it stays the
+   rollback reference until `/dcs-deploy` confirms the merge shipped and
+   deletes it. **If removal still fails** (locked files, a session still
+   running inside it): diagnose what holds the lock — POSIX: `lsof +D
+   <path>` or `fuser -v <path>`; Windows: `powershell "Get-Process |
+   Where-Object { $_.Path -like '*<path>*' }"` (or Sysinternals
+   `handle <path>` if installed) — then write `.dcs/CLOSED` into the
+   worktree (no content required — its mere presence is the signal),
+   tell the Owner it needs manual removal once whatever's holding it
+   releases, and include the diagnostic output in 214-LOG.md. `dcs_gate.py`'s zombie rule makes that worktree deny every guarded
+   edit in the meantime, so it can't quietly become a second life for
+   already-merged work.
 5. Only now does the incident's story name the worktree's fate — carry
    the merge commit sha and the deploy-pending state into the final
    sitrep (step 7).
