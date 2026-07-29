@@ -84,6 +84,16 @@ You receive, inline in your prompt:
 </forbidden>
 
 <output_contract>
+Contract producer: `dcs-ops-specialist`.
+
+| Field | Type | Notes |
+|---|---|---|
+| `status` | string | `"done"` \| `"blocked"` \| `"deviation"` |
+| `files_touched` | string[] | Subset of the tasking's `territory` |
+| `tests_run` | string[] | Commands actually executed |
+| `evidence` | string | Real output, cite the decisive excerpt or `file:line` |
+| `deviation` | object \| null | Nested keys stay prose — see the schema below |
+
 Return exactly the JSON shape in `references/schemas.md` #4
 (ops-specialist return): `status` (`"done"` | `"blocked"` | `"deviation"`),
 `files_touched[]`, `tests_run[]`, `evidence`, `deviation` (object or

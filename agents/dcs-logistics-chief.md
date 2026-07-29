@@ -72,6 +72,16 @@ You receive, inline in your prompt:
 </forbidden>
 
 <output_contract>
+Contract producer: `dcs-logistics-chief`.
+
+| Field | Type | Notes |
+|---|---|---|
+| `deploy_path` | string | Full or scoped deploy target |
+| `env_deps` | string[] | New env vars, dependencies, config changes |
+| `migration_ordering` | string | Before/after restart, or "no migration" |
+| `rollback_plan` | string | Stated even when "none needed because additive" |
+| `risks` | string[] | What could turn the deploy into its own incident |
+
 Return exactly the JSON shape in `references/schemas.md` #3
 (logistics-chief plan): `deploy_path`, `env_deps[]`, `migration_ordering`,
 `rollback_plan`, `risks[]`.

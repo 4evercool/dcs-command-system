@@ -2,7 +2,7 @@
 
 Fixed JSON return schema closes the "I did the task" gap; provenance in `doctrine-appendix.md`.
 
-Agents return the JSON block; the IC alone transcribes it to disk, keeping a single writer per artifact (`doctrine-appendix.md`).
+Agents return the JSON block; the IC alone transcribes it to disk (single writer per artifact, `doctrine-appendix.md`).
 
 ## 1. Situation-analyst findings (feeds 201-BRIEF.md)
 
@@ -22,7 +22,7 @@ Returned by `dcs-situation-analyst`.
 
 ## 2. Chief plan (feeds 203-ORG.md, 204-TASKING/\*.md, IAP.md)
 
-Returned by `dcs-planning-chief` (and, for deploy/env/migration concerns only, `dcs-logistics-chief` — see #3).
+Returned by `dcs-planning-chief` (and, for deploy/env/migration concerns only, `dcs-logistics-chief` — see #3). Contract producer: `dcs-planning-chief`.
 
 ```json
 {"objectives_feedback": "202's acceptance criteria are testable as written; no changes requested", "tactics": ["Add a delivery_date window check inside get_blocking_ingredients' existing transaction", "Update the reminder plugin's stale-order heuristic to respect the same window"], "taskings": [{"id": "S1", "task": "Add delivery_date window to get_blocking_ingredients per 202 acceptance criterion 1", "territory": ["src/db/inventory_repo.py"], "forbidden": ["src/plugins/**"], "evidence_required": ["pytest tests/test_inventory_repo.py -x output"]}, {"id": "S2", "task": "Stop flagging future-dated orders as stale per 202 acceptance criterion 2", "territory": ["src/plugins/reminder_plugin.py"], "forbidden": ["src/db/**"], "evidence_required": ["pytest tests/test_reminder_plugin.py -x output"]}], "partition_ok": true, "risks": ["Both files import db/connection.py — read-only import, not a write conflict"], "verification_plan": "Run both test files, then a manual repro of the 201 repro_path against a scratch order"}
@@ -49,9 +49,19 @@ Returned by `dcs-planning-chief` (and, for deploy/env/migration concerns only, `
 
 ## 3. Logistics-chief plan (Type 1 only — feeds IAP.md's deploy section)
 
+Returned by `dcs-logistics-chief`.
+
 ```json
 {"deploy_path": "deploy/deploy.sh (full deploy — migration touches backend and frontend build)", "env_deps": ["No new env vars", "requirements.txt: add alembic==1.13.1"], "migration_ordering": "Run the schema migration before restarting the api service, not after", "rollback_plan": "Migration is additive (new nullable column) — rollback is redeploying the prior commit; no down-migration needed", "risks": ["low-memory host — avoid running the frontend build and the migration concurrently"]}
 ```
+
+| Field | Type | Notes |
+|---|---|---|
+| `deploy_path` | string | Full or scoped target |
+| `env_deps` | string[] | Env vars, dependencies, config |
+| `migration_ordering` | string | Restart ordering, or none |
+| `rollback_plan` | string | Stated even if none needed |
+| `risks` | string[] | What could turn deploy into its own incident |
 
 ## 4. Ops-specialist return (feeds 214-LOG.md, informs SAFETY.md)
 
@@ -98,10 +108,8 @@ Halt shape, showing the `refutations` object:
 |---|---|---|
 | `verdict` | `"pass"` \| `"halt"` | Binding on the IC — a `halt` cannot be argued past, only resolved (fix-tasking or re-plan) |
 | `refutations` | object[] | Empty on `pass`. Each has `claim` (what was asserted) and `evidence` (what the Safety Officer independently found). **Reserved for the acceptance criteria and the behaviour of the code** — the only findings that justify stopping a merge |
-| `advisories` (v0.6.5) | object[], optional | Artifact-hygiene findings that do **not** block: `finding` + `fix`. Principle-15 issues in docstrings, comments, logs and AARs live here unless they clear one of the three bars in `agents/dcs-safety-officer.md` step 6. The IC folds them into the integration commit |
+| `advisories` | object[], optional | (v0.6.5) Artifact-hygiene findings that do **not** block: `finding` + `fix`. Principle-15 issues in docstrings, comments, logs and AARs live here unless they clear one of the three bars in `agents/dcs-safety-officer.md` step 6. The IC folds them into the integration commit |
 | `checked` | string[] | Everything the Safety Officer actually did — diff inspected, tests re-run itself, manual repro. Specialist self-reports are never listed here as the check itself, only as the claim being checked. Same for `refutations`/`advisories`: cite the decisive excerpt or `file:line`, never paste a full unabridged transcript |
-
-**Charter reminder:** the Safety Officer's job is to *attempt to refute* completion. When uncertain, it refutes — a `pass` is earned by failing to find a hole, not by finding no obvious one.
 
 ## 6. Commander decisions (transfer of command — feeds 214-LOG.md)
 
@@ -111,20 +119,24 @@ Returned by `dcs-commander`, one decision per invocation, at the four command po
 {"command_point": "typing", "type": 3, "rationale": "3 files, fix pattern known, no schema impact", "open_questions": []}
 ```
 
-Any decision may additionally carry an ESG-activation request (doctrine principle 14) — the tactical decision is still returned; the request rides along:
+Any decision may also carry an ESG-activation request (doctrine principle 14):
 
 ```json
-{"command_point": "deviation", "disposition": "escalate_owner", "rationale": "fix requires touching the payment flow", "directives": [], "esg_activation": {"requested": true, "reason": "payment flow is a forbidden_globs bound AND the same defect pattern spans two other queued register items -- scope is strategic, not tactical"}}
+{"command_point": "deviation", "disposition": "escalate_owner", "rationale": "fix requires touching the payment flow", "directives": [], "esg_activation": {"requested": true, "reason": "payment flow is forbidden AND the pattern spans two other queued items -- strategic, not tactical"}}
 ```
 
-| Field | Type | Notes |
-|---|---|---|
-| `command_point` | `"typing"` \| `"iap_review"` \| `"deviation"` \| `"verdict_disposition"` | Which decision this is |
-| `type` / `verdict` / `disposition` | enum per point | The decision itself — see `agents/dcs-commander.md` for each point's enum |
-| `rationale` / `reasons` | string / string[] | One line; grounded in verified inputs, not the Dispatcher's summary |
-| `required_changes` / `directives` | string[] | Concrete, one line each — usable verbatim as re-spawn or fix-tasking instructions |
-| `open_questions` | string[] | Only where the call is genuinely the Owner's — framed as the exact question to relay |
-| `esg_activation` | object, optional | `{requested: bool, reason: string}` — the IC requesting ESG activation (escalation trigger (e)); the Dispatcher files a 209 with a **convene ESG** option, marks the register row `ESCALATED`, and pauses for the Owner |
+| Field | Command point | Type | Notes |
+|---|---|---|---|
+| `command_point` | typing, iap_review, deviation, verdict_disposition | string | Which decision this is |
+| `type` | typing | number | Type 5/3/1, see `dcs-commander.md` |
+| `verdict` | iap_review | string | `"accept"` or `"reject"`; `reject` needs `required_changes` |
+| `disposition` | deviation, verdict_disposition | string | Enum differs per point, see `dcs-commander.md` |
+| `rationale` | typing, deviation, verdict_disposition | string | One line, grounded in verified inputs |
+| `reasons` | iap_review | string[] | Same grounding as `rationale` |
+| `required_changes` | iap_review | string[] | One line each, verbatim re-spawn instruction |
+| `directives` | deviation, verdict_disposition | string[] | One line each, verbatim re-spawn or fix-tasking |
+| `open_questions` | typing | string[] | Only where the call is genuinely the Owner's |
+| `esg_activation` | any | object, optional | `{requested, reason}` — rides with any decision (doctrine principle 14) |
 
 ## 7. Delegation bounds (v0.2 — feeds `.dcs/esg/DELEGATION.md`, parsed by `plan.md`/`run.md`/`loop.md`)
 
@@ -145,7 +157,7 @@ The fenced ```delegation-bounds``` JSON block inside `DELEGATION.md` — the onl
 | `max_specialists` | number | Compared against the 204 tasking count |
 | `deploy` (v0.4) | object, optional | Deploy delegation keys: `auto`, `auto_after_close`, `frontend_only`, `forbidden_globs`, `max_rows_per_train`. Behavior: `deploy.md` step 5, `run.md` step 7a. |
 
-`esg.max_periods_before_review` (doctrine principle 13, trigger c) is **not** part of this block — it lives in `config.json`'s `esg` key (default `3`), because trigger (c) applies to every incident regardless of whether a Delegation is even in force.
+`esg.max_periods_before_review` (principle 13, trigger c) is **not** part of this block — it lives in `config.json`'s `esg` key (default `3`); trigger (c) applies incident-wide regardless of Delegation.
 
 ## 8. 209 sitrep (v0.2 — feeds `.dcs/esg/SITREPS/<slug>-p<N>.md`)
 

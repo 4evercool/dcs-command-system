@@ -119,3 +119,25 @@ the remainder in `directives` as a follow-up incident to register. Return:
   thinking agent from a dead one, so silence stalls the incident (doctrine,
   "A command point is never a silent wait").
 </constraints>
+
+<output_contract>
+Contract producer: `dcs-commander`. One decision per invocation; the
+fields returned depend on which command point spawned you.
+
+| Field | Command point | Type | Notes |
+|---|---|---|---|
+| `command_point` | typing, iap_review, deviation, verdict_disposition | string | Which decision this is |
+| `type` | typing | number | Type 5 / 3 / 1 |
+| `verdict` | iap_review | string | `"accept"` \| `"reject"` |
+| `disposition` | deviation, verdict_disposition | string | Enum differs per point (see `<command_points>` above) |
+| `rationale` | typing, deviation, verdict_disposition | string | One line, grounded in verified inputs |
+| `reasons` | iap_review | string[] | Same grounding as `rationale` |
+| `required_changes` | iap_review | string[] | One line each, verbatim re-spawn instruction |
+| `directives` | deviation, verdict_disposition | string[] | One line each, verbatim re-spawn or fix-tasking |
+| `open_questions` | typing | string[] | Only where the call is genuinely the Owner's |
+| `esg_activation` | any | object, optional | `{requested, reason}` — rides with any decision |
+
+Return exactly the JSON shape in `references/schemas.md` #6 (commander
+decisions) for the command point you were spawned for — see
+`<command_points>` above for each point's own worked example.
+</output_contract>
