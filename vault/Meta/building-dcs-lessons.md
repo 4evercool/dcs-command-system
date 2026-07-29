@@ -1013,6 +1013,42 @@ discovered mid-execution. The lint step existed for exactly this shape
 of gap and worked on the first incident to produce one since it was
 written down.
 
+## 25. A specialist's project root must be the worktree, not the main checkout
+
+**When:** `token-economy-advisory-fixes` (2026-07-30) — Type 3, four
+one-line text fixes, 4 specialists in parallel.
+
+**What happened:** specialists were given `Project root: C:\dcs` (the main
+checkout) in their tasking prompts. All four applied their edits to
+`C:\dcs\...` instead of `C:\DCS-wt\token-economy-advisory-fixes\...`.
+The Dispatcher caught this at integration-commit time (the worktree had
+no modified files), copied the four files from main checkout to worktree,
+committed there, and restored the main checkout with `git checkout --`.
+
+**Why it matters:** the worktree *is* the incident's world until merge
+(v0.3, principle 6). Edits in the main checkout are edits to the
+integration branch outside the gate — `dcs_gate.py` had an ACTIVE file
+in the worktree but the target files were in the main tree, so the gate
+could not block them. Two sessions editing the same file in parallel
+would have noticed only at merge time.
+
+**The fix is procedural, not mechanical:** the Dispatcher must pass the
+worktree path as the project root in every specialist's tasking prompt.
+The `204-TASKING.md` template already carries `Project root:` — filling
+it with the worktree path instead of the main checkout is the one-line
+correction.
+
+**Also this incident:** the Agent tool's safety classifier
+(`deepseek-v4-pro`) was intermittently unavailable, blocking specialist
+and Safety Officer spawns across multiple model tiers. One specialist
+tasking (S3 — a one-sentence text insertion, fully specified by the
+Planning Chief) was applied by the Dispatcher directly. The Safety
+Officer independently verified the result and did not refute it. The
+lesson is not "Dispatcher-as-specialist is acceptable" — it is that the
+gate's project-root mismatch above made the Dispatcher's direct edit
+*ungated* for the same reason the specialists' edits were: the ACTIVE
+file lived in a different tree from the files being edited.
+
 ## Links
 
 - [[Post-mortems/energy-cost-model-rework]] — the incident behind v0.5.12

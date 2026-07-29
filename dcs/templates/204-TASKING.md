@@ -34,7 +34,7 @@ resolve by guessing.
      should happen. Cite the decisive excerpt or `file:line`, never a
      full unabridged transcript. -->
 
-- {{e.g. "pytest tests/test_inventory_repo.py -x -- full output"}}
+- {{e.g. "pytest tests/test_inventory_repo.py -x -- cite the failing assertion"}}
 
 ## On discovering the plan doesn't fit reality
 
