@@ -27,6 +27,10 @@ resolve by guessing.
 
 - {{glob -- usually another specialist's territory}}
 
+## Worktree root
+
+{{worktree_root}}
+
 ## Evidence required in the return
 
 <!-- Concrete commands whose REAL output must be pasted into the

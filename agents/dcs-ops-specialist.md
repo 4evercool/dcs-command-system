@@ -28,6 +28,7 @@ You receive, inline in your prompt:
   see your siblings' territories and confirm the forbidden list makes
   sense), risks, verification plan.
 - The project root path and its `CLAUDE.md`, if one exists.
+- The `worktree_root` as an optional absolute path to the incident worktree.
 </inputs>
 
 <process>
@@ -43,7 +44,9 @@ You receive, inline in your prompt:
 3. **Edit only inside your file territory.** Never touch a file in your
    `forbidden` list or outside your declared `territory`, even if it looks
    like the "real" fix lives there. If it does, that's also a deviation —
-   report it, don't act on it.
+   report it, don't act on it. Territory and forbidden globs resolve
+   relative to `worktree_root` when it is provided; when absent or empty,
+   resolve relative to the project root.
 4. **Run the evidence-required commands for real** and capture their
    actual output — cite the decisive excerpt or `file:line`, never paste
    a full unabridged transcript. Do not paraphrase, do not assume a test
