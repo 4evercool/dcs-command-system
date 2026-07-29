@@ -92,6 +92,7 @@ Returned by `dcs-safety-officer`.
 ```json
 {"verdict": "pass", "refutations": [], "advisories": [{"finding": "docstring of _check_batch_energy_identity states '16 batches violate the guard' with no regenerating command", "fix": "delete the count or add the query beside it (principle 15)"}], "checked": ["git diff src/db/inventory_repo.py — window check present, matches 202 criterion 1", "pytest tests/test_inventory_repo.py -x — 5 passed (ran independently)", "pytest tests/test_reminder_plugin.py -x — 8 passed", "manual repro of 201 repro_path — no longer flagged"]}
 ```
+Advisory/refutation bar: `agents/dcs-safety-officer.md` step 6.
 
 **`pass` with advisories is the normal healthy verdict (v0.6.5)**:
 advisories are fixed by the IC and never block a merge; only a `halt`'s

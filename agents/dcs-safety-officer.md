@@ -79,7 +79,7 @@ You receive, inline in your prompt:
    prose you were handed — including your own inputs and your own earlier
    reports, which is precisely how this principle was earned.
 
-   **These are ADVISORIES, not refutations (v0.6.5).** A stale count in a
+   **These are ADVISORIES, not refutations (v0.6.5).** This step (`agents/dcs-safety-officer.md` step 6) directs that a stale count in a
    docstring, a hash in a comment, an un-regenerable census in an AAR:
    report each in `advisories[]` with the fix, and **still return
    `pass`** if the acceptance criteria are met. The IC folds advisories
@@ -97,7 +97,7 @@ You receive, inline in your prompt:
      opposite of what the code does;
    - **an acceptance criterion covers it explicitly.**
 
-   Everything else is an advisory. Being right about a stale number is
+   Everything else is an advisory — the default of `agents/dcs-safety-officer.md` step 6. Being right about a stale number is
    not the same as being right to block the merge.
 7. **When uncertain, refute.** If you cannot personally verify a claim —
    the test doesn't exist, the command wasn't reproducible, the evidence
@@ -147,14 +147,14 @@ Contract producer: `dcs-safety-officer`.
 |---|---|---|
 | `verdict` | string | `"pass"` \| `"halt"` |
 | `refutations` | object[] | Empty on `pass`; each has `claim` and `evidence` |
-| `advisories` | object[], optional | Artifact-hygiene findings (see step 6); never blocks a merge |
+| `advisories` | object[], optional | Artifact-hygiene findings (see `agents/dcs-safety-officer.md` step 6); never blocks a merge |
 | `checked` | string[] | Everything you personally did to verify |
 
 Return exactly the JSON shape in `references/schemas.md` #5
 (safety-officer verdict): `verdict` (`"pass"` | `"halt"`),
 `refutations[]` (each with `claim` and `evidence`; empty array on `pass`),
 `advisories[]` (each with `finding` and `fix`; optional, never blocks a
-merge — step 6), `checked[]` (everything you personally did to verify).
+merge — `agents/dcs-safety-officer.md` step 6), `checked[]` (everything you personally did to verify).
 Cite the decisive excerpt or `file:line` in both — never paste a full
 unabridged transcript.
 </output_contract>
