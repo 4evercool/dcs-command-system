@@ -114,6 +114,11 @@ Up to 4 `dcs-ops-specialist` subagents, each given **exactly one**
 verification plan) — not the whole IAP dumped in raw, and not any other
 specialist's tasking.
 
+Compute `worktree_root` from `git worktree list --porcelain` — match the
+branch line `refs/heads/dcs/<slug>`, then take the preceding `worktree`
+line (its absolute path). Pass it to every specialist so territory globs
+resolve relative to the incident's actual checkout.
+
 Each specialist returns JSON per schemas.md #4 (ops-specialist return):
 `status` (`"done"`|`"blocked"`|`"deviation"`), `files_touched` (string[],
 subset of territory), `tests_run` (string[]), `evidence` (string),
