@@ -1032,11 +1032,17 @@ in the worktree but the target files were in the main tree, so the gate
 could not block them. Two sessions editing the same file in parallel
 would have noticed only at merge time.
 
-**The fix is procedural, not mechanical:** the Dispatcher must pass the
-worktree path as the project root in every specialist's tasking prompt.
-The `204-TASKING.md` template already carries `Project root:` — filling
-it with the worktree path instead of the main checkout is the one-line
-correction.
+**Resolved** `worktree-path-propagation` (2026-07-30), commit `16e4307`:
+the fix is now **mechanical**, not just procedural. Three changes applied:
+(1) `agents/dcs-ops-specialist.md` — `worktree_root` input + territory-
+resolution rule in `<process>` step 3; (2) `dcs/workflows/execute.md` step
+4 — instruction to compute `worktree_root` from `git worktree list
+--porcelain` and pass it to every specialist; (3) `dcs/templates/
+204-TASKING.md` — `## Worktree root` field with `{{worktree_root}}`
+placeholder. The original procedural fix («the Dispatcher must pass the
+worktree path») was documented here but never applied to code, leaving a
+gap between the vault lesson and the running system — exactly the kind of
+drift this lesson's own existence should have prevented.
 
 **Also this incident:** the Agent tool's safety classifier
 (`deepseek-v4-pro`) was intermittently unavailable, blocking specialist
