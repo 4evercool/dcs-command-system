@@ -88,6 +88,37 @@ away:
       under) the 250-line policy ceiling -- debt nobody discharged by
       deleting the entry -- and it does not pass vacuously if
       dcs/workflows/ is ever empty
+  18. schema field contract carrier: a schemas.md contract section (one
+      discovered per "Returned by `agent`" sentence, its Contract producer
+      resolved from the same sentence when it names more than one agent --
+      same "parse the source of truth at run time" discipline as checks
+      13/14/15) is paired with its resolved agent's agents/dcs-*.md
+      <output_contract> table, both parsed fresh on every run -- no field
+      name, agent slug, section number or population count appears as a
+      literal below. Checked in ONE direction only: every field the schema
+      section declares must appear in the resolved agent's own contract
+      table; the reverse (a field the charter names that the schema
+      section omits) is deliberately NOT checked, and both this check's
+      names and this docstring entry say so rather than implying a
+      two-way reconciliation. One named case per (section, agent) pair, so
+      a new agent's contract drifting from its schema section fails by
+      name, never folded into a count; an empty schema-section population,
+      an empty agents/dcs-*.md population, and a section whose own
+      "Returned by"/"Contract producer" declaration fails to resolve a
+      producer or yields no fields are each their own named red case
+      instead of silently emptying the pair loop. A permanent negative-
+      proof case (idiom of check 13(f)'s forged mapping) reruns the SAME
+      comparator against one real agent's <output_contract> table held in
+      memory with one of its own declared fields' row removed (the field
+      name comes from the parse, never typed here) -- proving the
+      comparator actually reads the table rather than passing vacuously --
+      and touches no file on disk; agents/** stays untouched.
+  19. schemas.md JSON example carrier: every fenced code block in
+      dcs/references/schemas.md parses with json.loads. The block
+      population is discovered at run time by walking the file's own
+      fences (reusing check 12's _fenced_blocks(), never a hardcoded list
+      or count), one named case per block, and zero blocks discovered is
+      its own red case rather than a vacuous pass.
 
 Run standalone, or as the merge-time guard named in CLAUDE.md (doctrine:
 close.md step 1a) so it runs before every incident merge.
@@ -1322,6 +1353,267 @@ check("workflow budget: every workflow is within its effective ceiling, "
       f"{WORKFLOW_BUDGET_LINES} lines), and the workflow population is "
       "non-empty",
       not _wb_offenders, "; ".join(_wb_offenders))
+
+# --- 18. schema field contract carrier ---------------------------------------
+# A schemas.md contract section is the pairing "## N. Title" + a "Returned
+# by `agent`" sentence + the section's OWN field table (one field per row,
+# first cell a backtick name, no `/`-joined cells -- S1's stated shape).
+# Where the sentence names more than one agent (schemas.md #2 names both
+# dcs-planning-chief and, parenthetically, dcs-logistics-chief) a separate
+# "Contract producer: `agent-slug`" sentence pins the ONE agent whose own
+# charter carries this section's field table -- both sentences are parsed
+# fresh from schemas.md itself, at run time, same "read the source of
+# truth, don't re-derive it" discipline as checks 13/14/15. No field name,
+# agent slug, section number, or population count is a literal below.
+#
+# Direction: ONLY "a field the schema section declares is present in the
+# resolved agent's own <output_contract> table" is checked. The reverse --
+# a field the charter's table names that the schema section's table omits
+# -- is NOT checked. Every case name and this comment say so; a "pairs
+# reconciled" or "contracts synced" name would overclaim a direction this
+# check does not verify.
+_SFC_RETURNED_BY_RE = re.compile(r"Returned by(.*?)\.", re.S)
+_SFC_AGENT_TOKEN_RE = re.compile(r"`(dcs-[\w-]+)`")
+_SFC_PRODUCER_RE = re.compile(r"Contract producer:\s*`([\w-]+)`")
+_SFC_TABLE_HEADER_RE = re.compile(r"^\|\s*Field\s*\|.*\|\s*$", re.M)
+_SFC_ROW_RE = re.compile(r"^\|\s*`([^`]+)`\s*\|")
+_SFC_SEP_RE = re.compile(r"^\|[\s:\-|]+$")
+
+
+def _sfc_field_table(body):
+    """The FIRST '| Field | ... |'-headed table in `body`, as an ordered
+    list of first-cell backtick names -- reading only up to the first line
+    that no longer opens with '|' stops before any LATER, nested table
+    (e.g. schemas.md #2's own "Tasking object" sub-table, which reuses the
+    identical header shape one section further down) ever enters the
+    result."""
+    _hdr_m = _SFC_TABLE_HEADER_RE.search(body)
+    if not _hdr_m:
+        return []
+    _fields = []
+    # `$` in MULTILINE mode matches just before the header line's own
+    # trailing "\n" without consuming it, so the text right after
+    # _hdr_m.end() always starts with that "\n" -- split("\n")[1:] steps
+    # past it instead of splitlines() reading it back as a spurious
+    # leading blank "line" that would break the loop on iteration zero.
+    for _line in body[_hdr_m.end():].split("\n")[1:]:
+        if not _line.strip().startswith("|"):
+            break
+        _row_m = _SFC_ROW_RE.match(_line)
+        if _row_m:
+            _fields.append(_row_m.group(1))
+    return _fields
+
+
+def _sfc_table_data_rows(body):
+    """The count of '|'-opening DATA lines in the same first table
+    _sfc_field_table reads (separator lines excluded). A row _SFC_ROW_RE
+    fails to parse -- e.g. a slash-joined cell -- is the difference
+    between this count and len(_sfc_field_table(body)): it must fail
+    loudly in a named case below, never vanish from the comparison
+    (Safety advisory 1, period 1)."""
+    _hdr_m = _SFC_TABLE_HEADER_RE.search(body)
+    if not _hdr_m:
+        return 0
+    _rows = 0
+    for _line in body[_hdr_m.end():].split("\n")[1:]:
+        if not _line.strip().startswith("|"):
+            break
+        if _SFC_SEP_RE.match(_line.strip()):
+            continue
+        _rows += 1
+    return _rows
+
+
+def _sfc_producer(body):
+    """The resolved contract-producing agent slug for one schemas.md
+    section body, or None if the declaration itself does not resolve."""
+    _rb_m = _SFC_RETURNED_BY_RE.search(body)
+    if not _rb_m:
+        return None
+    _agents = _SFC_AGENT_TOKEN_RE.findall(_rb_m.group(1))
+    if len(_agents) == 1:
+        return _agents[0]
+    _prod_m = _SFC_PRODUCER_RE.search(body)
+    return _prod_m.group(1) if _prod_m else None
+
+
+_SFC_OUTPUT_CONTRACT_RE = re.compile(r"<output_contract>(.*?)</output_contract>", re.S)
+
+
+def _sfc_charter_fields(agent_text):
+    """The resolved agent's OWN declared field names, read from its
+    <output_contract> block's field table -- None if the block itself is
+    missing (a structurally different failure than "block present, table
+    empty"), so callers can tell the two apart."""
+    _oc_m = _SFC_OUTPUT_CONTRACT_RE.search(agent_text)
+    if not _oc_m:
+        return None
+    return _sfc_field_table(_oc_m.group(1))
+
+
+# (a) section population: discovered by walking schemas.md's own "## N."
+# headings and keeping only the ones with a "Returned by" sentence --
+# schemas.md #7 (Delegation bounds) and #8 (209 sitrep, relocated) name no
+# agent and are correctly excluded this way, never by a hardcoded number.
+_sfc_section_starts = list(re.finditer(r"^##\s+(\d+)\.\s+(.+)$", schemas_md, re.M))
+_sfc_sections = []
+for _sfc_i, _sfc_m in enumerate(_sfc_section_starts):
+    _sfc_end = (_sfc_section_starts[_sfc_i + 1].start()
+                if _sfc_i + 1 < len(_sfc_section_starts) else len(schemas_md))
+    _sfc_body = schemas_md[_sfc_m.start():_sfc_end]
+    if not _SFC_RETURNED_BY_RE.search(_sfc_body):
+        continue
+    _sfc_sections.append({
+        "num": int(_sfc_m.group(1)),
+        "title": _sfc_m.group(2).strip(),
+        "producer": _sfc_producer(_sfc_body),
+        "fields": _sfc_field_table(_sfc_body),
+        "rows": _sfc_table_data_rows(_sfc_body),
+    })
+
+# (b) degeneracy guard, part 1: the section population itself must be
+# non-empty, or every case below passes by vacuous truth.
+check("field guard: schemas.md yields at least one \"Returned by <agent>\" "
+      "contract section",
+      bool(_sfc_sections),
+      "no '## N. Title' section with a 'Returned by' sentence was found")
+
+# (c) charter population: discovered by walking agents/dcs-*.md, never a
+# named list -- same glob idiom as known_agents (check 4) and workflows().
+_sfc_agent_files = sorted((REPO / "agents").glob("dcs-*.md"))
+check("field guard: agents/dcs-*.md yields at least one charter",
+      bool(_sfc_agent_files),
+      "agents/dcs-*.md glob returned nothing")
+
+_sfc_agent_fields = {
+    _p.stem: _sfc_charter_fields(_p.read_text(encoding="utf-8"))
+    for _p in _sfc_agent_files
+}
+
+# (d) degeneracy guard, part 2: every discovered section's OWN declaration
+# (its "Returned by"/"Contract producer" sentence resolving to exactly one
+# agent slug, AND its field table yielding at least one field) must itself
+# parse -- a section whose declaration silently failed would otherwise
+# just vanish from every downstream comparison instead of failing loudly.
+_sfc_bad_declarations = [
+    f"schemas.md #{_s['num']} ({_s['title']})"
+    for _s in _sfc_sections
+    if _s["producer"] is None or not _s["fields"]
+]
+check("field guard: every contract section's own declaration (a resolved "
+      "producer and at least one declared field) parses",
+      not _sfc_bad_declarations, "; ".join(_sfc_bad_declarations))
+
+# (d2) population completeness (Safety advisory 2, period 1): a section
+# that loses its "Returned by" sentence silently leaves the population in
+# (a) -- but its producer then stops being matched by ANY section, so
+# pinning "every charter is some section's resolved producer" makes the
+# drop loud. Both populations are discovered at run time above, never
+# listed here.
+_sfc_producers = {_s["producer"] for _s in _sfc_sections if _s["producer"]}
+_sfc_unmatched = sorted(_p.stem for _p in _sfc_agent_files
+                        if _p.stem not in _sfc_producers)
+check("field guard: every charter agents/dcs-*.md is the resolved "
+      "producer of at least one schemas.md contract section (a section "
+      "dropping its 'Returned by' line fails here instead of vanishing)",
+      not _sfc_unmatched,
+      f"charters no contract section resolves to: {_sfc_unmatched}")
+
+# (e) one named case per (section, agent) pair (idiom of checks 12(c) /
+# 13(d) / 14(d)) -- a mismatch in a NEW pair fails by name, not folded
+# into an aggregate count.
+for _sfc_s in _sfc_sections:
+    _sfc_label = f"field guard: schemas.md #{_sfc_s['num']} ({_sfc_s['title']})"
+    check(f"{_sfc_label} -- every `|` data row in its field table parses "
+          "as one declared field (an unparsed row fails, never vanishes)",
+          _sfc_s["rows"] == len(_sfc_s["fields"]),
+          f"{_sfc_s['rows']} data rows vs {len(_sfc_s['fields'])} parsed "
+          "fields -- a row the field regex cannot read (e.g. a "
+          "slash-joined cell) is invisible to the comparison")
+    if _sfc_s["producer"] is None:
+        check(f"{_sfc_label} -- contract producer resolves", False,
+              "the 'Returned by'/'Contract producer' sentence did not "
+              "resolve to exactly one agent slug")
+        continue
+    _sfc_charter_path = REPO / "agents" / f"{_sfc_s['producer']}.md"
+    _sfc_label = f"{_sfc_label} -> agents/{_sfc_s['producer']}.md"
+    if not _sfc_charter_path.is_file():
+        check(_sfc_label, False,
+              f"agents/{_sfc_s['producer']}.md does not exist")
+        continue
+    _sfc_target_fields = _sfc_agent_fields.get(_sfc_s["producer"])
+    if _sfc_target_fields is None:
+        check(_sfc_label, False,
+              f"agents/{_sfc_s['producer']}.md has no <output_contract> block")
+        continue
+    _sfc_missing = [_f for _f in _sfc_s["fields"] if _f not in _sfc_target_fields]
+    check(f"{_sfc_label} -- every field this section declares is present "
+          "in the charter's own contract table (this direction only, "
+          "never the reverse)",
+          not _sfc_missing,
+          f"declared in schemas.md but missing from the charter: {_sfc_missing}")
+
+# (f) negative proof (idiom of check 13(f)'s forged mapping): rerun the
+# SAME comparator (_sfc_charter_fields) against one real agent's
+# <output_contract> table held IN MEMORY with one of its own declared
+# fields' table row removed -- the field name taken from the parse above,
+# never typed here -- proving the comparator actually reads the table
+# rather than passing whatever it is handed. No file on disk is touched;
+# agents/** stays untouched.
+_sfc_forge_target = None
+for _sfc_s in _sfc_sections:
+    if not _sfc_s["producer"] or not _sfc_s["fields"]:
+        continue
+    _sfc_p = REPO / "agents" / f"{_sfc_s['producer']}.md"
+    if _sfc_p.is_file():
+        _sfc_forge_target = (_sfc_s, _sfc_p)
+        break
+
+if _sfc_forge_target:
+    _sfc_fs, _sfc_fp = _sfc_forge_target
+    _sfc_real_text = _sfc_fp.read_text(encoding="utf-8")
+    _sfc_victim = _sfc_fs["fields"][0]
+    _sfc_row_re = re.compile(r"^\|\s*`" + re.escape(_sfc_victim) + r"`.*$\n?", re.M)
+    _sfc_forged_text, _sfc_n_removed = _sfc_row_re.subn("", _sfc_real_text)
+    _sfc_forged_fields = _sfc_charter_fields(_sfc_forged_text) or []
+    _sfc_forged_missing = [_f for _f in _sfc_fs["fields"] if _f not in _sfc_forged_fields]
+    check(f"field guard negative proof: removing `{_sfc_victim}` in memory "
+          f"from agents/{_sfc_fs['producer']}.md's own contract table is "
+          "caught by the same comparator (no file touched)",
+          _sfc_n_removed == 1 and bool(_sfc_forged_missing),
+          f"rows removed: {_sfc_n_removed}, fields still reported missing "
+          f"after the forgery: {_sfc_forged_missing}")
+else:
+    check("field guard negative proof: a representative (section, agent) "
+          "pair exists to forge against",
+          False, "no section with a resolved producer, at least one "
+          "declared field, and an existing charter file was found")
+
+# --- 19. schemas.md JSON example carrier -------------------------------------
+# Every fenced code block in dcs/references/schemas.md must parse as JSON
+# -- an example that stopped being valid JSON stops being a worked example.
+# The block population is discovered at run time by walking schemas.md's
+# own ``` fences (_fenced_blocks(), already defined above for check 12 --
+# reused rather than re-derived, same discipline as check 16's reuse of
+# EXCLUDED_DIRS), never a hardcoded list or count.
+_sjb_blocks = _fenced_blocks(schemas_md)
+
+check("json block guard: dcs/references/schemas.md has at least one "
+      "fenced code block",
+      bool(_sjb_blocks),
+      "no ``` fenced block found in dcs/references/schemas.md")
+
+for _sjb_i, _sjb_lines in enumerate(_sjb_blocks, start=1):
+    _sjb_text = "\n".join(_sjb_lines)
+    try:
+        json.loads(_sjb_text)
+        _sjb_err = None
+    except json.JSONDecodeError as _sjb_e:
+        _sjb_err = str(_sjb_e)
+    check(f"json block guard: schemas.md fenced block #{_sjb_i} parses "
+          "with json.loads",
+          _sjb_err is None, _sjb_err or "")
 
 print(f"\n{checks - len(failures)}/{checks} passed")
 sys.exit(1 if failures else 0)

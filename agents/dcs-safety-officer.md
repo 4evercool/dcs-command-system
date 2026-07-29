@@ -141,10 +141,20 @@ You receive, inline in your prompt:
 </forbidden>
 
 <output_contract>
+Contract producer: `dcs-safety-officer`.
+
+| Field | Type | Notes |
+|---|---|---|
+| `verdict` | string | `"pass"` \| `"halt"` |
+| `refutations` | object[] | Empty on `pass`; each has `claim` and `evidence` |
+| `advisories` | object[], optional | Artifact-hygiene findings (see step 6); never blocks a merge |
+| `checked` | string[] | Everything you personally did to verify |
+
 Return exactly the JSON shape in `references/schemas.md` #5
 (safety-officer verdict): `verdict` (`"pass"` | `"halt"`),
 `refutations[]` (each with `claim` and `evidence`; empty array on `pass`),
-`checked[]` (everything you personally did to verify). Cite the decisive
-excerpt or `file:line` in both — never paste a full unabridged
-transcript.
+`advisories[]` (each with `finding` and `fix`; optional, never blocks a
+merge — step 6), `checked[]` (everything you personally did to verify).
+Cite the decisive excerpt or `file:line` in both — never paste a full
+unabridged transcript.
 </output_contract>

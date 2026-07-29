@@ -529,3 +529,46 @@ reject a malformed or incomplete return before it becomes doctrine for
 the rest of the period — a subagent writing straight to disk could
 commit a bad return to the record with nobody positioned to catch it
 first.
+
+**The contract-declaration format (incident `schemas-contract-format`,
+period 1).** Before this incident, `schemas.md` was contract-shaped only
+by convention — a `Returned by` line plus a fields table with one field
+per row — and two sections quietly broke that convention: #3 had neither
+a `Returned by` line nor a fields table at all (it was documented purely
+by its JSON example), and #6 joined several distinct field names into one
+table cell with `/` (`type` / `verdict` / `disposition`), which is
+unreadable to anything mechanical because a cell holding three names
+isn't a list of one field, it's a merge conflict nobody resolved. #2 had
+a second, independent ambiguity: its `Returned by` line names two agents
+(`dcs-planning-chief` and, for deploy concerns, `dcs-logistics-chief`),
+which is honest about who writes *some* schema, but not about which agent
+owns *this* section's own field list.
+
+The fix treats "`Returned by` line naming exactly one producer, plus a
+fields table with exactly one field per row" as the format itself, already
+true by construction for #1/#4/#5, and completes it for the three that
+didn't fit: #3 gained its own `Returned by` line and table (its schema was
+always `dcs-logistics-chief`'s alone); #2 gained an explicit `Contract
+producer:` sentence naming `dcs-planning-chief` only, so a reader — human
+or mechanical — never has to infer which of the two named agents owns the
+table below; #6 lost every slash-joined cell by adding a `Command point`
+column and giving each field its own row, so `disposition` (used at both
+`deviation` and `verdict_disposition`, with a different enum each time)
+and `type`/`verdict` (each used at exactly one point) are no longer
+conflated into one ambiguous row. `esg_activation` — the one field that
+rides with any decision rather than belonging to a single point — carries
+the point-column value `any` rather than an enumerated list (its
+optionality lives in the Type column, beside every other type qualifier),
+by design: it is the one field in the table that is genuinely
+cross-cutting, not a fourth point hiding under a fifth name.
+
+The same shape was mirrored into each `agents/dcs-*.md` charter's own
+`<output_contract>`, closing a real drift in the same edit:
+`agents/dcs-safety-officer.md`'s contract prose had never been updated to
+mention `advisories` after `schemas.md` gained the field at v0.6.5
+(commit `6a57b97`; regenerate both sides of the drift with
+`git show 6a57b97 -- agents/dcs-safety-officer.md dcs/references/schemas.md`)
+— the charter and the schema it implements had quietly
+disagreed about the shape of a `pass` verdict since that commit, caught
+only because this incident audited every charter's contract block against
+its schemas.md section side by side.

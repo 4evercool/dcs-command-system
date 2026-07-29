@@ -100,6 +100,18 @@ inventing an assumption.
 </forbidden>
 
 <output_contract>
+Contract producer: `dcs-planning-chief` (the deploy/env/migration schema
+is `dcs-logistics-chief`'s own — `references/schemas.md` #3, logistics-chief plan).
+
+| Field | Type | Notes |
+|---|---|---|
+| `objectives_feedback` | string | Push back on unmeasurable/untestable 202 criteria here |
+| `tactics` | string[] | The "how", one level above individual taskings |
+| `taskings` | object[] | Nested keys stay prose — see the schema below |
+| `partition_ok` | boolean | `false` requires `risks` to justify sequential/worktree staging |
+| `risks` | string[] | Partition, ordering, or any threat to disjoint parallel execution |
+| `verification_plan` | string | What "done" looks like end to end, for the Safety Officer |
+
 Return exactly the JSON shape in `references/schemas.md` #2 (chief plan):
 `objectives_feedback`, `tactics[]`, `taskings[]` (each with `id`, `task`,
 `territory[]`, `forbidden[]`, `evidence_required[]`), `partition_ok`,

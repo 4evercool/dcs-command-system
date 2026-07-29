@@ -74,6 +74,16 @@ yourself):
 </constraints>
 
 <output_contract>
+Contract producer: `dcs-situation-analyst`.
+
+| Field | Type | Notes |
+|---|---|---|
+| `summary` | string | One paragraph, no hedging |
+| `evidence` | string[] | Cites its source — no unsourced claims |
+| `affected_files` | string[] | Best-guess blast radius |
+| `repro_path` | string | Numbered steps, or `"not reproducible: <why>"` |
+| `prior_art` | string | Prior incident/memory reference, or `"none found"` |
+
 Return exactly the JSON shape in `references/schemas.md` #1
 (situation-analyst findings): `summary`, `evidence[]`, `affected_files[]`,
 `repro_path`, `prior_art`. Do not wrap it in additional prose the IC has to
