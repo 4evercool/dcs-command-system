@@ -23,6 +23,69 @@ release commit's own message instead:
 
 ---
 
+## 0.6.14 — 2026-07-29
+
+### Added
+
+- **Agent return contracts are now machine-readable on both sides, and a
+  new guard checks them against each other.** `dcs/references/schemas.md`
+  gained a uniform declaration shape for every contract section: a
+  `Returned by` (or, where a section's prose names more than one agent, an
+  explicit `Contract producer:`) sentence naming exactly one producing
+  agent, plus a one-field-per-row table — closing three prior gaps in one
+  pass: §3 (Logistics Chief) had no field table at all, §6 (Commander
+  decisions) packed multiple field names into slash-joined cells with no
+  binding to a command point, and §2's `Returned by` line named two agents
+  with no way to tell which one owns its field list. Every
+  `agents/dcs-*.md` charter now carries a matching `<output_contract>`
+  block in the same shape — `agents/dcs-commander.md` gets one for the
+  first time, and `agents/dcs-safety-officer.md`'s regains `advisories`,
+  missing from its contract prose since v0.6.5 (`6a57b97`) even though the
+  schema and the charter's own process had both used the field since.
+- **`tests/test_doctrine_integrity.py` gained two new checks (18, 19).**
+  Check 18 compares every schema section's declared fields against its
+  resolved charter's own table, in one direction only (a field the schema
+  declares must appear in the charter — the reverse is not checked, by
+  measured design: on the prior incident's population, that direction
+  gave zero false positives against one real finding, the reverse gave
+  four false names and one empty result). Both populations are discovered
+  by walking `schemas.md` and `agents/dcs-*.md` at run time, never listed
+  as literals; degeneracy is guarded on three axes (empty section
+  population, empty charter population, a section whose own declaration
+  fails to parse), plus a row-parity case and a population-completeness
+  case added after the Safety Officer's own review surfaced two ways a
+  malformed or dropped declaration could pass silently. A permanent
+  negative-proof case forges one field out of a real charter's table in
+  memory (no file touched) and confirms the same comparator catches it.
+  Check 19 parses every fenced JSON example in `schemas.md` with
+  `json.loads`, with its own empty-population guard.
+
+### Fixed
+
+- `agents/dcs-safety-officer.md`'s `<output_contract>` block now lists
+  `advisories`, matching `schemas.md #5, Safety-officer verdict` and the
+  charter's own step 6 — the drift dated to v0.6.5 and had gone unnoticed
+  until this release's own new guard made it checkable.
+
+### Config
+
+No new keys.
+
+### Verified at release
+
+`test_doctrine_integrity.py` **114/114 passed**, `test_dcs_gate.py`
+**100/100 passed**, `test_dcs_intake.py` **10/10 passed** (each re-run at
+this bump). `dcs/hooks/dcs_gate.py` is untouched since `v0.6.13` — `git
+diff --stat v0.6.13..HEAD -- dcs/hooks/dcs_gate.py` prints nothing. Hot-path
+budget check: `doctrine.md` + `schemas.md` = 37,882 of 37,888 normalized
+bytes (a 6-byte corridor for the next release touching either file —
+tracked in this repository's own maintainer vault, not shipped). Shipped
+in one operational period, zero deviations, zero Safety halts; the Safety
+Officer's six advisories (two of them new checks' own degeneracy gaps) were
+folded into the merged commit before close, not deferred.
+
+---
+
 ## 0.6.13 — 2026-07-29
 
 ### Added
