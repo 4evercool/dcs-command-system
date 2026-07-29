@@ -23,6 +23,42 @@ release commit's own message instead:
 
 ---
 
+---
+
+## 0.7.0 — 2026-07-29
+
+### Added
+
+- **Mechanical prompt-vs-schema validation at dispatch and receipt — the
+  off-disk half of the schema-drift channel that 0.6.14's on-disk format
+  left open.** Every workflow that spawns an agent now carries the agent's
+  required schema fields inline in the spawn prompt (inbound guard: the
+  agent *sees* the contract it must conform to). Every workflow that
+  collects an agent return now validates it structurally before writing any
+  artifact to disk (outbound guard: missing JSON block, missing required
+  field, or field outside the schema is treated as a deviation rather than
+  silently accepted). Both directions were measured in the field — five
+  inbound instances and three outbound instances across two prior
+  incidents — and neither was visible to the tree guard because a prompt is
+  not a file and neither is a return.
+- **`tests/test_doctrine_integrity.py` gained two new checks (20, 21).**
+  Check 20 (inbound field-presence guard) verifies that every required
+  field from every schema section appears in backtick context in the
+  workflow file that spawns that agent type — five named cases across
+  three workflows and five schema sections, all discovered by parsing
+  `schemas.md` and the workflow files at run time rather than hardcoded.
+  Check 21 (outbound missing-required-fields guard) walks
+  `.dcs/incidents/*/` and reports field mismatches against declared
+  schemas as **informational findings** (not test failures) — historical
+  drift is documented without blocking the suite. Both checks follow the
+  same discovery-based discipline as checks 13–19.
+- **Commander JSON examples now include `esg_activation`.** All four
+  `⟨command_points⟩` examples in `agents/dcs-commander.md` carry
+  `"esg_activation": null` — the field was declared in the
+  `⟨output_contract⟩` table since 0.6.14 but absent from every example a
+  commander would copy as a template. The discrepancy was flagged in
+  `schema-citation-guard` (2026-07-26) and deferred to this release.
+
 ## 0.6.14 — 2026-07-29
 
 ### Added
