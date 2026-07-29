@@ -1106,6 +1106,33 @@ unranked) owns exactly that file and is the natural carrier.
 > line; the carrier `esg-intake-writeback-gap` entered the ranks at 5,
 > and its register row now records this fold explicitly.
 
+## 26. The hot-path budget corridor is 6 bytes after `schemas-contract-format`
+
+**Evidence.** `schemas-contract-format`'s Safety Officer measured the
+pair at period 1's close (2026-07-29): `doctrine.md` + `schemas.md` =
+37 882 normalized bytes against `HOT_PATH_BUDGET_KB = 37` → 37 888 — a
+6-byte corridor. Regenerate (from repo root):
+
+```bash
+python -c "d=open('dcs/references/doctrine.md','rb').read().replace(b'\r\n',b'\n'); s=open('dcs/references/schemas.md','rb').read().replace(b'\r\n',b'\n'); print(len(d)+len(s),'of',37*1024)"
+```
+
+(the ceiling itself is `HOT_PATH_BUDGET_KB` in
+`tests/test_doctrine_integrity.py` — read it there, not here, if the
+ratchet has since been recomputed).
+
+**Why it matters.** Any next edit adding more than 6 net bytes to either
+hot-path file turns the budget check red at merge time, likely surprising
+the incident that does it mid-close. That incident's Safety advisory 4
+asked for exactly this note: plan the trim (or a deliberate ratchet
+recompute, measured on the MERGE RESULT per the comment block beside the
+budget check in `tests/test_doctrine_integrity.py`) at 202 time, not at
+the red check.
+
+**Not an incident.** A constraint to plan around, not a defect to fix —
+the ratchet working as designed. Becomes an incident only if a rank
+demands hot-path growth no honest trim can pay for.
+
 ## Follow-up registered at `token-economy`'s close, 2026-07-28
 
 Four one-line package-text fixes surfaced as Safety advisories, none
