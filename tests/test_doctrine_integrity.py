@@ -772,12 +772,17 @@ check(f"bar carrier: candidate population has {_bar_line_count} matching "
       "--include=*.md | wc -l)",
       _bar_line_count > 0 and len(_bar_candidates) > 0)
 
-# A "declaring place" is a candidate file with at least one paragraph where
+# A "declaring site" is a candidate file with at least one paragraph where
 # an advisory token AND a refutation/halt-verdict token co-occur -- the
-# bounded window (d) requires. Measured at period start: four candidate
-# files each carry only one of the two token classes, so a correct
-# co-occurrence predicate captures none of them -- never special-cased by
-# name here; the exclusion falls out of the predicate itself.
+# token-co-occurrence predicate that qualifies a file for the citation
+# checks below, distinct from a "citation" or "reference" (explicit
+# `agents/dcs-safety-officer.md step N` backtick citation). The co-
+# occurrence is necessary but not sufficient for check 14(d) -- a
+# declaring site must also carry a citation to the charter step.
+# Measured at period start: four candidate files each carry only one of
+# the two token classes, so a correct co-occurrence predicate captures
+# none of them -- never special-cased by name here; the exclusion falls
+# out of the predicate itself.
 _bar_declaring = []
 _bar_declaring_paras = {}
 for _bar_p in _bar_candidates:
@@ -797,10 +802,10 @@ _bar_declaring_rel = [str(p.relative_to(REPO)).replace("\\", "/") for p in _bar_
 # a file list, so a rewrite that deletes the prose instead of reconciling
 # it (population collapses to nothing) fails here instead of "passing" by
 # vacuous truth.
-check("bar carrier: declaring-place set is non-empty and includes the "
+check("bar carrier: declaring-site set is non-empty and includes the "
       "charter itself",
       bool(_bar_declaring) and any(r == "agents/dcs-safety-officer.md" for r in _bar_declaring_rel),
-      f"declaring places: {_bar_declaring_rel}")
+      f"declaring sites: {_bar_declaring_rel}")
 
 _BAR_SURFACES = {
     "agents/": lambda r: r.startswith("agents/"),
@@ -809,30 +814,47 @@ _BAR_SURFACES = {
 }
 _bar_surfaces_hit = [_bar_label for _bar_label, _bar_pred in _BAR_SURFACES.items()
                      if any(_bar_pred(r) for r in _bar_declaring_rel)]
-check("bar carrier: declaring places span at least two of the three "
+check("bar carrier: declaring sites span at least two of the three "
       "scanned surfaces",
       len(_bar_surfaces_hit) >= 2, f"surfaces hit: {_bar_surfaces_hit}")
 
 
-def _bar_paragraph_problems(paragraph, expected_step, expected_bar_count, expected_token):
+def _bar_paragraph_problems(paragraph, expected_step, expected_bar_count, expected_token,
+                           check_zero_cite=False):
     """Every problem invariants 1/2/3 find in one qualifying paragraph,
     against the SUPPLIED expected values -- never a private
     re-derivation -- so the same function serves both the real comparator
-    below and the forged-parse negative proof that follows it."""
+    below and the forged-parse negative proof that follows it.
+
+    When check_zero_cite is True, also flag a declaring site
+    (advisory+refutation token co-occurrence) with zero citations to the
+    charter step -- a silent-pass failure mode that the negative-proof test
+    below exists to catch. Defaults to False so the per-file comparator
+    preserves existing behaviour until source files are updated."""
     _problems = []
     _norm_para = _ws_norm(paragraph)
-    for _cm in _BAR_CITE_RE.finditer(_norm_para):
-        _n = int(_cm.group(1))
-        if _n != expected_step:
-            _problems.append(f"cites step {_n}, charter's live step is {expected_step}")
-        _window = _norm_para[max(0, _cm.start() - 150):_cm.end() + 150]
-        _bar_m = _BAR_COUNT_RE.search(_window)
-        if _bar_m:
-            _named = _bar_num(_bar_m.group(1))
-            if _named != expected_bar_count:
-                _problems.append(
-                    f"names {_named} bars beside the step citation, "
-                    f"charter's step {expected_step} lists {expected_bar_count}")
+    _cites = list(_BAR_CITE_RE.finditer(_norm_para))
+    if _cites:
+        for _cm in _cites:
+            _n = int(_cm.group(1))
+            if _n != expected_step:
+                _problems.append(f"cites step {_n}, charter's live step is {expected_step}")
+            _window = _norm_para[max(0, _cm.start() - 150):_cm.end() + 150]
+            _bar_m = _BAR_COUNT_RE.search(_window)
+            if _bar_m:
+                _named = _bar_num(_bar_m.group(1))
+                if _named != expected_bar_count:
+                    _problems.append(
+                        f"names {_named} bars beside the step citation, "
+                        f"charter's step {expected_step} lists {expected_bar_count}")
+    elif check_zero_cite:
+        # A declaring site (advisory+refutation token co-occurrence, the
+        # predicate that placed this paragraph in _bar_declaring_paras) with
+        # zero citations to the charter step -- silently passes the per-file
+        # comparator below without this negative-proof guard.
+        _problems.append(
+            f"declaring site (advisory+refutation token co-occurrence) "
+            f"carries no citation to agents/dcs-safety-officer.md step {expected_step}")
     for _tm in _BAR_DEFAULT_TOKEN_RE.finditer(_norm_para):
         _tok = _tm.group(1) or _tm.group(2)
         if _tok != expected_token:
@@ -841,15 +863,15 @@ def _bar_paragraph_problems(paragraph, expected_step, expected_bar_count, expect
     return _problems
 
 
-# (d) one named case per declaring place (idiom of checks 12(c)/13(d)): a
-# missing or mismatched citation in a NEW declaring place fails by name,
+# (d) one named case per declaring site (idiom of checks 12(c)/13(d)): a
+# missing or mismatched citation in a NEW declaring site fails by name,
 # not folded into one aggregate.
 for _bar_p in _bar_declaring:
     _bar_rel = str(_bar_p.relative_to(REPO)).replace("\\", "/")
     _bar_problems = []
     for _bar_para in _bar_declaring_paras[_bar_p]:
         _bar_problems += _bar_paragraph_problems(
-            _bar_para, _bar_step_num, _bar_charter_count, _bar_charter_token)
+            _bar_para, _bar_step_num, _bar_charter_count, _bar_charter_token, check_zero_cite=True)
     check(f"bar carrier: {_bar_rel} -- every safety-officer.md step "
           f"citation matches the charter (step {_bar_step_num}, "
           f"{_bar_charter_count} bars, default `{_bar_charter_token}`)",
@@ -879,6 +901,23 @@ check("bar carrier: comparator flags a forged (one bar dropped) bar count",
       f"no mismatch found expecting {max(0, _bar_charter_count - 1)} bars "
       f"instead of {_bar_charter_count}")
 
+# (e)(iii) negative proof: a declaring site (advisory+refutation token
+# co-occurrence) with zero citations to agents/dcs-safety-officer.md must
+# produce a non-empty problem list -- a comparator that stays quiet against
+# a paragraph carrying both tokens but no step citation silently passes the
+# per-file comparator below on a site that never cited the charter.
+_bar_forged_zero_cite_para = (
+    "This advisory paragraph discusses a refutation. "
+    "No citation to any charter step appears here."
+)
+_bar_forged_zero_cite_problems = _bar_paragraph_problems(
+    _bar_forged_zero_cite_para, _bar_step_num, _bar_charter_count, _bar_charter_token,
+    check_zero_cite=True)
+check("bar carrier: comparator flags a declaring site with zero citations",
+      bool(_bar_forged_zero_cite_problems),
+      f"no problem reported for a paragraph with advisory+refutation "
+      f"tokens but zero citations")
+
 # --- criterion 3 (mechanical half): a bare 'N of M' census in the charter,
 # with no regenerating command in the same paragraph, is red. "Same
 # paragraph" (blank-line delimited) was confirmed by the Owner at this
@@ -896,6 +935,28 @@ for _bar_para in _bar_paragraphs(safety_officer_md):
 check("bar carrier (criterion 3): the charter has no bare 'N of M' census "
       "without a regenerating command in the same paragraph",
       not _bar_census_bad, "; ".join(_bar_census_bad))
+
+# (criterion 3, appendix): same rule applied to doctrine-appendix.md, but
+# only to bare-census matches inside double-quoted spans -- a quoted census
+# is a direct assertion of a specific number, more binding than a running-
+# text mention. The appendix carries field-lesson narratives that recount
+# past figures in running prose (e.g. "0 cases across 5 files"); those are
+# not inside quotation marks and are out of scope here.
+_appendix_md = read("dcs/references/doctrine-appendix.md")
+_appendix_census_bad = []
+for _appendix_para in _bar_paragraphs(_appendix_md):
+    _quoted_census = []
+    for _appendix_cm in _BARE_CENSUS_RE.finditer(_appendix_para):
+        _match_pos = _appendix_cm.start()
+        _before = _appendix_para[:_match_pos]
+        if _before.count('"') % 2 == 1:  # inside double quotes
+            _quoted_census.append(_appendix_cm.group(0))
+    if _quoted_census and not _REGEN_CMD_RE.search(_appendix_para):
+        _appendix_census_bad.extend(_quoted_census)
+check("bar carrier (criterion 3): doctrine-appendix.md has no bare 'N of M' "
+      "census inside quotation marks without a regenerating command in "
+      "the same paragraph",
+      not _appendix_census_bad, "; ".join(_appendix_census_bad))
 
 # --- 15. deploy-evidence contract carrier -----------------------------------
 # Incident deploy-marker-blind, 201: two prose surfaces stated the DEPLOYED

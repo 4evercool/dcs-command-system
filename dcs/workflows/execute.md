@@ -229,7 +229,7 @@ is to attempt to refute completion using its own independent checks.
 
 The Safety Officer returns JSON per schemas.md #5 (safety-officer verdict):
 `verdict` (`"pass"`|`"halt"`), `refutations` (object[]), `advisories`
-(object[], optional), `checked` (string[]).
+(object[], optional), `checked` (string[]) — advisory/refutation bar per `agents/dcs-safety-officer.md` step 6.
 
 ## 9. Handle the verdict — COMMAND POINT 4 (verdict disposition)
 
@@ -238,7 +238,7 @@ a JSON block is present, all required fields per schemas.md #5 (safety-officer v
 `refutations`, `checked`; `advisories` is optional) are present, and no
 fields outside the schema appear. Missing required field or structural
 non-JSON = deviation — re-spawn the Safety Officer rather than proceeding to
-disposition.
+disposition. Advisory/refutation bar: `agents/dcs-safety-officer.md` step 6.
 
 **Preflight — Channel A: confirm this project's gate carries the halt
 ceiling before relying on it.** A package update refreshes
@@ -247,7 +247,7 @@ ceiling before relying on it.** A package update refreshes
 `grep -c halt_cycles "<project>/.claude/hooks/dcs_gate.py"`; `0` means no
 counter (a **phantom ceiling**). Say so in one named `214-LOG.md` line
 (`halt ceiling: advisory -- dcs_gate.py has no halt_cycles counter, run
-/dcs-init`) and treat the count below as **advisory**, not enforced.
+/dcs-init`) and treat the count below as **advisory** (per `agents/dcs-safety-officer.md` step 6), not enforced.
 
 This is a command point (doctrine: "Transfer of command"). **If this
 session is not running Fable**: spawn `dcs-commander` via Task (model

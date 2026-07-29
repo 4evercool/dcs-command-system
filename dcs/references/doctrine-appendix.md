@@ -365,8 +365,10 @@ incident `safety-halt-functional-scope`).** v0.6.5 gave the Safety
 Officer's charter an explicit default: an artifact-hygiene finding is an
 `advisories[]` entry, not a `halt`, unless it clears one of three named
 bars (`agents/dcs-safety-officer.md` step 6). The charter justified that
-default with a census — "13 of 17 Safety halts across all incidents to
-date were process/artifact findings" — which was itself a derived fact
+default with a qualitative census — "the large majority of Safety halts
+across all incidents to date were process/artifact findings" — which
+was itself a derived fact (the specific numbers were
+unverifiable, per the field lesson below)
 with no regenerating command beside it, principle 15 applied to the
 sentence that introduced the advisory/refutation split. When this
 incident tried to regenerate it, **no query over the surviving

@@ -382,7 +382,7 @@ symmetric fallback below).
   `command: verdict -> fix_taskings` entry (command point 4), cited by
   its timestamp;
 - from `execute.md` step 9's advisories-on-a-pass paragraph, when an
-  advisory's own fix touches `IAP.md`'s content, with that pass's
+  advisory's own fix (per `agents/dcs-safety-officer.md` step 6) touches `IAP.md`'s content, with that pass's
   already-logged `command: verdict -> close` / `-> next_period` entry
   (command point 4), cited by its timestamp.
 
