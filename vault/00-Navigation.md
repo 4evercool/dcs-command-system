@@ -35,6 +35,7 @@ only ever be read while improving DCS itself, it belongs here.
 - [[Decisions/orphan-worktree-husk|Decision: stop reporting the schema-citation-guard husk]] — reopened 2026-07-28, a second husk appeared
 - [[Decisions/delegation-evolution|Decision: how DELEGATION.md reached v4]] — the full v1→v4 bound-by-bound argument, consolidated from STRATEGY.md's Sessions log
 - [[Decisions/sqlite-migration-register|Decision: decline the SQLite migration for REGISTER.md]] — the Owner's proposal and the case against it
+- [[Decisions/v0.7-scope|Decision: what earns the 0.7.0 label]] — ADOPTED at the eleventh `/dcs-esg` (2026-07-29): contract validation at the seam (v0.6.14 shipped the format; 0.7.0 is the dispatch/receipt validation it enables)
 - [[Backlog]] — known gaps, with evidence
 
 ## Conventions

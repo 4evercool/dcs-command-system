@@ -71,7 +71,13 @@ evidence for tuning it — and tuning by impression is what principle 15
 warns about. A single line appended to a local (gitignored) log would be
 enough.
 
-## 5. Version bumps still go through PowerShell — QUEUED
+## 5. Version bumps still go through PowerShell — FOLDED into the `bin/dcs.js` incident
+
+> **Folded at the eleventh `/dcs-esg`, 2026-07-29:** register row
+> `version-bump-command` was absorbed into `doctor-version-only-check`
+> (one `bin/dcs.js` incident — content-aware `doctor` + `bump`), per
+> [[Decisions/v0.7-scope]]'s weighing. The hazard class below carries
+> across unchanged.
 
 The encoding disaster in [[Meta/building-dcs-lessons]] §6 was repaired
 and guarded (no-Cyrillic check, `package.json` < 8 kB), but the *process*
