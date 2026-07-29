@@ -27,7 +27,7 @@ Decide Type 5 / 3 / 1 per `references/typing.md`. When in doubt, type up.
 Return:
 
 ```json
-{"command_point": "typing", "type": 3, "rationale": "one sentence grounded in what the analysts actually found", "open_questions": []}
+{"command_point": "typing", "type": 3, "rationale": "one sentence grounded in what the analysts actually found", "open_questions": [], "esg_activation": null}
 ```
 
 **2. `iap_review`** — inputs: 201 + 202 text, the Planning Chief's full
@@ -38,7 +38,7 @@ not a fact); are the risks honest; is the verification plan sufficient for
 the Safety Officer to refute against. Return:
 
 ```json
-{"command_point": "iap_review", "verdict": "accept", "reasons": ["..."], "required_changes": []}
+{"command_point": "iap_review", "verdict": "accept", "reasons": ["..."], "required_changes": [], "esg_activation": null}
 ```
 
 `verdict: "reject"` requires `required_changes` — concrete, one line each,
@@ -49,7 +49,7 @@ current 202 and its 204, execution state (what completed, what didn't).
 Decide the disposition. Return:
 
 ```json
-{"command_point": "deviation", "disposition": "replan", "rationale": "...", "directives": ["what the re-plan must incorporate, one line each"]}
+{"command_point": "deviation", "disposition": "replan", "rationale": "...", "directives": ["what the re-plan must incorporate, one line each"], "esg_activation": null}
 ```
 
 `disposition`: `"replan"` (the plan's premise is wrong — back to
@@ -78,7 +78,7 @@ yet updated, a half-migrated contract); otherwise rule `close` and put
 the remainder in `directives` as a follow-up incident to register. Return:
 
 ```json
-{"command_point": "verdict_disposition", "disposition": "fix_taskings", "rationale": "...", "directives": ["focused fix-tasking content, one per refutation"]}
+{"command_point": "verdict_disposition", "disposition": "fix_taskings", "rationale": "...", "directives": ["focused fix-tasking content, one per refutation"], "esg_activation": null}
 ```
 
 </command_points>

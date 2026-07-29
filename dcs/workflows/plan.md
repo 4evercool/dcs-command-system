@@ -82,6 +82,15 @@ these two files contain, per its agent charter). For Type 1, also spawn
 `dcs-logistics-chief` in the same message with the same two files' text
 (both can run in parallel — they don't depend on each other's output).
 
+The Planning Chief returns JSON per schemas.md #2 (chief plan): required
+fields `objectives_feedback` (string), `tactics` (string[]), `taskings`
+(object[], each with `id`/`task`/`territory[]`/`forbidden[]`/
+`evidence_required[]`), `partition_ok` (boolean), `risks` (string[]),
+`verification_plan` (string). The Logistics Chief returns JSON per
+schemas.md #3 (logistics-chief plan): required fields `deploy_path`
+(string), `env_deps` (string[]), `migration_ordering` (string),
+`rollback_plan` (string), `risks` (string[]).
+
 If this is a re-plan triggered by a deviation, also include the
 triggering specialist's `found` / `why_plan_wrong` / `proposal` fields in
 the Planning Chief's prompt.
@@ -112,9 +121,16 @@ that is a signal the 202 is unstable — see 4b's repeated-reject trigger.
 
 ## 4. Validate the returns — COMMAND POINT 2 (IAP acceptance)
 
-From the Planning Chief: `objectives_feedback`, `tactics[]`, `taskings[]`,
-`partition_ok`, `risks[]`, `verification_plan` (schema in
-`references/schemas.md` #2, chief plan).
+Validate each chief return structurally before proceeding to lint: confirm
+a JSON block is present, all required fields per schemas.md #2 (chief plan; Planning
+Chief: `objectives_feedback`, `tactics`, `taskings`, `partition_ok`,
+`risks`, `verification_plan`) or #3 (Logistics Chief: `deploy_path`,
+`env_deps`, `migration_ordering`, `rollback_plan`, `risks`) are present,
+and no fields outside the declared schema appear. Missing required field
+or structural non-JSON = deviation — re-spawn the chief rather than
+proceeding to lint.
+
+From the Planning Chief: the fields above match schemas.md #2 (chief plan).
 
 ### 4a. Tasking lint — mechanical, run BEFORE the command point (v0.5.1)
 

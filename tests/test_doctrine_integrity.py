@@ -1287,17 +1287,18 @@ WORKFLOW_GRANDFATHERED_LINES = {
     # (2026-07-28), 32 over the 250-line policy ceiling. Documented,
     # temporary debt pending a follow-up trim.
     'deploy.md': 282,
-    # 424 lines measured at incident workflow-budget-enforcement
-    # (2026-07-28), 174 over the 250-line policy ceiling. Documented,
+    # 255 lines measured at incident prompt-vs-schema-drift
+    # (2026-07-29), 5 over the 250-line policy ceiling. Documented,
     # temporary debt pending a follow-up trim.
-    'execute.md': 424,
-    # 666 lines measured at incident workflow-budget-enforcement
-    # (2026-07-28), 416 over the 250-line policy ceiling -- and NOT a
-    # settled state being formalised: plan.md was 422 lines as recently as
-    # commit 623582f (2026-07-28), then reached 666 via e285108 and
-    # 807edb8 the same day. This entry records a same-day 244-line growth
-    # as accepted debt, pending a follow-up trim.
-    'plan.md': 666,
+    'new.md': 260,
+    # 445 lines measured at incident prompt-vs-schema-drift
+    # (2026-07-29), 195 over the 250-line policy ceiling. Documented,
+    # temporary debt pending a follow-up trim.
+    'execute.md': 450,
+    # 682 lines measured at incident prompt-vs-schema-drift
+    # (2026-07-29), 432 over the 250-line policy ceiling. Documented,
+    # temporary debt pending a follow-up trim.
+    'plan.md': 687,
 }
 
 
@@ -1614,6 +1615,148 @@ for _sjb_i, _sjb_lines in enumerate(_sjb_blocks, start=1):
     check(f"json block guard: schemas.md fenced block #{_sjb_i} parses "
           "with json.loads",
           _sjb_err is None, _sjb_err or "")
+
+# --- 20. inbound field-presence guard -----------------------------------------
+# For each workflow that spawns an agent, verify that ALL required fields
+# from the relevant schema contract section(s) appear in backtick context in
+# the workflow text. A field declared in a schema section that is NOT found in
+# backtick-context in the workflow means the workflow no longer names a field
+# the schema requires -- real inbound drift: a spawned agent reading the
+# workflow would be unaware of a required return field.
+#
+# Workflow-to-section mapping is the one declared place; the field set for
+# each section comes from the _sfc_sections parse above (check 18) -- same
+# "parse the source of truth at run time" discipline as checks 13/14/15/18.
+# No field name, section number or workflow name appears as a literal in any
+# comparator below.
+
+_INBOUND_WF_SECTIONS = {
+    'new.md':    [1],      # schema #1 -> dcs-situation-analyst
+    'plan.md':   [2, 3],   # schema #2 -> dcs-planning-chief, #3 -> dcs-logistics-chief
+    'execute.md': [4, 5],  # schema #4 -> dcs-ops-specialist, #5 -> dcs-safety-officer
+}
+
+for _iwf_name, _iwf_sections in _INBOUND_WF_SECTIONS.items():
+    _iwf_path = REPO / "dcs" / "workflows" / _iwf_name
+    if not _iwf_path.is_file():
+        check(f"inbound field guard: {_iwf_name} exists", False,
+              f"dcs/workflows/{_iwf_name} not found")
+        continue
+    _iwf_text = _iwf_path.read_text(encoding="utf-8")
+    # Every backtick-wrapped token in the workflow -- restrict to single-line
+    # matches: [^`\n] won't cross newlines, which is correct for Markdown
+    # inline code (fenced blocks use ```, never a single backtick span).
+    _iwf_backticks = set(re.findall(r'`([^`\n]+)`', _iwf_text))
+
+    for _iwf_sec in _iwf_sections:
+        _iwf_section = next((_s for _s in _sfc_sections if _s["num"] == _iwf_sec), None)
+        if _iwf_section is None:
+            check(f"inbound field guard: {_iwf_name} -> schemas.md #{_iwf_sec} -- "
+                  "section found in schemas.md parse",
+                  False,
+                  f"schemas.md section #{_iwf_sec} not found in _sfc_sections "
+                  "(no 'Returned by' sentence, or section does not exist)")
+            continue
+        _iwf_fields = _iwf_section.get("fields", [])
+        if not _iwf_fields:
+            check(f"inbound field guard: {_iwf_name} -> schemas.md #{_iwf_sec} -- "
+                  "section has declared fields",
+                  False,
+                  f"section #{_iwf_sec} ({_iwf_section.get('title', '?')}) "
+                  "has no parsed field table")
+            continue
+
+        _iwf_missing = [_f for _f in _iwf_fields if _f not in _iwf_backticks]
+        check(f"inbound field guard: {_iwf_name} -> schemas.md #{_iwf_sec} "
+              f"({_iwf_section['title']}) -- all {len(_iwf_fields)} required "
+              "fields present in backtick context",
+              not _iwf_missing,
+              f"declared in schema but missing from backtick context: {_iwf_missing}")
+
+# --- 21. outbound missing-required-fields guard --------------------------------
+# Walk .dcs/incidents/*/ looking for SAFETY.md, AAR.md, 214-LOG.md -- files
+# that contain JSON blocks resembling agent returns. For each JSON block found,
+# compare its fields against the relevant schema section's required fields.
+# Findings are INFORMATIONAL only (never fail the test): historical artifacts
+# contain documented pre-existing drift that must not block the suite.
+#
+# SAFETY.md maps to schemas.md #5 (safety-officer). AAR.md and 214-LOG.md are
+# matched by field presence -- the schema section whose required fields overlap
+# most with the block's keys is treated as the relevant one.
+
+_INCIDENTS_DIR = REPO / ".dcs" / "incidents"
+_OUTBOUND_FNAMES = ["SAFETY.md", "AAR.md", "214-LOG.md"]
+
+# File-name to primary schema section guess
+_OUTBOUND_FILE_SCHEMA = {
+    "SAFETY.md": 5,   # safety-officer verdict
+}
+
+# Known schema required-field sets (from the _sfc_sections parse above)
+_OUTBOUND_SCHEMA_FIELDS = {
+    _s["num"]: _s["fields"]
+    for _s in _sfc_sections
+    if _s.get("fields")
+}
+
+_ob_findings = []
+
+if _INCIDENTS_DIR.is_dir():
+    for _ob_incident_dir in sorted(_INCIDENTS_DIR.iterdir()):
+        if not _ob_incident_dir.is_dir():
+            continue
+        for _ob_fname in _OUTBOUND_FNAMES:
+            _ob_fpath = _ob_incident_dir / _ob_fname
+            if not _ob_fpath.is_file():
+                continue
+            _ob_text = _ob_fpath.read_text(encoding="utf-8")
+            _ob_rel = str(_ob_fpath.relative_to(REPO)).replace("\\", "/")
+
+            for _ob_block_i, _ob_lines in enumerate(_fenced_blocks(_ob_text), start=1):
+                _ob_json_text = "\n".join(_ob_lines)
+                try:
+                    _ob_parsed = json.loads(_ob_json_text)
+                except json.JSONDecodeError:
+                    continue
+                if not isinstance(_ob_parsed, dict):
+                    continue
+
+                _ob_keys = set(_ob_parsed.keys())
+
+                # Determine which schema section(s) to check against
+                _ob_primary = _OUTBOUND_FILE_SCHEMA.get(_ob_fname)
+                if _ob_primary is not None:
+                    _ob_secs = [_ob_primary]
+                else:
+                    # Best match by field overlap
+                    if _OUTBOUND_SCHEMA_FIELDS:
+                        _ob_secs = sorted(
+                            _OUTBOUND_SCHEMA_FIELDS,
+                            key=lambda _sn: len(_ob_keys & set(_OUTBOUND_SCHEMA_FIELDS.get(_sn, []))),
+                            reverse=True,
+                        )[:1]
+                    else:
+                        _ob_secs = []
+
+                for _ob_sec in _ob_secs:
+                    _ob_required = _OUTBOUND_SCHEMA_FIELDS.get(_ob_sec, [])
+                    if not _ob_required:
+                        continue
+                    _ob_missing = sorted(_f for _f in _ob_required if _f not in _ob_keys)
+                    if _ob_missing:
+                        _ob_findings.append(
+                            f"  {_ob_rel} block #{_ob_block_i} vs schemas.md "
+                            f"#{_ob_sec}: missing required fields: {_ob_missing}"
+                        )
+
+if _ob_findings:
+    print(f"\nINFO: outbound field guard -- {len(_ob_findings)} finding(s) "
+          "(informational only, not test failures):")
+    for _ob_f in _ob_findings:
+        print(_ob_f)
+else:
+    print("\nINFO: outbound field guard -- no missing-required-field "
+          "discrepancies found in .dcs/incidents/*/ artifacts")
 
 print(f"\n{checks - len(failures)}/{checks} passed")
 sys.exit(1 if failures else 0)

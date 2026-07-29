@@ -114,6 +114,12 @@ Up to 4 `dcs-ops-specialist` subagents, each given **exactly one**
 verification plan) — not the whole IAP dumped in raw, and not any other
 specialist's tasking.
 
+Each specialist returns JSON per schemas.md #4 (ops-specialist return):
+`status` (`"done"`|`"blocked"`|`"deviation"`), `files_touched` (string[],
+subset of territory), `tests_run` (string[]), `evidence` (string),
+`deviation` (object|null; required when `status` is `"deviation"`, with
+keys `found`/`why_plan_wrong`/`proposal`).
+
 - **Parallel:** only when the partition table shows disjoint territories
   for this batch. Spawn all of them in one message with multiple Task
   tool_use blocks.
@@ -145,11 +151,15 @@ without its structured block: re-spawn, never wait, never resume.
 
 ## 5. Collect and validate structured returns
 
-Each specialist returns the schema in `references/schemas.md` #4
-(ops-specialist return). Check
-`files_touched` against that specialist's declared `territory` — any file
-outside territory is itself a violation worth flagging to the Owner even
-if the specialist didn't self-report it as a deviation.
+Validate each return before proceeding: confirm a JSON block is present,
+all required fields per schemas.md #4 (ops-specialist return): `status`, `files_touched`,
+`tests_run`, `evidence`, `deviation` — required when `status` is
+`"deviation"`) are present, and no fields outside the schema appear.
+Missing required field or structural non-JSON = deviation — handle per
+step 6 as a deviation return. Check `files_touched` against that
+specialist's declared `territory` — any file outside territory is itself a
+violation worth flagging to the Owner even if the specialist didn't
+self-report it as a deviation.
 
 ## 6. Handle non-`done` returns — COMMAND POINT 3 (deviation arbitration)
 
@@ -217,7 +227,18 @@ fix-taskings touched since that verdict) — a second officer cannot cite
 what it was never given. Its charter (see `agents/dcs-safety-officer.md`)
 is to attempt to refute completion using its own independent checks.
 
+The Safety Officer returns JSON per schemas.md #5 (safety-officer verdict):
+`verdict` (`"pass"`|`"halt"`), `refutations` (object[]), `advisories`
+(object[], optional), `checked` (string[]).
+
 ## 9. Handle the verdict — COMMAND POINT 4 (verdict disposition)
+
+Validate the Safety Officer return before proceeding to disposition: confirm
+a JSON block is present, all required fields per schemas.md #5 (safety-officer verdict): `verdict`,
+`refutations`, `checked`; `advisories` is optional) are present, and no
+fields outside the schema appear. Missing required field or structural
+non-JSON = deviation — re-spawn the Safety Officer rather than proceeding to
+disposition.
 
 **Preflight — Channel A: confirm this project's gate carries the halt
 ceiling before relying on it.** A package update refreshes

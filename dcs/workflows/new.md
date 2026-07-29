@@ -59,11 +59,18 @@ it exists. If spawning two, split the angle (e.g. one on
 reproduction+logs, one on codegraph impact+prior art) rather than having
 both do identical work.
 
-Collect their structured findings (`references/schemas.md` #1,
-situation-analyst findings). If the two
-disagree on something material (e.g. one finds a repro path the other
-calls unreproducible), note the disagreement rather than silently picking
-one — it belongs in the 201 as an open question.
+Each must return a JSON block per schemas.md #1 (situation-analyst
+findings): required fields `summary` (string), `evidence` (string[]),
+`affected_files` (string[]), `repro_path` (string), `prior_art` (string).
+
+Validate each return: confirm a JSON block is present, all required fields
+per schemas.md #1 (situation-analyst findings): `summary`, `evidence`, `affected_files`, `repro_path`,
+`prior_art`) are present, and no fields outside the schema appear. Missing
+required field or structural non-JSON = deviation — re-spawn that analyst.
+Collect the findings. If the two disagree on something material (e.g. one
+finds a repro path the other calls unreproducible), note the disagreement
+rather than silently picking one — it belongs in the 201 as an open
+question.
 
 ## 4. Draft 201-BRIEF.md
 
