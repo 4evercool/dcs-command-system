@@ -34,7 +34,7 @@ about the merged tree), and the budget was re-derived from the merge
 result. **A size is a derived fact with a lifetime; this one expired
 between being measured and being merged.**
 
-## 2. Field-lesson citations are unverifiable
+## 2. Field-lesson citations are unverifiable ✅ RESOLVED — `field-lesson-citations`, 2026-07-31
 
 `tests/test_doctrine_integrity.py` checks structure but cannot check
 whether *"field lesson 2026-07-24: X happened"* is true — the evidence
@@ -47,6 +47,13 @@ artifact so a human can verify in one lookup; or keep verification a
 Safety Officer duty and state it explicitly in its charter. Leaning
 toward the first — it makes the claim checkable without adding a
 dependency.
+
+**Resolved by `field-lesson-citations` (commit `710cf52`, 2026-07-31):**
+every field lesson citation in the 6 target files now carries an incident
+identifier (slug, version, or "(predates self-hosting)"); the convention
+is documented in `doctrine-appendix.md`; check 20 in
+`test_doctrine_integrity.py` mechanically guards against recurrence. See
+`.dcs/incidents/2026-07-31-field-lesson-citations/AAR.md`.
 
 ## 3. The register has no cross-project view ✅ DECIDED — not building it
 
