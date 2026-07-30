@@ -574,3 +574,37 @@ mention `advisories` after `schemas.md` gained the field at v0.6.5
 disagreed about the shape of a `pass` verdict since that commit, caught
 only because this incident audited every charter's contract block against
 its schemas.md section side by side.
+
+### D1: Command-point liveness provenance (incident `hot-path-budget-emergency-trim`, 2026-07-30)
+
+Original text moved from `doctrine.md` "A command point is never a silent wait" sub-section to keep the hot path below budget. The compressed version preserves the header, the announcement rule, and the dead-spawn rule while removing the liveness-proxy enumeration and shortening the "ask the session" instruction.
+
+> Original bullet 2 full text:
+> **An empty or errored return is a FAILED spawn, not a slow one.** A spawn that ends with no decision block — quota exhausted, API error, early termination — is dead; the decision will never arrive. Re-spawn immediately on the next tier and log **both** attempts (the failure and the seat that answered). Never wait indefinitely on a corpse, never resume it (principle 9b), and never let a dead spawn become the reason the Dispatcher decides alone. **Liveness is measured by the decision, never by a proxy** — not transcript size, not file mtimes, not silence, all harness artifacts. **Ask the session what the agent returned; never infer it from the filesystem.**
+
+The removed material is the proxy enumeration ("not transcript size, not file mtimes, not silence, all harness artifacts"), the explicit parenthetical "(the failure and the seat that answered)", and the word "indefinitely". The core rule — liveness is measured by the decision, ask the session, never infer from the filesystem — is preserved in compressed form.
+
+### D2: Principle 13 sentinel mechanics provenance (incident `hot-path-budget-emergency-trim`, 2026-07-30)
+
+Original v0.6.9 per-attempt ceiling text moved from `doctrine.md` principle 13, trigger (b). The compressed version replaces this with a one-sentence reference to `dcs_gate.py`'s `halt_cycles()` and `GRAMMAR_LINE`. The convergence-read rule (v0.5.9) and all other triggers (a, c, d, f) remain in the core unchanged.
+
+> Original v0.6.9 text:
+> (v0.6.9) A per-attempt ceiling on trigger (b) closes a hole `execute.md`'s fix-tasking branch has **by construction**: that branch runs its own halt → fix-tasking → re-verify loop *inside* a single attempt, and nothing before this ceiling ever counted it. The unit of count is one such iteration, logged in `214-LOG.md` as a `SAFETY-HALT:` sentinel per `dcs_gate.py`'s published grammar (`GRAMMAR_LINE`): "An entry begins at column zero with a mandatory bracketed timestamp; any other line is a continuation, never a sentinel, and quoting a whole prior entry inside a body requires indenting it off column zero." `dcs_gate.py` is the counter; `esg.max_halts_per_attempt` (default 3) is the ceiling, and reaching it is a mechanical denial, not a warning — it promotes the inner loop into the outer attempt count trigger (c) already tracks. Exactly two sentinels reset the tally: `IAP-APPROVED: <hash>` (written by `plan.md`), an anchor only while `<hash>` prefixes the stamped `IAP-APPROVED` the gate already verified — the marker is the authority, the log line only fixes its position in time; and `SAFETY-PASS:` (written by `execute.md`), so a passed period can still close. A sentinel quoted inside a sentence is never an anchor; the Owner answering "continue" is a decision, not a reset
+
+The doctrine-appendix.md already carries the extended field-lesson narratives for this ceiling (see "Principle 13 — the halt-ceiling field lesson" and "Principle 13 — the sentinel threat model" above); this entry records the exact prose divested from the hot path.
+
+### D3: v0.1 constraints historical narrative provenance (incident `hot-path-budget-emergency-trim`, 2026-07-30)
+
+Original historical evolution text moved from `doctrine.md` "v0.1 constraints" section. The compressed version retains the current-state summary only.
+
+> Original text:
+> **One incident active at a time** *(superseded by v0.3)* — `.dcs/ACTIVE` is the lock; `/dcs-new` refuses a second incident while one is active. **(v0.3)** Now **one incident per worktree**: `.dcs/ACTIVE` is per-worktree (git-ignored, never merges) — one seat, one `ACTIVE` file, one incident, scoped to whichever tree the session is rooted in. The no-two-incidents-anywhere constraint moves to the register's territory partition (principle 6; "Parallel operation" below).
+
+The removed material is the v0.1-era description of `.dcs/ACTIVE` as "the lock" and `/dcs-new` refusing a second incident, plus the transition language "(superseded by v0.3)" and "Now". The current rule (one incident per worktree) is preserved in compressed form.
+
+### D4: Worktree audit step 5 — platform diagnostic commands provenance (incident `hot-path-budget-emergency-trim`, 2026-07-30)
+
+Original platform-specific diagnostic commands moved from `doctrine.md` step 5 of the worktree audit checklist. Produced by incident `worktree-removal-self-conflict` (v0.7.0). The core rule (diagnose before escalating, cd to esg_root) remains in doctrine.md; the platform-specific commands are here.
+
+> Original platform diagnostic text:
+> POSIX: `lsof +D <path>` or `fuser -v <path>`; Windows: `powershell "Get-Process | Where-Object { $_.Path -like '*<path>*' }"` (or Sysinternals `handle <path>` if installed)

@@ -97,6 +97,7 @@ below carry the tree they were measured in.
 | **2026-07-26 (`08f75f0`)** | **36,561** | **35.7** | after `schemas-md-trim`. `schemas.md` −2,317 B; ratchet re-seated **38 → 37**, so slack is **1,327 B** against a *lower* ceiling |
 | 2026-07-26 (`9830af5`) | 36,582 | 35.7 | after `schema-citation-guard`. `doctrine.md` **+21 B** for check 13's anchor. Row added retroactively at the next incident's close — that incident did not record one, which is why the step from 36,561 looked unexplained |
 | **2026-07-27 (`c0fea95`)** | **36,683** | **35.8** | after `safety-halt-functional-scope`. `doctrine.md` **+101 B**: principle 15 now names the advisory default and cites the charter step instead of "checklist". Provenance went to `doctrine-appendix.md`, which is outside the pair. **1,205 B of slack** against the 37 kB ratchet |
+| **2026-07-30**, `hot-path-budget-emergency-trim` | **36,539** | **35.7** | emergency trim: `doctrine.md` −1,694 B (7 positions, as of this incident), `schemas.md` −186 B (2 positions, as of this incident); provenance to appendix; sentinel tokens retained for integrity; **325 B slack** against 36 kB ratchet |
 
 Regenerate the two current rows — note this uses the **normalised** measure
 the guard itself applies (`CRLF → LF` before counting), not `os.path.getsize`,
