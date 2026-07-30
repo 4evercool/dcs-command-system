@@ -198,7 +198,15 @@ git worktree add "<repo-parent>\<repo>-wt\<slug>" -b "dcs/<slug>"
 ```
 
 (`<repo>-wt\` is a sibling directory of the repo, created automatically
-the first time any incident needs one). Everything below — the incident
+the first time any incident needs one).
+
+**(v0.7.1)** After the worktree is created, check whether
+`<project_root>/.dcs/provision` exists. If it does, run it with the new
+worktree path as the first argument and the main checkout root as the
+second. Non-zero exit: warn the Owner and proceed. Absent file: skip
+silently.
+
+Everything below — the incident
 directory, `201-BRIEF.md`, `214-LOG.md`, `ACTIVE` — is written **inside
 this worktree**, never in the main checkout.
 

@@ -184,9 +184,19 @@ REPO = Path(__file__).resolve().parent.parent
 # to doctrine-appendix.md) and schemas.md (2 positions, notes tightened),
 # then re-derived the ratchet from the resulting, final, normalised size:
 #
+#   budget = math.ceil(36539/1024) = 36
+#
+# Incident provisioning-script-upstreaming (2026-07-30) added a
+# project-supplied provision hook convention to doctrine.md (one
+# subsection, ~900 B) and provenance to doctrine-appendix.md (never
+# @-included, so hot-path contribution is the doctrine.md portion only),
+# then re-derived the ratchet from the resulting, final, normalised size:
+#
+#   budget = math.ceil(37455/1024) = 37
+#
 # Regenerate with:
 #   python -c "d=open('dcs/references/doctrine.md','rb').read().replace(b'\r\n', b'\n'); s=open('dcs/references/schemas.md','rb').read().replace(b'\r\n', b'\n'); print(len(d), len(s), len(d)+len(s))"
-HOT_PATH_BUDGET_KB = 36
+HOT_PATH_BUDGET_KB = 37
 
 # Directories holding generated/binary artefacts that are never source and
 # never shipped: .git internals, npm's node_modules, and Python's
@@ -1352,14 +1362,14 @@ WORKFLOW_GRANDFATHERED_LINES = {
     # (2026-07-28), 32 over the 250-line policy ceiling. Documented,
     # temporary debt pending a follow-up trim.
     'deploy.md': 282,
-    # 255 lines measured at incident prompt-vs-schema-drift
-    # (2026-07-29), 5 over the 250-line policy ceiling. Documented,
+    # 263 lines measured at incident provisioning-script-upstreaming
+    # (2026-07-30), 13 over the 250-line policy ceiling. Documented,
     # temporary debt pending a follow-up trim.
-    'new.md': 260,
-    # 445 lines measured at incident prompt-vs-schema-drift
-    # (2026-07-29), 195 over the 250-line policy ceiling. Documented,
+    'new.md': 270,
+    # 451 lines measured at incident provisioning-script-upstreaming
+    # (2026-07-30), 201 over the 250-line policy ceiling. Documented,
     # temporary debt pending a follow-up trim.
-    'execute.md': 450,
+    'execute.md': 460,
     # 682 lines measured at incident prompt-vs-schema-drift
     # (2026-07-29), 432 over the 250-line policy ceiling. Documented,
     # temporary debt pending a follow-up trim.

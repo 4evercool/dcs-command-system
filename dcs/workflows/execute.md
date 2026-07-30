@@ -132,7 +132,8 @@ keys `found`/`why_plan_wrong`/`proposal`).
   one, wait for its structured return, then spawn the next — later
   taskings may need to account for what an earlier one actually did.
 - **Worktree-isolated:** if the IAP declares `isolation: worktree` for a
-  specialist, set up the worktree (e.g. `git worktree add`) before
+  specialist, set up the worktree (`git worktree add` and, if
+  `<project_root>/.dcs/provision` exists, run it per new.md step 7b) before
   spawning it, and merge/reconcile after it returns, per what the IAP
   specified.
 
