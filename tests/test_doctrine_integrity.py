@@ -177,11 +177,16 @@ REPO = Path(__file__).resolve().parent.parent
 # provenance in doctrine-appendix.md), then re-derived the ratchet from
 # the resulting, final, normalised size:
 #
-#   budget = math.ceil(38361/1024) = 38
+#   budget = math.ceil(36539/1024) = 36
+#
+# Incident hot-path-budget-emergency-trim (2026-07-30) executed a cut
+# registry against doctrine.md (7 positions, compressed-in-place or moved
+# to doctrine-appendix.md) and schemas.md (2 positions, notes tightened),
+# then re-derived the ratchet from the resulting, final, normalised size:
 #
 # Regenerate with:
 #   python -c "d=open('dcs/references/doctrine.md','rb').read().replace(b'\r\n', b'\n'); s=open('dcs/references/schemas.md','rb').read().replace(b'\r\n', b'\n'); print(len(d), len(s), len(d)+len(s))"
-HOT_PATH_BUDGET_KB = 38
+HOT_PATH_BUDGET_KB = 36
 
 # Directories holding generated/binary artefacts that are never source and
 # never shipped: .git internals, npm's node_modules, and Python's

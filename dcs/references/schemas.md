@@ -33,7 +33,7 @@ Returned by `dcs-planning-chief` (and, for deploy/env/migration concerns only, `
 | `objectives_feedback` | string | Chief may push back on unmeasurable/untestable 202 criteria — IC decides whether to revise 202 |
 | `tactics` | string[] | The "how", one level above individual taskings |
 | `taskings` | object[] | See tasking table below — becomes 204-TASKING/\*.md, one file per entry |
-| `partition_ok` | boolean | `true` only if every `territory` array is disjoint from every other's. `false` requires `risks` to justify sequential staging or worktree isolation — the IC rejects `false` with no justification and re-spawns |
+| `partition_ok` | boolean | `true` only if every `territory` is disjoint; `false` must be justified in `risks` (staging or worktree isolation), else IC re-spawns |
 | `risks` | string[] | Partition risk, ordering risk, anything threatening the "disjoint files, parallel execution" assumption |
 | `verification_plan` | string | Feeds the Safety Officer's brief — what "done" should look like end to end |
 
@@ -43,9 +43,9 @@ Returned by `dcs-planning-chief` (and, for deploy/env/migration concerns only, `
 |---|---|---|
 | `id` | string | `S1`, `S2`, ... — matches the 204 filename (`204-TASKING/S1.md`) |
 | `task` | string | Specific, references a 202 acceptance criterion by number |
-| `territory` | string[] | Glob(s) this specialist may edit — disjoint from every other tasking's territory unless staged sequentially |
+| `territory` | string[] | Glob(s) this specialist may edit; must be disjoint from every other tasking's territory unless staged sequentially |
 | `forbidden` | string[] | Explicit "do not touch" globs — usually the other specialists' territories |
-| `evidence_required` | string[] | Concrete command(s) whose real output the specialist must include in its return; cite the decisive excerpt or `file:line`, never paste a full unabridged transcript |
+| `evidence_required` | string[] | Concrete command(s) to run and report real output from — cite decisive excerpt, never full transcript |
 
 ## 3. Logistics-chief plan (Type 1 only — feeds IAP.md's deploy section)
 
@@ -96,8 +96,7 @@ Advisory/refutation bar: `agents/dcs-safety-officer.md` step 6.
 
 **`pass` with advisories is the normal healthy verdict (v0.6.5)**:
 advisories are fixed by the IC and never block a merge; only a `halt`'s
-refutations do. Bar for what counts as a refutation instead of an
-advisory: `agents/dcs-safety-officer.md` step 6.
+refutations do (bar: `agents/dcs-safety-officer.md` step 6).
 
 Halt shape, showing the `refutations` object:
 
