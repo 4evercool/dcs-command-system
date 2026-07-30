@@ -171,4 +171,6 @@ above.
 
 {{free text -- e.g. why an item is PARKED/KILLED, territory-overlap Owner
 overrides (which row, which conflicting row, Owner's reasoning),
-REGISTER-LOCK takeovers, links to relevant sitreps in SITREPS/}}
+REGISTER-LOCK takeovers, links to relevant sitreps in SITREPS/.
+Historical per-session accounts route to vault/Meta/ESG-sessions/
+with a pointer; keep Notes scoped to operational annotations.}}
