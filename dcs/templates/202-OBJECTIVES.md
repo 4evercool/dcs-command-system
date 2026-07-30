@@ -31,7 +31,7 @@ file itself.
      "deployed to prod". The Safety Officer verifies the working-tree diff;
      the integration commit happens AFTER its pass (execute.md 9b), deploy
      after close. Such criteria guarantee a first halt (field lesson,
-     2026-07-22). Also: only criteria agents can verify in THEIR harness --
+     2026-07-22, predates self-hosting). Also: only criteria agents can verify in THEIR harness --
      browser/UI observations belong in an Owner-UAT section, not here.
 
      OWNERSHIP TAG (v0.5.4): every criterion is satisfiable by SOMEBODY.
@@ -55,7 +55,7 @@ file itself.
      is the second line of defence, not the first, and it will run the
      command and record the output. An in-tree fact needs no such
      command -- `grep -n "^## Unreleased" CHANGELOG.md` settles itself.
-     Field lesson 2026-07-26: a criterion waived a version bump on
+     Field lesson 2026-07-26, incident `criterion-unmeasured-fact`: a criterion waived a version bump on
      "0.6.9 is unpublished"; it had been published 75 minutes earlier,
      and the version shipped twice with different contents. -->
 

@@ -105,7 +105,7 @@ has its own root cause, and fixing it could ship on its own.
 - Say plainly in the report which defects were split out and where they
   went — the Owner should see the decomposition, not discover it.
 
-**Field lesson 2026-07-23/24 (the incident this rule exists for):** a
+**Field lesson 2026-07-23/24, v0.5.12 (the incident this rule exists for):** a
 201 opened with "the energy model is wrong" **and** noted three
 accompanying defects, one of them actively corrupting production data.
 All four were absorbed into a single Type 1. It ran **31 hours, 3

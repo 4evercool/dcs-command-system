@@ -8,6 +8,23 @@ longer version of a rationale that doctrine only gives one clause of.
 Nothing here is `@`-included by any workflow or agent — if a rule matters
 to how an agent behaves, it is already in the core.
 
+### Field-lesson citation convention
+
+Every field lesson in this appendix (and throughout the package) follows
+one of three citation forms, depending on when the originating incident
+occurred relative to the self-hosting boundary (2026-07-25, when DCS began
+running its own incidents under its own process):
+
+- **Post-self-hosting (date >= 2026-07-25):** the originating incident's
+  slug in backticks — e.g., incident `decomposition-backlog-routing`.
+  The slug matches the incident directory name under `.dcs/incidents/`.
+- **Pre-self-hosting with known version (date < 2026-07-25):** the DCS
+  version at the time of the incident — e.g., `v0.5.2`. The version alone
+  is the identifier; no additional annotation is needed.
+- **Pre-self-hosting without a known version or date:** the literal note
+  `(predates self-hosting)`, which is the best-available identifier when
+  neither an incident slug nor a version number is known.
+
 Headings below mirror the core's section names so you can jump from a
 core rule straight to its story.
 
@@ -59,7 +76,7 @@ rationale too: a command-point agent writes nothing by design (the
 single-writer rule), so its working time is indistinguishable from a
 hang unless the Dispatcher says out loud that it is spawning.
 
-**Field lesson 2026-07-24 (quota vs. transcript).** The rule that
+**Field lesson 2026-07-24 (quota vs. transcript, predates self-hosting).** The rule that
 liveness is measured by the decision, never by a proxy, comes from one
 incident that produced both halves of the failure mode in a single
 sitting. A command-point spawn on Fable was genuinely killed by quota
@@ -181,7 +198,7 @@ rule was prose twice before it became a mechanism (`dcs_gate.py` denying
 `SendMessage` while an incident is active), and prose did not hold either
 time.
 
-**Principle 13 — the four-revisions field lesson.** The loophole the
+**Principle 13 — the four-revisions field lesson (predates self-hosting).** The loophole the
 "attempt" definition exists to close: counting operational periods alone
 let one incident run four revisions inside a single period 1, correctly
 logging under the old wording that trigger (c) "does not fire — revisions
@@ -345,7 +362,7 @@ any kind, so the walk finds no anchor, and the tally opens at zero
 instead of at "every halt since the log began."
 
 **Principle 13 — the convergence-read lesson (moved from
-`execute.md`).** Field lesson 2026-07-24: an IC produced exactly this
+`execute.md`).** Field lesson 2026-07-24 (predates self-hosting): an IC produced exactly this
 read — unprompted and correctly — only at the fourth halt, and the
 Owner's pivot to a general guard ended the incident's rotation
 immediately. The read was right; it was late because nothing asked for
@@ -431,7 +448,7 @@ contributor would: by reading the target project's `CLAUDE.md`. DCS never
 ships assumptions about what a given project's memory system, evidence
 trail, or call-graph tooling looks like.
 
-**Field lesson 2026-07-24 (charter defect, not agent failure).** A
+**Field lesson 2026-07-24 (charter defect, not agent failure, predates self-hosting).** A
 concrete case behind the codegraph example above: a project made
 call-graph queries mandatory before cross-file edits, and
 `dcs-ops-specialist` — the only role that edits code — had no such tool

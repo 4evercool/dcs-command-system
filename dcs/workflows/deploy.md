@@ -45,7 +45,7 @@ itself (that's `/dcs-esg` agenda item (f)'s job).
 "Clean" means: **no dirty tracked files among the paths the deploy
 command actually ships** — discover the payload from the project's
 `CLAUDE.md` / deploy script (e.g. a deploy that ships `src/` doesn't
-care about `.claude/` hook churn). Field lesson 2026-07-22: a whole-tree
+care about `.claude/` hook churn). Field lesson 2026-07-22, v0.3.4: a whole-tree
 check stopped a deploy over `.claude/` files the deploy would never
 ship, asking a question the payload scoping already answers.
 
@@ -74,7 +74,7 @@ gates.
 **DCS is not the only thing that ships.** Other sessions, people, and CI
 can deploy the integration branch any time, carrying every merged
 incident underneath it — so a `MERGED` row may already be live without
-DCS ever having shipped it (field lesson 2026-07-23: an unrelated hotfix
+DCS ever having shipped it (field lesson 2026-07-23, v0.4.1: an unrelated hotfix
 deploy transitively shipped a whole incident; the register still claimed
 it pending).
 
@@ -145,7 +145,7 @@ that pushes to prod and restarts services is exactly the kind of action
 a harness may gate independently of DCS): this is a **first-class path,
 not a failure** — the block is a deliberate boundary, not an obstacle
 to route around. **Never** substitute, split, or wrap the command
-(field lesson 2026-07-23: a session hit this and correctly refused).
+(field lesson 2026-07-23 (predates self-hosting): a session hit this and correctly refused).
 Instead:
 
 1. Print the **exact** command in its own shell-tagged block for the
@@ -166,8 +166,7 @@ workflow** (`DEPLOYED` / stop / stays `MERGED (deploy pending)`, by
 shape) — nothing else in the package states one; every other declaring
 statement cites this step by name.
 
-Facts-only rule (same discipline as `close.md`'s AAR rule, field lesson
-2026-07-22): **do not** report success because the deploy command
+Facts-only rule (same discipline as `close.md`'s AAR rule, field lesson 2026-07-22 (predates self-hosting)): **do not** report success because the deploy command
 exited 0. Read what the project documents for checking deployed state
 (the same discovery step 4 used from `CLAUDE.md`), and verify **after**
 step 6, by the same shape step 4 already sorted it into:
