@@ -153,3 +153,11 @@ Three ICS analogies (full spec: `docs/spec-v0.3-parallel.md`):
 Three surfaces make an audit finding an actual fix: the audit finds it; `/dcs-esg` agenda item (f) is where the Owner decides (finish/park/kill), and **parking always removes the worktree**; the gate's `.dcs/CLOSED` zombie rule makes one that slipped past both unusable meantime (principle 11's one deliberate fail-closed exception).
 
 **`/dcs-loop` stays serial in v0.3** — one incident at a time off the queue, even with several `ACTIVE` rows from parallel sessions; running it *across* worktrees is out of scope (`docs/spec-v0.3-parallel.md`).
+
+### Project-supplied provision hook (v0.7.1)
+
+A project may supply a provision script at `<project>/.dcs/provision`. DCS provides the hook point only — the project owns the script, and the script is never part of the DCS payload.
+
+Before the first operational period of an incident in a worktree, DCS calls `.dcs/provision <worktree-path> <main-checkout-root>`. Exit 0 signals a successful provision. A non-zero exit produces a warning in `214-LOG.md` but does not block the incident — the incident proceeds with a note that provision returned non-zero. If `.dcs/provision` is absent, the hook call is silently skipped.
+
+The script must be idempotent: running it twice on the same worktree is safe. It must not assume the worktree is in any particular state beyond what `git worktree add` produces. The project's own maintainers are responsible for the script's content and correctness.

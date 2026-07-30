@@ -512,6 +512,14 @@ or not. This is doctrine's only deliberately fail-closed exception to
 "the gate only reads the approval marker" (principle 11) — a closed
 incident's directory should never accidentally become a live one again.
 
+**Project-supplied provision hook provenance (incident `provisioning-script-upstreaming`, 2026-07-30).** The `.dcs/provision` hook point generalises a pattern first developed in the bread_bot project (commit `4ae52377`), where a worktree-provisioning script automated environment setup for each new incident worktree. Three bread_bot incidents exercised the pattern independently before it was upstreamed into DCS as a general convention:
+
+- **`cost-dynamics-labor-toggle`** — the provision script installed project-specific tooling the incident's specialists needed before their first operational period.
+- **`cost-dynamics-per-product`** — the same script was re-invoked on a second worktree and proved the idempotency requirement in practice: a re-run mid-incident (after a worktree reset) did no harm.
+- **`tools-prod-db-guards`** — the script was absent from a worktree created before the pattern was formalised, confirming the "absent = skip" behaviour: the incident ran normally, and the missing provision was noted in the log as a non-blocking observation rather than a failure.
+
+The review-to-register chain that brought this upstream: a third-party review of bread_bot (2026-07-27) identified the provision pattern as a candidate for DCS itself rather than a project-local convention; the finding entered the register, was prioritised at the ESG, and became this incident. The convention DCS adopts is the minimal contract the three incidents all converged on: a single script at a known path, two arguments, three exit behaviours, and idempotency — nothing project-specific, nothing DCS ships.
+
 ## Structured return schemas
 
 **Why every return is fixed JSON, not prose (principle 9).** A fixed

@@ -1055,6 +1055,18 @@ gate's project-root mismatch above made the Dispatcher's direct edit
 *ungated* for the same reason the specialists' edits were: the ACTIVE
 file lived in a different tree from the files being edited.
 
+## 26. A mechanical fix for worktree-path propagation shipped, and the very next specialist still edited the wrong tree
+
+**When:** `provisioning-script-upstreaming` (2026-07-30) — Type 1, the incident immediately following `worktree-path-propagation`'s deploy.
+
+**What happened:** S1 (dcs-ops-specialist) edited `C:\DCS\dcs\workflows\new.md` and `C:\DCS\dcs\workflows\execute.md` — the main checkout — despite the 204 tasking stating `Worktree root: C:\DCS-wt\provisioning-script-upstreaming`. S1's `files_touched` accurately reported the main-checkout paths, so the specialist was truthful about what it touched but edited the wrong tree. S2, in the same period with the same tasking format, correctly edited the worktree. The bug is intermittent — it does not reproduce on every spawn.
+
+**How it was caught:** the Dispatcher ran `git -C <worktree> diff --stat` after S1 returned and saw zero modified files; `git -C <main> diff --stat` showed the changes. The fix was mechanical (copy files, revert main) but the gate did not block the main-checkout edits because `.dcs/ACTIVE` lives in the worktree while the specialist targeted the main tree — the gate's root-resolution logic had no ACTIVE file in the main checkout's tree.
+
+**What's different from §25:** §25 documented the *absence* of a mechanical fix and the project-root mismatch in the specialist prompt. This incident ran *after* the fix deployed — `dcs/templates/204-TASKING.md` carries the `## Worktree root` field, `dcs/workflows/execute.md` step 4 instructs computing `worktree_root` from `git worktree list --porcelain`. The fix is present in the running system and the defect still reproduced, once, on the first specialist spawn after deploy. The second specialist correctly resolved to the worktree.
+
+**Candidate hardening, not built here:** verify the specialist's `files_touched` paths all resolve to the worktree root before accepting a `done` return — one `grep` per path against the worktree prefix. A path outside the worktree is a deviation regardless of whether the specialist self-reported as `done`. This check is cheap (no re-spawn, no re-verification) and catches the failure mode mechanically rather than waiting for a human to notice a zero-diff worktree.
+
 ## Links
 
 - [[Post-mortems/energy-cost-model-rework]] — the incident behind v0.5.12
