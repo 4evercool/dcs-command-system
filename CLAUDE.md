@@ -135,10 +135,9 @@ territory, and it costs zero runtime latency because nothing
   guard's workflow line-count budget (`WORKFLOW_BUDGET_LINES` /
   `WORKFLOW_GRANDFATHERED_LINES` in `tests/test_doctrine_integrity.py`)
   as a hard ceiling now, not an advisory one — cross it and the merge
-  guard goes red. Four files predate the check and run under a
+  guard goes red. One file (`new.md`) predates the check and runs under a
   documented, temporary grandfather ceiling instead of full ~250-line
-  compliance — `close.md`, `deploy.md`, `execute.md`, `plan.md`; current
-  values are `WORKFLOW_GRANDFATHERED_LINES` in
+  compliance; current values are `WORKFLOW_GRANDFATHERED_LINES` in
   `tests/test_doctrine_integrity.py`, not restated here since that dict,
   not this sentence, is what the guard actually reads — recorded debt
   pending a trim, not a new normal. Every other workflow holds the plain

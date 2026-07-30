@@ -800,6 +800,11 @@ mechanism explicitly. Trimming the four grandfathered files back toward
 ~250 is deliberately not part of this close — tracked as its own
 follow-up row below.
 
+**2026-07-31: 4 of 5 grandfathered files discharged by incident
+`workflow-file-trim-grandfathered`** (plan.md 246, execute.md 250,
+deploy.md 246, close.md 243). `new.md` (263, grandfathered at 270)
+remains — the sole grandfathered file. CLAUDE.md text updated accordingly.
+
 **Registered at the close of `deploy-marker-blind`, 2026-07-27.**
 `CLAUDE.md` sets a ≤ ~250-line budget for workflow files. **Nothing checks
 it** — `tests/test_doctrine_integrity.py`'s size budget covers

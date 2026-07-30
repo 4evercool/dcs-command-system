@@ -1353,27 +1353,10 @@ else:
 WORKFLOW_BUDGET_LINES = 250
 
 WORKFLOW_GRANDFATHERED_LINES = {
-    # 282 lines measured at incident worktree-removal-self-conflict
-    # (2026-07-29), 32 over the 250-line policy ceiling. Documented,
-    # temporary debt pending a follow-up trim -- not a bespoke permanent
-    # ceiling for this file.
-    'close.md': 283,
-    # 282 lines measured at incident workflow-budget-enforcement
-    # (2026-07-28), 32 over the 250-line policy ceiling. Documented,
-    # temporary debt pending a follow-up trim.
-    'deploy.md': 282,
     # 263 lines measured at incident provisioning-script-upstreaming
     # (2026-07-30), 13 over the 250-line policy ceiling. Documented,
     # temporary debt pending a follow-up trim.
     'new.md': 270,
-    # 451 lines measured at incident provisioning-script-upstreaming
-    # (2026-07-30), 201 over the 250-line policy ceiling. Documented,
-    # temporary debt pending a follow-up trim.
-    'execute.md': 460,
-    # 682 lines measured at incident prompt-vs-schema-drift
-    # (2026-07-29), 432 over the 250-line policy ceiling. Documented,
-    # temporary debt pending a follow-up trim.
-    'plan.md': 687,
 }
 
 
