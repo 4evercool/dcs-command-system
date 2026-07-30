@@ -12,31 +12,30 @@ a lifetime (doctrine principle 15):
 python vault/_scripts/incident_metrics.py <project-root> [<worktree>...]
 ```
 
-> **The script's `halts` column is not trustworthy today, in both directions**
-> (measured 2026-07-26 during `safety-halt-functional-scope`'s stem; queued as
-> register row `halt-enumeration-grammar-drift`). It counts with an unanchored
-> whole-file substring search — `vault/_scripts/incident_metrics.py:52`,
-> `halts=len(re.findall(r"SAFETY: halt", log))` — so narrative that quotes the
-> sentinel back counts as a verdict: it reports 10 halts for
-> `energy-cost-model-rework` where `grep -n "^\[.*\] SAFETY: halt"` finds 4
-> real verdicts. And the same regex cannot see the `SAFETY-HALT:` grammar
-> v0.6.9 introduced, so it reports **0** halts for `schema-citation-guard`,
-> which had one. No enumeration command currently spans both grammars —
-> anchor the pattern and check which grammar a log uses before citing any halt
-> count from this file.
+> **Fixed 2026-07-30 (`halt-enumeration-grammar-drift`).** The `halts` column
+> has been removed from the snapshot table below. Its values were produced by
+> an unanchored regex in `vault/_scripts/incident_metrics.py` that counted
+> narrative mentions as verdicts and could not see the `SAFETY-HALT:` grammar —
+> every value in that column was unreliable. The underlying script has been
+> corrected to anchor the pattern and span both grammars. Regenerate halt
+> counts fresh for any incident with:
+>
+> ```bash
+> python vault/_scripts/incident_metrics.py <project-root> [<worktree>...]
+> ```
 
 ## Snapshot — 2026-07-25, bread_bot (first eight incidents)
 
-| incident | 201 kB | log kB | entries | halts | passes | rejects | escal | taskings |
-|---|---|---|---|---|---|---|---|---|
-| analytics-patterns-dynamics-mismatch | 9 | 6 | 23 | 0 | 1 | 0 | 0 | 2 |
-| fix-audit-287-292 | 9 | 8 | 0 | 0 | 0 | 0 | 0 | 4 |
-| nan-guard-admin-forms | 10 | 5 | 13 | 0 | 1 | 0 | 0 | 3 |
-| shift-overview-rework | 7 | 30 | 50 | 0 | 3 | 0 | 0 | 6 |
-| analytics-order-date-tz-sweep | 11 | 10 | 29 | 0 | 1 | 0 | 0 | 3 |
-| **energy-cost-model-rework** | **32** | **285** | **257** | **10** | 3 | **5** | **3** | **8** |
-| migration-number-allocation | 15 | 23 | 23 | 0 | 1 | 1 | 0 | 2 |
-| subscription-refund-cluster | 27 | 26 | 42 | 0 | 1 | 0 | 1 | 3 |
+| incident | 201 kB | log kB | entries | passes | rejects | escal | taskings |
+|---|---|---|---|---|---|---|---|
+| analytics-patterns-dynamics-mismatch | 9 | 6 | 23 | 1 | 0 | 0 | 2 |
+| fix-audit-287-292 | 9 | 8 | 0 | 0 | 0 | 0 | 4 |
+| nan-guard-admin-forms | 10 | 5 | 13 | 1 | 0 | 0 | 3 |
+| shift-overview-rework | 7 | 30 | 50 | 3 | 0 | 0 | 6 |
+| analytics-order-date-tz-sweep | 11 | 10 | 29 | 1 | 0 | 0 | 3 |
+| **energy-cost-model-rework** | **32** | **285** | **257** | 3 | **5** | **3** | **8** |
+| migration-number-allocation | 15 | 23 | 23 | 1 | 1 | 0 | 2 |
+| subscription-refund-cluster | 27 | 26 | 42 | 1 | 0 | 1 | 3 |
 
 ## What the numbers say
 
@@ -47,14 +46,12 @@ as well — not type, not tasking count. This is the evidence behind
 `new.md` step 4a and the "~7–11 kB is normal" smell test.
 
 **The outlier is an outlier on process, not on subject.** Energy's brief
-is 3× the median; its log is ~10×, its entries ~5×, and it is the only
-incident with double-digit halts. Difficulty alone does not produce that
-shape — [[Post-mortems/energy-cost-model-rework|absorbed scope]] does.
-
-**Zero halts is the norm.** Six of eight incidents never had a Safety
-refutation. That matters for reading the outlier: halts are not routine
-friction to be endured, they are a signal, and ten of them in one
-incident was ten opportunities to stop.
+is 3× the median; its log is ~10×, its entries ~5×. Difficulty alone does not
+produce that shape — [[Post-mortems/energy-cost-model-rework|absorbed scope]]
+does. The halt-count comparisons that were here (double-digit, zero-is-norm,
+ten opportunities) were based on the same broken regex documented in the
+callout above. Regenerate with the command at the top of this file before
+citing any halt comparison across incidents.
 
 **A `?` in the timestamps column** (fix-audit-287-292) means the 214 log
 has no parseable entries — an early incident written before the log

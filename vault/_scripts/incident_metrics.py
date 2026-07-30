@@ -17,6 +17,21 @@ import re
 import sys
 import glob
 
+HALT_RE = re.compile(
+    r"^\[[^\]]*\]\s+SAFETY(?:-HALT:|: halt)",
+    re.MULTILINE,
+)
+
+
+def count_halts(log_text):
+    """Return the count of halt sentinels in *log_text*.
+
+    Matches only grammar-line entries (timestamp prefix on its own line,
+    followed by ``SAFETY-HALT:`` or the legacy ``SAFETY: halt`` form).
+    Mid-sentence mentions and prose references are not counted.
+    """
+    return len(HALT_RE.findall(log_text))
+
 
 def collect(roots):
     found = {}
@@ -53,7 +68,7 @@ def row(slug, p):
         brief_kb=round(os.path.getsize(brief) / 1024) if os.path.exists(brief) else 0,
         log_kb=round(len(log.encode("utf-8")) / 1024),
         entries=len(entries),
-        halts=len(re.findall(r"SAFETY: halt", log)),
+        halts=count_halts(log),
         passes=len(re.findall(r"SAFETY: pass", log)),
         rejects=len(re.findall(r"iap_review REJECT", log)),
         escalations=len(re.findall(r"ESCALATION: trigger", log)),
