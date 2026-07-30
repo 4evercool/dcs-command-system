@@ -153,8 +153,15 @@ expected to honor a protocol it lacks the tool to execute.
 | `/dcs-loop` | Unattended sweep of the queued register under the Delegation |
 | `/dcs-deploy` | The deploy train: ship all merged incidents from clean main |
 
-CLI (this npm package): `dcs install` · `dcs uninstall` · `dcs doctor` ·
-`dcs version`.
+CLI (this npm package):
+
+| Command | What it does |
+|---|---|
+| `dcs install` | Copy the payload into `~/.claude` |
+| `dcs uninstall` | Remove the payload from `~/.claude` |
+| `dcs doctor` | Content-aware payload comparison (sha256 of every file, via `tests/payload_check.py`) + Python-on-PATH check |
+| `dcs bump <version>` | Atomically update `dcs/VERSION` and `package.json` → `version` to the same value |
+| `dcs version` | Print the package version |
 
 ## How it holds up
 

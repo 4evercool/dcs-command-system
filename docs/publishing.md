@@ -29,7 +29,7 @@ or
 ```bash
 npm i -g dcs-command-system
 dcs install        # copy package -> ~/.claude
-dcs doctor         # version check + python-on-PATH check for the gate hook
+dcs doctor         # content-aware payload comparison (sha256 of every file, via tests/payload_check.py) + python-on-PATH check
 dcs uninstall      # remove from ~/.claude (project-side files untouched)
 ```
 
@@ -38,8 +38,11 @@ Then, per project, inside a Claude Code session: `/dcs-init`.
 ## Version-sync rule (HARD)
 
 `package.json → version` MUST equal `dcs/VERSION` at publish time. The
-CLI prints `dcs/VERSION` as the authoritative version; `doctor` compares
-installed vs package. A release bump touches BOTH files in one commit.
+CLI prints `dcs/VERSION` as the authoritative version; `doctor` performs
+a content-aware comparison — sha256 of every payload file, via
+`tests/payload_check.py` — instead of a simple version-string check.
+A release bump touches both files in one commit (use `dcs bump <version>`
+— see step 2 below).
 
 ## Release steps (Owner runs these; the assistant prepares but never publishes)
 
@@ -47,9 +50,9 @@ Repeat this whole sequence for every update, not just the first one.
 
 1. Land the change on `main`: commit, `git push`, tests green
    (`python tests/test_dcs_gate.py`), `git status` clean.
-2. Pick the version bump (semver) and bump `dcs/VERSION` and
-   `package.json` → `version` together, same value, one commit
-   (`chore(release): vX.Y.Z`), push:
+2. Run `dcs bump <version>` (e.g. `dcs bump 0.6.0`). This atomically
+   updates both `dcs/VERSION` and `package.json` → `version` to the same
+   value. Commit the result (`chore(release): vX.Y.Z`) and push:
    - patch `0.4.x` — fixes, docs, internal cleanup
    - minor `0.x.0` — new capability, backward-compatible
    - major `x.0.0` — breaking change to hook behavior, schemas, or CLI
