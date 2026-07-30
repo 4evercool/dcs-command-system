@@ -121,8 +121,9 @@ territory, and it costs zero runtime latency because nothing
 - **Write files with the Write/Edit tools, never PowerShell
   `Set-Content`/`Out-File`** — those emit a UTF-8 BOM, which has twice
   broken a hash comparison and a parse here.
-- **English throughout the package.** Incident artifacts inherit the
-  conversation's language; the shipped package does not.
+- **English throughout the package, including incident artifacts.** The repo
+  is publicly cloned; artifacts in any other language are invisible to
+  the English-speaking audience and to the npm registry.
 - **Ship no project facts.** DCS discovers a project's protocols from
   *that* project's `CLAUDE.md` at runtime. Worked examples in
   `schemas.md` use a neutral fiction (`src/`, `docs/`), never a real

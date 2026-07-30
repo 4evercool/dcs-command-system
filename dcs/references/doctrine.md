@@ -105,7 +105,7 @@ One operational period = one pass through the P-loop. **(v0.5.12) An incident ma
 
 - **One incident active at a time** *(superseded by v0.3)* — `.dcs/ACTIVE` is the lock; `/dcs-new` refuses a second incident while one is active. **(v0.3)** Now **one incident per worktree**: `.dcs/ACTIVE` is per-worktree (git-ignored, never merges) — one seat, one `ACTIVE` file, one incident, scoped to whichever tree the session is rooted in. The no-two-incidents-anywhere constraint moves to the register's territory partition (principle 6; "Parallel operation" below).
 - **No manifest, no updater, no multi-project registry** — each project gets its own `.dcs/` via `/dcs-init`; `~/.claude/dcs/` is shared read-only source material.
-- **English throughout the package.** **Incident artifacts inherit the conversation language** — a 201-BRIEF.md written mid-Russian-conversation is written in Russian, because the Owner has to read it.
+- **English throughout the package, including incident artifacts** — the repo is publicly cloned and read by an English-speaking audience; artifacts in any other language are invisible to that audience and to the npm registry.
 
 ## Communication convention: slash commands are chat input, not shell
 
