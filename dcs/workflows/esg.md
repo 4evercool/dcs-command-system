@@ -110,7 +110,7 @@ at face value into step 4.
 ## 4. Record
 
 - Update `STRATEGY.md`'s ranked priorities per the Owner's decisions.
-- Update `REGISTER.md` rows per the (a)/(c)/(e)/(f) decisions above,
+- Update `REGISTER.md` rows per the (a)/(b)/(c)/(e)/(f) decisions above,
   applying its own two-state Territory rule (`dcs/templates/REGISTER.md`):
   a BARE GLOB LIST while State is QUEUED or ACTIVE, collapsed to ONE LINE
   each (Territory, Outcome, Intake source) the moment a row here reaches
@@ -124,6 +124,11 @@ at face value into step 4.
   never reached planning), Outcome to a pointer at `AAR.md`'s Outcome
   section (a one-line reason in Notes instead, if none was written),
   Intake source to a pointer at the original intake citation.
+- For each item queued under (b) at H/M priority: add a new QUEUED row to
+  `REGISTER.md` per the register template (`dcs/templates/REGISTER.md`).
+  For each item the Owner routed to the project's lightweight surface
+  under (b): follow that surface's documented convention — do NOT add a
+  register row for these.
 - Originate a post-hoc `REGISTER.md` row for each field repair reported
   under (g), per the register template's `RESOLVED (field repair)`
   convention (`dcs/templates/REGISTER.md`) — verify the commit reference
