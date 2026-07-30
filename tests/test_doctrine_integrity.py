@@ -1731,6 +1731,49 @@ for _iwf_name, _iwf_sections in _INBOUND_WF_SECTIONS.items():
               not _iwf_missing,
               f"declared in schema but missing from backtick context: {_iwf_missing}")
 
+# --- 20. field-lesson citation guard -----------------------------------------
+# Every "field lesson" mention in the shipped package must carry an
+# incident identifier: an incident slug, a version number, or an explicit
+# "(predates self-hosting)" note. A false field lesson shipped once
+# (v0.5.10); this guard makes a recurrence mechanically detectable.
+_FL_FILES = [
+    "dcs/references/doctrine-appendix.md",
+    "dcs/workflows/deploy.md",
+    "dcs/workflows/new.md",
+    "dcs/workflows/close.md",
+    "dcs/templates/202-OBJECTIVES.md",
+    "dcs/templates/REGISTER.md",
+]
+# Match "field lesson" only when near a date pattern (YYYY-MM-DD) —
+# filters out title lines, convention prose, cross-references, and
+# compound adjectives ("field-lesson narratives") that are not claims.
+_FL_LINE_RE = re.compile(r"[Ff]ield lesson.*\d{4}-\d{2}-\d{2}", re.I)
+_FL_ID_RE = re.compile(
+    r"incident `[a-z0-9-]+`|v\d+\.\d+\.\d+|predates self-hosting", re.I)
+_fl_bad = []
+for _fl_fname in _FL_FILES:
+    _fl_path = REPO / _fl_fname
+    if not _fl_path.exists():
+        _fl_bad.append(f"{_fl_fname}: file not found")
+        continue
+    _fl_text = _fl_path.read_text(encoding="utf-8")
+    for _fl_li, _fl_line in enumerate(_fl_text.splitlines(), start=1):
+        if _FL_LINE_RE.search(_fl_line) and not _FL_ID_RE.search(_fl_line):
+            # Check if the next line carries the identifier (multi-line
+            # citations like "field lesson,\n2026-07-22, predates...")
+            _fl_lines = _fl_text.splitlines()
+            _fl_next = (
+                _fl_lines[_fl_li]
+                if _fl_li < len(_fl_lines)
+                else ""
+            )
+            if not _FL_ID_RE.search(_fl_next):
+                _fl_bad.append(f"{_fl_fname}:{_fl_li}: {_fl_line.strip()[:80]}")
+check("field-lesson citations: every field lesson mention in shipped "
+      "package carries an incident identifier (slug, version, or "
+      "'predates self-hosting')",
+      not _fl_bad, "; ".join(_fl_bad))
+
 # --- 21. outbound missing-required-fields guard --------------------------------
 # Walk .dcs/incidents/*/ looking for SAFETY.md, AAR.md, 214-LOG.md -- files
 # that contain JSON blocks resembling agent returns. For each JSON block found,

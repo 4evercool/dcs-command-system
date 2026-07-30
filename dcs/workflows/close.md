@@ -58,7 +58,7 @@ Safety Officer review without refutation), lessons (concrete, reusable —
 not vague), deviation history (or "none"), and the Safety Officer's final
 verdict copied verbatim from `SAFETY.md`.
 
-**Facts-only rule (field lesson, 2026-07-22 — the first live AAR claimed
+**Facts-only rule (field lesson, 2026-07-22 (predates self-hosting) — the first live AAR claimed
 a deploy that hadn't happened and lessons that were never written):**
 
 - Every "written / deployed / verified / done" claim MUST cite an
@@ -140,7 +140,7 @@ to step 6.
    each branch may pass in isolation while the merged tree is silently
    broken — `git merge-tree` can report zero conflicts on a merge that
    would, e.g., land two branches with the same DB migration number under
-   one registry key, silently dropping one (field lesson 2026-07-24).
+   one registry key, silently dropping one (field lesson 2026-07-24, v0.5.3).
 
    If the project's `CLAUDE.md` names a **merge-time guard** — a test or
    script that inspects the *merge result* rather than either branch —

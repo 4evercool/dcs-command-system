@@ -74,7 +74,7 @@ a write, not to serialize normal usage.
      that condition. A row may reach DEPLOYED because someone ELSE's
      deploy carried it (DCS is not the only shipper) -- record that as
      out-of-band, naming the sha or witness result that carried it,
-     rather than implying DCS shipped it. Field lesson 2026-07-23: rows
+     rather than implying DCS shipped it. Field lesson 2026-07-23 (predates self-hosting): rows
      claimed a deleted branch that was still on disk and a pending
      deploy that was already live. -->
 
