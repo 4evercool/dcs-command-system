@@ -13,9 +13,11 @@ Fires on PostToolUse for Edit|Write (wired into .claude/settings.json by
    main's. No root found -> not a DCS-onboarded tree, nothing to do.
 2. Target isn't <project_root>/.dcs/esg/REGISTER.md -> nothing to do. Any
    other edit is none of this hook's business.
-3. Otherwise, run the sibling register_view.py (<project_root>/.dcs/esg/
-   register_view.py -- the per-project installed copy, same directory as
-   REGISTER.md itself) and report its result via additionalContext.
+3. Otherwise, run <project_root>/.dcs/register_view.py -- the per-project
+   installed copy, tracked in the project's own git history (unlike
+   REGISTER.md itself, this is a static tool, not per-worktree data, so
+   it lives outside .dcs/esg/ rather than beside the file it reads) --
+   and report its result via additionalContext.
 
 This hook never writes to .dcs/esg/REGISTER.md or REGISTER-LOCK itself --
 it only ever invokes register_view.py, which is documented there as
@@ -93,7 +95,7 @@ def main():
         if os.path.normcase(str(target_resolved)) != os.path.normcase(str(register)):
             sys.exit(0)  # not the register -- not our business
 
-        script = register.parent / "register_view.py"
+        script = project_root / ".dcs" / "register_view.py"
         if not script.is_file():
             sys.exit(0)  # this project hasn't installed the view generator
 
@@ -109,7 +111,7 @@ def main():
             emit(
                 "[register-view] regeneration timed out after {0}s following "
                 "a REGISTER.md edit -- view may be stale, "
-                "re-run python .dcs/esg/register_view.py by hand.".format(SUBPROCESS_TIMEOUT)
+                "re-run python .dcs/register_view.py by hand.".format(SUBPROCESS_TIMEOUT)
             )
             sys.exit(0)
 

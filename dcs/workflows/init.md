@@ -63,12 +63,12 @@ unaffected by this step.
 ## 3b. Copy the register view generator
 
 Copy `$HOME/.claude/dcs/esg/register_view.py` to
-`<project>/.dcs/esg/register_view.py`, creating `.dcs/esg/` if needed
-(already gitignored by step 3a — the `register-view.html` it later writes
-needs no separate entry). Same reasoning as step 4's hooks: a
-project-owned, stdlib-only copy, always freshly overwritten on re-init —
-a tool, not a per-project config file. Reads only `REGISTER.md`, writes
-only the sibling `register-view.html`, never touches `REGISTER-LOCK`.
+`<project>/.dcs/register_view.py` — NOT `.dcs/esg/`, which step 3a just
+gitignored wholesale. Unlike `REGISTER.md`, this is a static tool, not
+per-worktree data, so it must survive a plain `git clone`: same tracked
+treatment as step 4's hooks, always freshly overwritten on re-init.
+Reads `.dcs/esg/REGISTER.md`, writes the sibling `register-view.html`
+there (creating `.dcs/esg/` if needed), never touches `REGISTER-LOCK`.
 Inert until run by hand or the regen hook below is wired.
 
 ## 4. Copy the hooks
@@ -213,7 +213,7 @@ intake nudge, no register-view auto-regen. Repeat the exact blocks from
 step 5 for later manual wiring. `/dcs-new` and `/dcs-plan` still work
 without the gate wired, but "no edits before approval" becomes advisory,
 not mechanical — say so plainly. Unwired, the regen hook just means
-running `python .dcs/esg/register_view.py` by hand.
+running `python .dcs/register_view.py` by hand.
 
 ## 8a. Audit agent tool grants against the project's protocols (v0.5.6)
 

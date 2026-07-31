@@ -39,8 +39,9 @@ dcs/                      # this payload — shared, read-only source material
 │   ├── IAP.md  214-LOG.md  AAR.md  config.json
 ├── esg/
 │   └── register_view.py   # sortable HTML view of REGISTER.md, copied
-│                           # per-project by /dcs-init to .dcs/esg/;
-│                           # regenerate: python .dcs/esg/register_view.py
+│                           # per-project by /dcs-init to .dcs/ (tracked --
+│                           # not .dcs/esg/, which is gitignored wholesale);
+│                           # regenerate: python .dcs/register_view.py
 └── hooks/
     ├── dcs_gate.py         # the PreToolUse gate, copied per-project by /dcs-init
     └── register_view_regen.py  # PostToolUse: regenerates the register
