@@ -70,13 +70,17 @@ per-project by construction, and the cost is a second write target on every
 state transition. Register row `KILLED`. Reopen if a second onboarded project
 makes the pain concrete.
 
-## 4. Intake nudge has no telemetry
+## 4. Intake nudge has no telemetry — RESOLVED (2026-07-31)
 
 `dcs_intake.py` fires once per session, but nothing records whether the
 offer was accepted, declined, or ignored. Without that, there is no
 evidence for tuning it — and tuning by impression is what principle 15
 warns about. A single line appended to a local (gitignored) log would be
 enough.
+
+**Resolved by incident `intake-nudge-telemetry` (Type 3, period 1).**
+`record_telemetry()` appends one-line JSON to `.dcs/esg/intake-telemetry.log`
+on each first-session invocation. See `.dcs/incidents/2026-07-31-intake-nudge-telemetry/AAR.md`.
 
 ## 5. Version bumps still go through PowerShell — FOLDED into the `bin/dcs.js` incident
 

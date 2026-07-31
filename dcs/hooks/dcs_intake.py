@@ -34,6 +34,7 @@ import json
 import os
 import sys
 import tempfile
+from datetime import datetime, timezone
 from pathlib import Path
 
 MAX_AGE_SECONDS = 12 * 3600  # marker files older than this are reaped
@@ -94,6 +95,28 @@ def emit(context):
     sys.exit(0)
 
 
+def record_telemetry(session_id, project_root, event_type):
+    """Append one JSON line to .dcs/esg/intake-telemetry.log.
+    Fails open -- a telemetry write is never worth breaking the hook."""
+    try:
+        prefix = hashlib.sha256(
+            (str(session_id) + "|" + str(project_root)).encode("utf-8")
+        ).hexdigest()[:12]
+        record = {
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "session_id": prefix,
+            "event_type": event_type,
+            "project_root": str(project_root),
+        }
+        log_dir = Path(project_root) / ".dcs" / "esg"
+        log_dir.mkdir(parents=True, exist_ok=True)
+        log_path = log_dir / "intake-telemetry.log"
+        with open(log_path, "a", encoding="utf-8") as f:
+            f.write(json.dumps(record) + "\n")
+    except OSError:
+        pass
+
+
 def main():
     try:
         payload = json.load(sys.stdin)
@@ -114,6 +137,7 @@ def main():
             raw = active.read_text(encoding="utf-8-sig").strip()
             parts = [p.strip() for p in raw.split("|")]
             slug, inc_type, phase = (parts + ["?", "?", "?"])[:3]
+            record_telemetry(session_id, project_root, "active_reported")
             emit(
                 "[DCS] An incident is ACTIVE in this tree: {slug} "
                 "(Type {t}, phase {p}). The approval gate is armed and will "
@@ -124,6 +148,7 @@ def main():
                 )
             )
 
+        record_telemetry(session_id, project_root, "nudge_offered")
         emit(
             "[DCS] This project is DCS-onboarded; no incident is currently "
             "active. If what the Owner just asked for is a bug fix or a "
