@@ -1,10 +1,11 @@
 <purpose>
 Onboard a project into DCS: create its `.dcs/` state directory, copy the
-gate hook into its `.claude/hooks/`, and — only on explicit Owner consent —
-wire the PreToolUse hook into its `.claude/settings.json`. Settings edits
-are a configuration change (see the "Explicit permission required" category
-in the operating rules), so this workflow never edits `settings.json`
-without asking first, in chat, and waiting for a clear yes.
+register view generator and all three hooks into their project-side
+locations, and — only on explicit Owner consent — wire the hooks into its
+`.claude/settings.json`. Settings edits are a configuration change (see
+the "Explicit permission required" category in the operating rules), so
+this workflow never edits `settings.json` without asking first, in chat,
+and waiting for a clear yes.
 </purpose>
 
 <required_reading>
@@ -59,23 +60,39 @@ every branch instead of staying the single portfolio source of truth.
 `.dcs/config.json` and `.dcs/incidents/` stay tracked as before —
 unaffected by this step.
 
+## 3b. Copy the register view generator
+
+Copy `$HOME/.claude/dcs/esg/register_view.py` to
+`<project>/.dcs/esg/register_view.py`, creating `.dcs/esg/` if needed
+(already gitignored by step 3a — the `register-view.html` it later writes
+needs no separate entry). Same reasoning as step 4's hooks: a
+project-owned, stdlib-only copy, always freshly overwritten on re-init —
+a tool, not a per-project config file. Reads only `REGISTER.md`, writes
+only the sibling `register-view.html`, never touches `REGISTER-LOCK`.
+Inert until run by hand or the regen hook below is wired.
+
 ## 4. Copy the hooks
 
-Copy **both** hooks to `<project>/.claude/hooks/`, creating the directory
-if it doesn't exist — `$HOME/.claude/dcs/hooks/dcs_gate.py` and
-`$HOME/.claude/dcs/hooks/dcs_intake.py`. These are new files under the
-project's own `.claude/`, not shared references: each hook must be
+Copy all **three** hooks to `<project>/.claude/hooks/`, creating the
+directory if needed — `$HOME/.claude/dcs/hooks/dcs_gate.py`,
+`dcs_intake.py`, and `register_view_regen.py`. New files under the
+project's own `.claude/`, not shared references: each must be
 self-contained (stdlib only) since it runs from the project's own hook
-invocation, not from `~/.claude/`.
+invocation.
 
 - **`dcs_gate.py`** (PreToolUse) — the approval gate. Blocking.
 - **`dcs_intake.py`** (UserPromptSubmit, v0.6.0) — one short note on the
-  first prompt of each session: offer `/dcs-run` if the request is a bug
-  or feature, or report an active incident's slug/type/phase if one is
-  mid-flight in this tree. **Advisory, never blocking**, once per session.
-  It exists because the gate is deliberately silent when no incident is
-  active, so nothing otherwise mentions that an incident was an option —
-  DCS would apply exactly when someone remembered it.
+  first prompt of each session: offer `/dcs-run` for a bug/feature ask,
+  or report an active incident's slug/type/phase. **Advisory, never
+  blocking**, once per session — the gate is silent when no incident is
+  active, so nothing else would mention that one was an option.
+- **`register_view_regen.py`** (PostToolUse) — regenerates
+  `register-view.html` whenever the project's own `REGISTER.md` is
+  edited, so the view can't go stale between manual runs. **Can never
+  deny or block** (PostToolUse fires after the edit already happened),
+  but does run `register_view.py` as a subprocess and write a file as a
+  side effect. Silent no-op if step 3b was skipped or the edit target
+  isn't that `REGISTER.md`.
 
 ## 5. Inspect the project's existing `.claude/settings.json`
 
@@ -103,9 +120,8 @@ fix — append `|SendMessage` to that matcher — using the same explicit
 consent flow as any other settings change.
 
 **c. File has a `PreToolUse` entry with the exact same matcher
-(`Edit|Write|NotebookEdit|SendMessage`) already pointing at
-`dcs_gate.py`.** Already
-wired — nothing to do, report this.
+(`Edit|Write|NotebookEdit|SendMessage`) already pointing at `dcs_gate.py`.**
+Already wired — nothing to do, report this.
 
 The exact block to add (matcher and command are fixed; adjust only if the
 project's hooks array needs a different JSON nesting to append into):
@@ -125,8 +141,7 @@ project's hooks array needs a different JSON nesting to append into):
 ```
 
 **And the intake nudge (v0.6.0)** — a sibling of `hooks.PreToolUse`, not
-an entry inside it. `UserPromptSubmit` takes no `matcher` (it is not
-tool-specific), so the block is:
+an entry inside it. `UserPromptSubmit` takes no `matcher`, so the block is:
 
 ```json
 "UserPromptSubmit": [
@@ -142,43 +157,63 @@ tool-specific), so the block is:
 ]
 ```
 
-Present both blocks together in step 6's permission request, and say
-plainly what each does: the first can **deny** a tool call, the second
-only adds one line of context on the first prompt of a session and can
-never block anything. An Owner may reasonably want one and not the
-other — take that answer as given rather than arguing for the pair.
+**And the register-view regen hook** — a third sibling array,
+`hooks.PostToolUse`, checked by the same three cases (a/b/c)
+independently. Only worth presenting if step 3b actually ran:
 
-**Print this exact block to the Owner** before touching the file, along
-with which of the three cases applies and exactly where it would be
-inserted (new file vs. appended to an existing array, and if appended,
-what it's alongside).
+```json
+"PostToolUse": [
+  {
+    "matcher": "Edit|Write",
+    "hooks": [
+      {
+        "type": "command",
+        "command": "python \"$CLAUDE_PROJECT_DIR/.claude/hooks/register_view_regen.py\"",
+        "timeout": 20,
+        "statusMessage": "Regenerating register view"
+      }
+    ]
+  }
+]
+```
+
+Present all three blocks together in step 6, stating plainly what each
+does: the gate can **deny** a tool call; the intake nudge only adds
+context and can never block; the regen hook can't block either but does
+write a file as a side effect. An Owner may want any subset — take that
+as given rather than arguing for the full set.
+
+**Print the exact blocks to the Owner** first, with which case applies to
+each array and exactly where each would be inserted.
 
 ## 6. Ask for explicit permission
 
-Use `AskUserQuestion`: "Wire the DCS gate hook into
-`<project>/.claude/settings.json` now? [yes / no, just copy the hook file /
-show me the exact diff first]". Do not proceed to edit `settings.json`
-without an explicit yes — this matches the general rule that changing
-account/config settings requires asking first, every time, regardless of
-how mechanical the edit looks.
+Use `AskUserQuestion`: "Wire the DCS hooks into
+`<project>/.claude/settings.json` now — gate, intake nudge, and
+register-view regen? [yes, wire all three / no, just copy the hook files
+/ show me the exact diff first]". Do not edit `settings.json` without an
+explicit yes — settings changes always require asking first, however
+mechanical the edit looks. An Owner may want only a subset (e.g. the gate
+but not the regen hook) — take a partial answer as given.
 
 ## 7. On yes: perform the edit
 
-Use the `Edit` tool (never a raw stream redirect) to append the matcher
-block into the existing `PreToolUse` array, or create the `hooks` /
-`PreToolUse` structure if absent. After editing, re-read the file and
-confirm it's still valid JSON (`python -c "import json; json.load(open(r'<path>'))"`
-or equivalent) — a broken `settings.json` disables every hook in the
-project, not just DCS's.
+Use the `Edit` tool (never a raw stream redirect) to append each block
+into its respective array (`PreToolUse`, `UserPromptSubmit`,
+`PostToolUse`), creating whichever `hooks.*` structures are absent — skip
+any array the Owner didn't consent to. After editing, re-read the file
+and confirm it's still valid JSON (`python -c "import json;
+json.load(open(r'<path>'))"`) — a broken `settings.json` disables every
+hook in the project, not just DCS's.
 
 ## 8. On no: leave `settings.json` untouched
 
-Report that the hook file is copied but inert — no PreToolUse wiring means
-no gate enforcement yet. Repeat the exact block from step 5 so the Owner
-(or a future session) can wire it manually later. `/dcs-new` and
-`/dcs-plan` still work without the hook wired, but the "no edits before
-approval" guarantee becomes advisory only, not mechanical, until it's
-wired — say this plainly.
+Report the hook files are copied but inert — no gate enforcement, no
+intake nudge, no register-view auto-regen. Repeat the exact blocks from
+step 5 for later manual wiring. `/dcs-new` and `/dcs-plan` still work
+without the gate wired, but "no edits before approval" becomes advisory,
+not mechanical — say so plainly. Unwired, the regen hook just means
+running `python .dcs/esg/register_view.py` by hand.
 
 ## 8a. Audit agent tool grants against the project's protocols (v0.5.6)
 
@@ -204,12 +239,12 @@ forbids. The fix belongs in the DCS repo, then a re-install.
 ## 9. Report completion
 
 Summarize: `.dcs/` created (config.json path), `.gitignore` entries added
-(step 3a), `dcs_gate.py` copied to (path), gate wiring status (armed /
-copied-but-not-wired / already wired), and the one-incident-per-worktree
-constraint (only one `.dcs/ACTIVE` per tree — `/dcs-new` will refuse to
-open a second incident in the same tree while one is active; Type 3/1
-incidents each get their own worktree via `git worktree add`, so multiple
-can run in parallel across different worktrees — see doctrine's
-"Parallel operation" section).
+(step 3a), `register_view.py` and all three hooks copied (paths), each
+hook's wiring status individually — gate, intake, and regen may each land
+differently if the Owner consented to a subset — and the
+one-incident-per-worktree constraint (only one `.dcs/ACTIVE` per tree;
+Type 3/1 incidents each get their own worktree via `git worktree add`, so
+multiple run in parallel across worktrees — see doctrine's "Parallel
+operation" section).
 
 </process>
