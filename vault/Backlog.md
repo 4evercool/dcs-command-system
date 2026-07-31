@@ -1250,3 +1250,49 @@ both files as budget-blocked for the next incident that touches them
 until a trim lands (see item 7's ratchet history for the shape such a
 trim takes, and the still-open `workflow-file-trim-grandfathered`
 register row for the grandfathered-file half of the same problem).
+
+## 27. ENTRY_PREFIX `*` quantifier allows empty bracket content
+
+**Evidence.** `dcs_gate.py:106` — `ENTRY_PREFIX = r"^\[[^\]]*\]\s+"`.
+The `*` quantifier on `[^\]]*` allows zero-length bracket content:
+`sentinel_of('[] SAFETY-HALT:')` returns `'halt'`, contradicting
+GRAMMAR_LINE's "mandatory bracketed timestamp" (line 134). Found by a
+`situation-analyst` during `halt-enumeration-grammar-drift`'s stem,
+2026-07-30 — verified against all 20 incident logs (zero actual entries
+use empty brackets).
+
+**Why it matters.** Latent, never exploited — no real log entry has empty
+brackets. But the same class of defect as the three grammar revisions in
+`halt-loop-unbounded` (prose says one thing, regex allows slightly more).
+A future inline edit to `sendinel_of()` or its callers that widens the
+gap between prose and implementation would have no guard catching it.
+
+**Candidate fix.** One character: `*` → `+`. But `[^\]]+` requires at
+least one bracket-content character, which is strictly correct per
+GRAMMAR_LINE — the regex then matches the prose. Must also update
+`GRAMMAR_LINE`'s enclosing comment (lines 91-105, ~14 lines) if the
+prose statement of the boundary rule changes.
+
+## 28. `execute.md` trigger (b) provides no anchored regex
+
+**Evidence.** `dcs/workflows/execute.md` line 374: "Grep 214-LOG.md for
+prior SAFETY-HALT: lines before deciding." Provides no anchored regex
+pattern. Compare to trigger (c) at lines 88-92, which quotes GRAMMAR_LINE
+verbatim. A literal `grep "SAFETY-HALT:" 214-LOG.md` would return
+continuation-line quotations alongside true sentinels. Found by a
+`situation-analyst` during `halt-enumeration-grammar-drift`'s stem,
+2026-07-30.
+
+**Why it matters.** A human or agent following trigger (b) literally
+could miscount by including continuation-line narrative quotations as
+verdicts. The same `halt-enumeration-grammar-drift` register row
+documents exactly this failure in `incident_metrics.py` (unanchored
+substring match over-counts). Bounded in practice because the surrounding
+prose explains the grammar concept, and a careful reader would apply the
+GRAMMAR_LINE rule — but the instruction as written does not give them the
+command to do so.
+
+**Candidate fix.** Replace the bare instruction with an anchored grep
+command, same pattern as trigger (c) uses for IAP-APPROVED:
+`grep -c -E '^\[[^]]*\]\s+SAFETY-HALT:'` — one line, no new
+infrastructure needed.
