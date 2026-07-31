@@ -99,8 +99,9 @@ above. Still read-only — no writes, no subagent spawns.
 
 1. If `<project>/.dcs/esg/` doesn't exist: report "no ESG on this
    project — run `/dcs-esg` to found one" and stop.
-2. Read `REGISTER.md` and print its full table (QUEUED / ACTIVE / PARKED
-   / CLOSED, all rows — CLOSED rows give the Owner history at a glance).
+2. Read `REGISTER.md` and print its full table (QUEUED | ACTIVE | MERGED
+   (deploy pending) | DEPLOYED | PARKED | KILLED | RESOLVED, all rows —
+   MERGED, DEPLOYED, KILLED, and RESOLVED rows give the Owner history at a glance).
 3. Read `DELEGATION.md`'s latest version block and report the delegation
    version in force plus `auto_approve_type3`'s current value (so the
    Owner knows at a glance whether routine work is currently unattended-
