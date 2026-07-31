@@ -37,8 +37,14 @@ dcs/                      # this payload — shared, read-only source material
 ├── templates/             # skeletons the workflows fill in per incident
 │   ├── 201-BRIEF.md  202-OBJECTIVES.md  203-ORG.md  204-TASKING.md
 │   ├── IAP.md  214-LOG.md  AAR.md  config.json
+├── esg/
+│   └── register_view.py   # sortable HTML view of REGISTER.md, copied
+│                           # per-project by /dcs-init to .dcs/esg/;
+│                           # regenerate: python .dcs/esg/register_view.py
 └── hooks/
-    └── dcs_gate.py         # the PreToolUse gate, copied per-project by /dcs-init
+    ├── dcs_gate.py         # the PreToolUse gate, copied per-project by /dcs-init
+    └── register_view_regen.py  # PostToolUse: regenerates the register
+                               # view whenever REGISTER.md is edited
 
 agents/dcs-*.md             # flat files, alongside any other installed agents
 skills/dcs-*/SKILL.md        # one skill per command, thin @-include wrappers

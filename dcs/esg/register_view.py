@@ -1,9 +1,17 @@
 #!/usr/bin/env python3
 """Generate a sortable read-only HTML view of .dcs/esg/REGISTER.md.
 
-Regenerate with:  python vault/_scripts/register_view.py
-Output:           vault/register-view.html   (gitignored, never committed)
-Read-only over .dcs/esg/ -- never writes there, never takes the lock.
+Regenerate with:  python .dcs/esg/register_view.py
+Output:           .dcs/esg/register-view.html   (already gitignored --
+                  .dcs/esg/ is wholesale-ignored by every /dcs-init'd
+                  project -- never committed)
+Read-only over REGISTER.md itself -- never writes there, never takes the
+REGISTER-LOCK.
+
+Shipped from dcs/esg/register_view.py (package source, installed to
+~/.claude/dcs/esg/ by install.ps1); each onboarded project holds its own
+copy at <project>/.dcs/esg/register_view.py, same convention as
+dcs/hooks/dcs_gate.py.
 """
 import argparse
 import html
@@ -14,8 +22,8 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_SOURCE = REPO_ROOT / ".dcs" / "esg" / "REGISTER.md"
-DEFAULT_OUT = REPO_ROOT / "vault" / "register-view.html"
-REGEN_CMD = "python vault/_scripts/register_view.py"
+DEFAULT_OUT = REPO_ROOT / ".dcs" / "esg" / "register-view.html"
+REGEN_CMD = "python .dcs/esg/register_view.py"
 
 STATE_ORDER = ["ACTIVE", "QUEUED", "MERGED", "PARKED", "DEPLOYED", "RESOLVED", "KILLED"]
 STATE_INDEX = {name: i for i, name in enumerate(STATE_ORDER)}
