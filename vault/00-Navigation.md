@@ -37,6 +37,8 @@ only ever be read while improving DCS itself, it belongs here.
 - [[Decisions/delegation-evolution|Decision: how DELEGATION.md reached v4]] — the full v1→v4 bound-by-bound argument, consolidated from STRATEGY.md's Sessions log
 - [[Decisions/sqlite-migration-register|Decision: decline the SQLite migration for REGISTER.md]] — the Owner's proposal and the case against it
 - [[Decisions/v0.7-scope|Decision: what earns the 0.7.0 label]] — ADOPTED at the eleventh `/dcs-esg` (2026-07-29): contract validation at the seam (v0.6.14 shipped the format; 0.7.0 is the dispatch/receipt validation it enables)
+- [[Decisions/non-anthropic-hardening|Decision: harden DCS for non-Anthropic operators]] — ADOPTED 2026-08-01 from the period review: mechanism over prose, fail-closed close gate, independence halt, Delegation model floor; three incidents queued
+- register view — sortable HTML over .dcs/esg/REGISTER.md; regenerate with python vault/_scripts/register_view.py (output gitignored)
 - [[Backlog]] — known gaps, with evidence
 
 ## Conventions
