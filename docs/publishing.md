@@ -51,8 +51,9 @@ A release bump touches both files in one commit (use `dcs bump <version>`
 `npm publish` packs **the working tree on disk**, not a tag and not
 `origin/main`. Whatever is checked out when you run it is what ships. So
 the tree you publish from must be the same commit you pushed — and that
-commit must already contain the release's own paperwork (`CHANGELOG.md`
-entry included). Verify it, never assume it:
+commit must already contain the release's own paperwork: a `CHANGELOG.md`
+entry that is not merely present but **true of what actually merged**.
+Verify it, never assume it:
 
 ```bash
 git status --porcelain            # must be empty
@@ -64,18 +65,34 @@ If a tag for this version already exists, it must point at that same
 commit — `git rev-parse vX.Y.Z^{commit}` — or you are about to ship
 something the tag does not describe.
 
-Both 0.7.x failures were this one rule, unwritten:
+Three releases have failed here, in three different ways — and only the
+first is this rule. Do not collapse them; they need different checks:
 
+- **v0.4.2** shipped from a tree that predated the README's audit-trail
+  section. This is the rule above, exactly: a stale working tree got
+  packed. The tip gate in step 5 catches it.
 - **0.7.1** went to npm with no tag, no GitHub release and no changelog
-  entry at all. Nothing checked, so nothing complained; the gap was found
-  a day later by diffing the published tarball against candidate trees.
-- **0.7.2** was published from a tree one commit behind `main`, so the
-  shipped `CHANGELOG.md` still claimed a defect was unfixed that the very
-  same release had fixed. The payload was correct; the paperwork beside it
-  was not.
+  entry at all — all three were created retroactively a day later. The
+  tip gate would **not** have caught this: the tree was fine. What was
+  missing was provenance — and **no step below catches that yet.** Tagging
+  happens at step 8, *after* publishing, so "does a tag exist for this
+  version" can only ever detect after the fact here; turning it into a
+  preventer means moving tagging ahead of publish. Tracked as incident
+  `release-provenance-guard`.
+- **0.7.2** was published faithfully from the true tip of `main`, and its
+  tarball is byte-identical to its tag — 75 of 75 files. `3d559ce` was
+  committed 00:42:24Z and published 00:45:48Z; the corrective commit did
+  not exist until 00:51:51Z, six minutes later. **Neither the tip gate nor
+  any tag-versus-tarball comparison would have caught it**, because
+  nothing disagreed. What shipped wrong was the *content* of the tip's own
+  `CHANGELOG.md`: an incident had merged without updating its entry, so
+  the entry still called a defect unfixed that the same release had just
+  fixed. The only thing that catches this is reading the entry against
+  what actually merged — hence "true of what actually merged" above, not
+  merely "present".
 
-npm forbids republishing a version, so neither was repairable afterwards —
-which is why this is a pre-publish gate and not a review note.
+npm forbids republishing a version, so none of the three was repairable
+afterwards — which is why these are pre-publish gates and not review notes.
 
 ## Release steps (Owner runs these; the assistant prepares but never publishes)
 
@@ -113,8 +130,9 @@ Repeat this whole sequence for every update, not just the first one.
    ```
    Nothing from the first, two identical shas from the third. Anything
    else means the tree about to be packed is not the tree you pushed —
-   stop and reconcile. Do not `git checkout` a tag to publish "the tagged
-   version": that is precisely how 0.7.2 shipped a stale `CHANGELOG.md`.
+   stop and reconcile. Do not `git checkout` a tag or an older commit to
+   publish "the tagged version": a stale checkout is how v0.4.2 shipped a
+   tree predating its own README section.
 6. Publish (unscoped packages are public by default):
    ```bash
    npm publish
@@ -126,14 +144,18 @@ Repeat this whole sequence for every update, not just the first one.
    ```bash
    npm pack dcs-command-system@X.Y.Z
    tar xzf dcs-command-system-X.Y.Z.tgz && cd package
-   find . -type f ! -name package.json | sed 's|^\./||' | sort |
+   find . -type f | sed 's|^\./||' | sort |
      while read -r f; do
        [ "$(git -C /path/to/repo show "HEAD:$f" | sha256sum)" = "$(sha256sum < "$f")" ] ||
          echo "DIFFERS: $f"
      done
    ```
-   Silence is the pass. (`package.json` is excluded because npm
-   normalizes it during packing, so it never matches byte-for-byte.)
+   Silence is the pass. `package.json` is compared like every other file:
+   npm packs it verbatim, measured — the published 0.7.2 copy and
+   `git show 3d559ce:package.json` have identical sha256 under npm 11.8.0.
+   If some future npm does rewrite it on pack, it will show up here as a
+   single expected difference; confirm that is what happened before calling
+   it a defect, and do not silently drop the file from the comparison.
    Record the result — "N identical, 0 differing" — the same way a
    `/dcs-deploy` witness is recorded; a bare version label is never
    sufficient evidence that a ship happened. Also confirm the end-user
