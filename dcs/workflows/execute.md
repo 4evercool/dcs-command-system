@@ -56,15 +56,9 @@ path is chosen, adapt — the deviation/Safety Officer gates below still apply.
 
 ## Escalation-trigger check — period boundary (doctrine principle 13)
 
-Before spawning any specialist, check trigger (c): read
-`esg.max_periods_before_review` from `<project>/.dcs/config.json` (default
-`3`). Count ATTEMPTS: the number of `IAP-APPROVED:` sentinel entries in
-`214-LOG.md` (recognized per `dcs_gate.py`'s grammar: "An entry begins at
-column zero with a mandatory bracketed timestamp; any other line is a
-continuation, never a sentinel, and quoting a whole prior entry inside a
-body requires indenting it off column zero."). If the attempt about to run
-exceeds the threshold, skip to "On any escalation trigger" below instead
-of step 4.
+Before spawning any specialist, check trigger (c): read `esg.max_periods_before_review` from `<project>/.dcs/config.json` (default `3`).
+Count ATTEMPTS: the number of `IAP-APPROVED:` sentinel entries in `214-LOG.md` (recognized per `dcs_gate.py`'s grammar: "An entry begins at column zero with a mandatory bracketed timestamp; any other line is a continuation, never a sentinel, and quoting a whole prior entry inside a body requires indenting it off column zero.").
+If the attempt about to run exceeds the threshold, skip to "On any escalation trigger" below instead of step 4.
 
 Also check trigger (d): if `<esg_root>/.dcs/esg/DELEGATION.md` is in force
 and the IAP's territory touches a `forbidden_globs` entry not caught at
@@ -86,8 +80,9 @@ keys `found`/`why_plan_wrong`/`proposal`).
 
 - **Parallel:** only when the partition table shows disjoint territories.
 - **Sequential:** when the IAP declared overlap-with-justification.
-- **Worktree-isolated:** set up the worktree per new.md step 7b before
-  spawning, and merge/reconcile after.
+- **Worktree-isolated:** only when the IAP declares `isolation: worktree`
+  for a specialist — set up that specialist's worktree per new.md step 7b
+  before spawning it, and merge/reconcile after it returns.
 
 **Re-tasking a specialist is a fresh spawn (doctrine principle 9b).** Never
 resume the previous agent — it holds the old tasking; spawn a new
@@ -109,15 +104,17 @@ file outside territory is a violation.
 
 **Any `status: "deviation"`:** stop the execution phase. This is a command
 point. **If not running Fable**: spawn `dcs-commander` via Task (model
-`fable`) with the triggering specialist's full return, the current 202 and
-its 204, and execution state — for established facts, pass their source,
-never a summary from memory. Its decision (schemas.md #6, commander decisions) governs: `replan` / `amend_tasking` /
-`escalate_owner`. **If this session is Fable**, make the call yourself.
-Record in `214-LOG.md`. Update `202-OBJECTIVES.md` and/or the relevant
-`204-TASKING/*.md` to reflect what was learned — editing the plan voids the approval
-mechanically (the deviation doctrine working as intended).
-Append to `214-LOG.md`: `deviation reported by <ID>: <summary> -- returning
-to planning`. Tell the Owner to run `/dcs-plan` again.
+`fable`) with the triggering specialist's full return, the current 202 and its
+204, and execution state — for established facts, pass their source, never a
+summary from memory. Its decision (schemas.md #6, commander decisions)
+governs: `replan` / `amend_tasking` / `escalate_owner`. **If this session is
+Fable**, make the call yourself. Use `AskUserQuestion` when the disposition is
+`escalate_owner` — the right call is genuinely the Owner's judgment, not just
+a mechanical correction. Record in `214-LOG.md`. Update `202-OBJECTIVES.md`
+and/or the relevant `204-TASKING/*.md` to reflect what was learned — editing
+the plan voids the approval mechanically (the deviation doctrine working as
+intended). Append to `214-LOG.md`: `deviation reported by <ID>: <summary> --
+returning to planning`. Tell the Owner to run `/dcs-plan` again.
 
 **Any `status: "blocked"`:** report the blocker to the Owner — this is an
 external obstacle, not necessarily a planning defect.
@@ -236,11 +233,12 @@ summarizes the period's change. Append to `214-LOG.md`: `integration commit
 Assess against `202-OBJECTIVES.md`:
 - **Goal fully met:** tell the Owner to run `/dcs-close`.
 - **Partially met: CLOSE AND REQUEUE is the default; another period is the
-  exception that must be argued.** A Safety-passed period holds proven
-  work. Keeping the incident open keeps it in a branch — unmerged,
-  unshipped, and fixing nothing. Only keep open when the remaining work is
-  genuinely inseparable (schema change whose readers are not yet updated,
-  contract half-migrated). State which in `214-LOG.md`.
+  exception that must be argued.** A Safety-passed period holds proven work.
+  Keeping the incident open keeps it in a branch — unmerged, unshipped, and
+  fixing nothing. Only keep open when the remaining work is genuinely
+  inseparable (schema change whose readers are not yet updated, contract
+  half-migrated). State which in `214-LOG.md`. (field lesson 2026-07-24 —
+  `dcs/references/doctrine-appendix.md`, "Workflow field lessons", W3)
 
 ## 10. Report
 
