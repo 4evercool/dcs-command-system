@@ -100,13 +100,14 @@ a new file.
 If `201-BRIEF.md`'s "Intake source" names something external (e.g. an
 `audit_results` row id, a ticket): **do not** write to it directly.
 
-**First check who owns closure.** Read the project's `CLAUDE.md` and the
-201: if a documented routine closes items itself upon observing the fix
-(e.g. a daily validate-findings routine that stamps rows when the fixing
-commit is deployed), then the correct action is **no action** — record in
-AAR.md that closure is DELEGATED, name the routine, and note what it
-needs to observe the fix. Manually closing what a routine owns creates a
-race and duplicates its write. Delegate only when the documentation is
+**First check who owns closure.** Read the project's `CLAUDE.md` and
+the 201: if a documented routine closes items itself upon observing the
+fix (e.g. a daily validate-findings routine that stamps rows when the
+fixing commit is deployed), then the correct action is **no action** —
+record in AAR.md that closure is DELEGATED, name the routine, and note
+what it needs to observe the fix. Manually closing what a routine owns
+creates a race and duplicates its write (field lesson 2026-07-22,
+predates self-hosting). Delegate only when the documentation is
 explicit — a vaguely-mentioned routine is NOT an owner; when in doubt,
 use the flag-for-Owner fallback (a duplicate flag is annoying; a
 silently-never-closed finding is a leak).

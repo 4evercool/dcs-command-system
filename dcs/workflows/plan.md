@@ -54,12 +54,13 @@ From the Planning Chief: the fields above match schemas.md #2 (chief plan).
 ### 4a. Tasking lint — mechanical, run BEFORE the command point (v0.5.1)
 
 These checks are arithmetic, not judgment. Run them yourself; a failure
-is yours to fix, never a reason to spend a command point.
+is yours to fix, never a reason to spend a command point (field lesson
+2026-07-23 — `dcs/references/doctrine-appendix.md`, "Workflow field lessons", W1).
 
 1. **Self-contradiction** — for every tasking, `territory ∩ forbidden` must be empty.
 2. **Orphaned deliverables** — every deliverable named in `tactics[]`, `verification_plan`, or Logistics-chief plan must map to an existing tasking `id`.
 3. **Unassigned occurrences** — when the plan says "replace/remove X", `grep` for X: every occurrence must fall inside exactly one tasking's `territory`.
-3a. **Sweeps must be enumeration-shaped (v0.5.9).** A criterion whose scope is a *population* ("all", "every", "no remaining", a pattern) must satisfy: **(i)** the 202 names the command that enumerates the population; **(ii)** the criterion is phrased as that command returning empty; **(iii)** you run the command now and record its output in `214-LOG.md`. A hand-listed population is a census — stale the moment the tree moves.
+3a. **Sweeps must be enumeration-shaped (v0.5.9).** A criterion whose scope is a *population* ("all", "every", "no remaining", a pattern) must satisfy: **(i)** the 202 names the command that enumerates the population; **(ii)** the criterion is phrased as that command returning empty; **(iii)** you run the command now and record its output in `214-LOG.md`. A hand-listed population is a census — stale the moment the tree moves. Field lesson 2026-07-24 — `dcs/references/doctrine-appendix.md`, "Workflow field lessons", W2.
 3b. **Claims about state outside the tree must be measured.** A criterion asserting anything outside the working tree (registry version, published status, remote ref, live service) is a measured claim. Mirror 3a: **(i)** the 202 names the command that establishes the fact; **(ii)** the criterion is phrased as that command's result; **(iii)** you run it now and record the output in `214-LOG.md`.
 4. **Territory disjointness** — verify the globs don't intersect; don't trust `partition_ok: true`.
 5. **Evidence executability** — each `evidence_required` command must be runnable in the specialist's harness (no browser/UI).
@@ -126,7 +127,7 @@ Resolve `esg_root` (`git worktree list --porcelain`, first entry). Update row's 
 
 **All bounds hold AND `auto_approve_type3: true`:** IC approves — skip 6b, stamp `approved_by: IC (Delegation v<N>)`. Log. Tell Owner.
 
-**Any bound fails, no Delegation, or Type 1:** fall through to 6b — name failed bound(s). No DELEGATION.md → fallback to `config.json` (conservative, no per-bound audit).
+**Any bound fails, no Delegation, or Type 1:** fall through to 6b — name failed bound(s). No DELEGATION.md → fallback to `config.json` (conservative, no per-bound audit): on that path auto-approve **only** if Type == 3 AND `auto_approve_type3: true` AND the IAP touches no file matching any `guarded_paths` glob outside the ordinary source tree — i.e. nothing that already looks unusual for a routine change. Anything else falls to 6b.
 
 ## 6b. Present the IAP to the Owner
 

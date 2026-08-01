@@ -633,3 +633,24 @@ Original platform-specific diagnostic commands moved from `doctrine.md` step 5 o
 
 > Original platform diagnostic text:
 > POSIX: `lsof +D <path>` or `fuser -v <path>`; Windows: `powershell "Get-Process | Where-Object { $_.Path -like '*<path>*' }"` (or Sysinternals `handle <path>` if installed)
+
+## Workflow field lessons (restored, incident `trim-content-loss-restoration`)
+
+Incident `workflow-file-trim-grandfathered` (commit `bca0b56`, 2026-07-31) trimmed four workflow files to the 250-line ceiling and deleted the field lessons below outright instead of routing them here, which is where CLAUDE.md's "Where lessons go" convention sends the provenance of a rule; the rules themselves stayed in the workflows and only the stories were lost; each entry quotes the deleted prose verbatim and regenerates with `git show bca0b56^:dcs/workflows/<file>`; all three lessons predate self-hosting with no recorded version, so each carries the `predates self-hosting` identifier per the citation convention above; and the figures inside the quotations are historical counts from the incidents that produced them, not numbers this file recomputes, to be read as of that incident's own close, because it moves.
+
+### W1: plan.md step 4a preamble — the tasking lint is not a command point (field lesson 2026-07-23, predates self-hosting)
+
+> Field lesson 2026-07-23: an entire IAP review cycle (the IC's second REJECT on one incident) was consumed by defects in this list, and the IC's own verdict was that both were *Dispatcher transcription errors, not the chief's*.
+> — predates self-hosting; regenerate with `git show bca0b56^:dcs/workflows/plan.md`, old lines 139-142.
+
+### W2: plan.md lint check 3a — a census is not an enumeration (field lesson 2026-07-24, predates self-hosting)
+
+> Field lesson 2026-07-24: an incident took **four Safety halts** on one objective, each closing the named instances and revealing another of the same class, because the criterion enumerated sites instead of asserting an invariant.
+> — predates self-hosting; regenerate with `git show bca0b56^:dcs/workflows/plan.md`, old lines 170-173.
+
+### W3: execute.md step 9b — a fix that is not shipped fixes nothing (field lesson 2026-07-24, predates self-hosting)
+
+> Field lesson 2026-07-24, in the incident's own AAR: period 1 produced a Safety-passed fix for a bug that was actively corrupting production data, and *"that fix then sat in a branch. A fix that is not shipped fixes nothing, and the defect kept corrupting production data the whole time"* — a second period existed only to make the first one shippable.
+> — predates self-hosting; regenerate with `git show bca0b56^:dcs/workflows/execute.md`, old lines 430-435.
+
+W1's rule still lives at `plan.md` step 4a's preamble, W2's at `plan.md` lint check 3a, and W3's at `execute.md` step 9b and in this appendix's "## The lifecycle (Planning P mapped to software)" section above.

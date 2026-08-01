@@ -128,7 +128,7 @@ Two optional commands sequence the P-loop without eliminating its gates.
 
 1. **Never execute a Type 1 incident unattended** — register it as `PARKED` (`"awaits Owner"`), continue to the next queued item.
 2. **Never deploy from the loop** — every incident stops at committed + safety-passed (register row: `MERGED (deploy pending)`, never `DEPLOYED`); deploys batch for the Owner.
-3. **At any Owner gate the Delegation does not cover:** write pause state to disk (resumable via `/dcs-status`), end the loop turn — never busy-wait, never self-approve out of bounds.
+3. **At any Owner gate the Delegation does not cover:** notify if a tool is available, write pause state to disk (resumable via `/dcs-status`), end the loop turn — never busy-wait, never self-approve out of bounds.
 
 ## Parallel operation (v0.3)
 

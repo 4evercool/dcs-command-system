@@ -177,7 +177,20 @@ REPO = Path(__file__).resolve().parent.parent
 # provenance in doctrine-appendix.md), then re-derived the ratchet from
 # the resulting, final, normalised size:
 #
-#   budget = math.ceil(36539/1024) = 36
+#   budget = math.ceil(36547/1024) + 1 = 37
+#
+# Still a ratchet: it bites 1 kB sooner than the 38 kB it replaces.
+# This paragraph's figure was overwritten in place twice, by 2e15682 and
+# again by e3d4bcc, and reconstructed at incident
+# trim-content-loss-restoration; regenerate the original with
+# `git show 2e15682^:tests/test_doctrine_integrity.py`.
+#
+# Incident worktree-removal-self-conflict (2026-07-29) then grew
+# doctrine.md by 479 B (audit step 5's three-tier removal behaviour) and
+# re-derived the ratchet from the resulting, final, normalised size
+# (regenerate with `git show 2e15682 -- tests/test_doctrine_integrity.py`):
+#
+#   budget = math.ceil(38361/1024) = 38
 #
 # Incident hot-path-budget-emergency-trim (2026-07-30) executed a cut
 # registry against doctrine.md (7 positions, compressed-in-place or moved
