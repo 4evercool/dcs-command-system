@@ -46,12 +46,44 @@ a content-aware comparison — sha256 of every payload file, via
 A release bump touches both files in one commit (use `dcs bump <version>`
 — see step 2 below).
 
+## Publish-from-the-pushed-tip rule (HARD)
+
+`npm publish` packs **the working tree on disk**, not a tag and not
+`origin/main`. Whatever is checked out when you run it is what ships. So
+the tree you publish from must be the same commit you pushed — and that
+commit must already contain the release's own paperwork (`CHANGELOG.md`
+entry included). Verify it, never assume it:
+
+```bash
+git status --porcelain            # must be empty
+git fetch origin
+git rev-parse HEAD origin/main    # must print the same sha twice
+```
+
+If a tag for this version already exists, it must point at that same
+commit — `git rev-parse vX.Y.Z^{commit}` — or you are about to ship
+something the tag does not describe.
+
+Both 0.7.x failures were this one rule, unwritten:
+
+- **0.7.1** went to npm with no tag, no GitHub release and no changelog
+  entry at all. Nothing checked, so nothing complained; the gap was found
+  a day later by diffing the published tarball against candidate trees.
+- **0.7.2** was published from a tree one commit behind `main`, so the
+  shipped `CHANGELOG.md` still claimed a defect was unfixed that the very
+  same release had fixed. The payload was correct; the paperwork beside it
+  was not.
+
+npm forbids republishing a version, so neither was repairable afterwards —
+which is why this is a pre-publish gate and not a review note.
+
 ## Release steps (Owner runs these; the assistant prepares but never publishes)
 
 Repeat this whole sequence for every update, not just the first one.
 
-1. Land the change on `main`: commit, `git push`, tests green
-   (`python tests/test_dcs_gate.py`), `git status` clean.
+1. Land the change on `main` — **including this release's `CHANGELOG.md`
+   entry**, which is part of the release, not follow-up work. Commit,
+   `git push`, tests green (`npm test`), `git status` clean.
 2. Run `dcs bump <version>` (e.g. `dcs bump 0.6.0`). This atomically
    updates both `dcs/VERSION` and `package.json` → `version` to the same
    value. Commit the result (`chore(release): vX.Y.Z`) and push:
@@ -71,25 +103,60 @@ Repeat this whole sequence for every update, not just the first one.
 4. Confirm you're logged in (`npm whoami`; re-run `npm login` if it
    errors) and that this version isn't already on the registry:
    `npm view dcs-command-system versions` shouldn't list `X.Y.Z` yet.
-5. Publish (unscoped packages are public by default):
+5. **The tip gate — run this immediately before publishing, from the repo
+   root, and read the output.** It is the whole
+   publish-from-the-pushed-tip rule in three commands:
+   ```bash
+   git status --porcelain
+   git fetch origin
+   git rev-parse HEAD origin/main
+   ```
+   Nothing from the first, two identical shas from the third. Anything
+   else means the tree about to be packed is not the tree you pushed —
+   stop and reconcile. Do not `git checkout` a tag to publish "the tagged
+   version": that is precisely how 0.7.2 shipped a stale `CHANGELOG.md`.
+6. Publish (unscoped packages are public by default):
    ```bash
    npm publish
    ```
-6. Verify end-to-end, from a directory outside the repo:
+7. **Content witness — prove what actually shipped**, rather than
+   trusting the version string. From a scratch directory outside the
+   repo, fetch the published tarball back and compare it file by file
+   against the commit you published from:
+   ```bash
+   npm pack dcs-command-system@X.Y.Z
+   tar xzf dcs-command-system-X.Y.Z.tgz && cd package
+   find . -type f ! -name package.json | sed 's|^\./||' | sort |
+     while read -r f; do
+       [ "$(git -C /path/to/repo show "HEAD:$f" | sha256sum)" = "$(sha256sum < "$f")" ] ||
+         echo "DIFFERS: $f"
+     done
+   ```
+   Silence is the pass. (`package.json` is excluded because npm
+   normalizes it during packing, so it never matches byte-for-byte.)
+   Record the result — "N identical, 0 differing" — the same way a
+   `/dcs-deploy` witness is recorded; a bare version label is never
+   sufficient evidence that a ship happened. Also confirm the end-user
+   path works, from outside the repo:
    ```bash
    npx dcs-command-system@latest version
    ```
-   should print the new version; `dcs doctor` too if installed globally.
-7. Tag and push it — two separate commands, `&&` is bash syntax and
+8. Tag and push it — two separate commands, `&&` is bash syntax and
    breaks in Windows PowerShell 5.1:
    ```bash
    git tag vX.Y.Z
    git push --tags
    ```
-8. Cut a GitHub Release off the tag, so the update is visible to
-   watchers instead of sitting as a bare tag:
+   If the tag already exists (someone tagged ahead of the publish),
+   do not create it — verify it instead:
+   `git rev-parse vX.Y.Z^{commit}` must equal the commit you published
+   from. If it does not, the tag describes a different tree than npm has,
+   and that mismatch is the thing to fix before cutting a release off it.
+9. Cut a GitHub Release off the tag, so the update is visible to
+   watchers instead of sitting as a bare tag. Keep the notes and the
+   `CHANGELOG.md` entry saying the same thing:
    ```bash
-   gh release create vX.Y.Z --title vX.Y.Z --notes "..."
+   gh release create vX.Y.Z --title vX.Y.Z --notes-file notes.md
    ```
 
 Existing installs don't get any of this automatically — see "Upgrade
