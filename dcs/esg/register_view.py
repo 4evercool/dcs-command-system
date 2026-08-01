@@ -78,11 +78,21 @@ def split_row(line):
     return [f.strip() for f in fields]
 
 
+# A markdown table separator row: pipes, dashes, colons, whitespace and
+# nothing else. A real data row always has other characters (an em-dash
+# cell is U+2014, not in this class), so this can never swallow one.
+SEPARATOR_RE = re.compile(r"^\|[\s|:-]+$")
+
+
 def find_table(lines):
     """Locate the header line and the contiguous run of '|'-prefixed data
     lines right after the separator. Everything above the header
     (including the large HTML comments) is ignored by construction, since
-    we only start scanning from the header match onward."""
+    we only start scanning from the header match onward. The separator is
+    verified, not assumed: a blind header+2 skip would silently drop the
+    first data row of a register whose separator line is missing -- the
+    one failure mode this parser must never have (a row may render as
+    unparsed, never vanish)."""
     header_idx = None
     for i, line in enumerate(lines):
         if line.startswith("| ID | Title |"):
@@ -91,7 +101,9 @@ def find_table(lines):
     if header_idx is None:
         return None, []
     data_indices = []
-    i = header_idx + 2  # header line, then the |--- separator line
+    i = header_idx + 1
+    if i < len(lines) and SEPARATOR_RE.match(lines[i]):
+        i += 1  # skip the |---|---| separator line
     while i < len(lines) and lines[i].startswith("|"):
         data_indices.append(i)
         i += 1
@@ -161,7 +173,11 @@ def parse_register(text):
     unparsed = []
     for i in data_indices:
         raw = lines[i]
-        cells = split_row(raw)
+        # Strip the line before splitting: invisible trailing whitespace
+        # after the closing pipe would otherwise survive as a phantom
+        # 13th field ("" is removed as a delimiter artifact, " " is not)
+        # and demote a perfectly valid row to the unparsed bin.
+        cells = split_row(raw.strip())
         if len(cells) == 12:
             rows.append(build_row(cells, i + 1))
         else:
