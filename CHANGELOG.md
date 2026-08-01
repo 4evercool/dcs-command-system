@@ -91,6 +91,13 @@ hook copies are never written by an install — see
 
 ### Fixed
 
+- **Operative content dropped by 0.7.1's trims is restored** (incident
+  `trim-content-loss-restoration`). `plan.md`'s no-`DELEGATION.md`
+  fallback has its `guarded_paths` auto-approval condition back — it had
+  been stated nowhere in the shipped package; `execute.md` regains its
+  `escalate_owner` handling; and `doctrine.md` regains the clause
+  requiring an unattended loop to notify at any Owner gate the Delegation
+  does not cover. See 0.7.1's Known regressions for how they were lost.
 - **`/dcs-status` no longer prints a register state that does not
   exist.** `dcs/workflows/status.md` instructed a stale four-state enum
   including `CLOSED`, which has not been a register state since v0.3; it
@@ -192,10 +199,10 @@ trees:
 - `doctrine.md` lost its unattended-operation clause requiring the loop
   to notify at any uncovered Owner gate when a tool is available.
 
-Incident `trim-content-loss-restoration` is open to restore these; they
-are **not** fixed in 0.7.2. The trim's own AAR claimed "no operational
-steps removed from any file," which is why the losses went unnoticed at
-the time.
+All three were restored by incident `trim-content-loss-restoration`,
+which merged into 0.7.2 — see that release's Fixed section. The trim's
+own AAR had claimed "no operational steps removed from any file," which
+is why the losses went unnoticed at the time.
 
 Two more things worth knowing about this release. The emergency hot-path
 trim (`e3d4bcc`) recovered 1,881 B and ratcheted `HOT_PATH_BUDGET_KB`
