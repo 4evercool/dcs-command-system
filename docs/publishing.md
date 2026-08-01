@@ -74,11 +74,13 @@ first is this rule. Do not collapse them; they need different checks:
 - **0.7.1** went to npm with no tag, no GitHub release and no changelog
   entry at all — all three were created retroactively a day later. The
   tip gate would **not** have caught this: the tree was fine. What was
-  missing was provenance — and **no step below catches that yet.** Tagging
-  happens at step 8, *after* publishing, so "does a tag exist for this
-  version" can only ever detect after the fact here; turning it into a
-  preventer means moving tagging ahead of publish. Tracked as incident
-  `release-provenance-guard`.
+  missing was provenance. `package.json`'s `scripts.prepublishOnly` now
+  runs `python tests/release_provenance_check.py` and fails `npm publish`
+  — including `npm publish --dry-run` — before any registry contact
+  when the tag or the `CHANGELOG.md` entry is missing. `npm pack` and
+  `npm pack --dry-run` are unaffected — they never run `prepublishOnly`
+  (measured, npm 11.8.0).
+  Tracked as incident `release-provenance-guard`.
 - **0.7.2** was published faithfully from the true tip of `main`, and its
   tarball is byte-identical to its tag — 75 of 75 files. `3d559ce` was
   committed 00:42:24Z and published 00:45:48Z; the corrective commit did
@@ -133,11 +135,24 @@ Repeat this whole sequence for every update, not just the first one.
    stop and reconcile. Do not `git checkout` a tag or an older commit to
    publish "the tagged version": a stale checkout is how v0.4.2 shipped a
    tree predating its own README section.
-6. Publish (unscoped packages are public by default):
+6. Tag and push it — two separate commands, `&&` is bash syntax and
+   breaks in Windows PowerShell 5.1:
+   ```bash
+   git tag vX.Y.Z
+   git push --tags
+   ```
+   If the tag already exists — the normal case when this sequence is
+   being retried after an earlier interruption — do not create it again:
+   verify it instead. `git rev-parse vX.Y.Z^{commit}` must equal `HEAD`,
+   the commit about to be published in the next step. If it does not,
+   the tag describes a different tree than the one about to ship, and
+   that mismatch is the thing to fix before publishing.
+7. Publish (unscoped packages are public by default). The provenance
+   gate above now runs automatically as part of this step:
    ```bash
    npm publish
    ```
-7. **Content witness — prove what actually shipped**, rather than
+8. **Content witness — prove what actually shipped**, rather than
    trusting the version string. From a scratch directory outside the
    repo, fetch the published tarball back and compare it file by file
    against the commit you published from:
@@ -163,17 +178,6 @@ Repeat this whole sequence for every update, not just the first one.
    ```bash
    npx dcs-command-system@latest version
    ```
-8. Tag and push it — two separate commands, `&&` is bash syntax and
-   breaks in Windows PowerShell 5.1:
-   ```bash
-   git tag vX.Y.Z
-   git push --tags
-   ```
-   If the tag already exists (someone tagged ahead of the publish),
-   do not create it — verify it instead:
-   `git rev-parse vX.Y.Z^{commit}` must equal the commit you published
-   from. If it does not, the tag describes a different tree than npm has,
-   and that mismatch is the thing to fix before cutting a release off it.
 9. Cut a GitHub Release off the tag, so the update is visible to
    watchers instead of sitting as a bare tag. Keep the notes and the
    `CHANGELOG.md` entry saying the same thing:

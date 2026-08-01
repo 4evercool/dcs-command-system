@@ -27,7 +27,8 @@
   },
   "scripts": {
     "postinstall": "node bin/dcs.js postinstall",
-    "test": "python tests/test_dcs_gate.py && python tests/test_dcs_intake.py && python tests/test_doctrine_integrity.py"
+    "test": "python tests/test_dcs_gate.py && python tests/test_dcs_intake.py && python tests/test_doctrine_integrity.py",
+    "prepublishOnly": "python tests/release_provenance_check.py"
   },
   "keywords": [
     "claude-code",
