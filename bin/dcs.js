@@ -156,13 +156,24 @@ function doctor() {
           }
         }
       } else {
-        // exit 2 = environment error — fall back to string comparison
+        // exit 2 = environment error — content was NOT verified; never
+        // let this fall through silently on a version-string match.
+        console.log(
+          "content check: NOT performed (payload_check.py exited with " +
+            "environment error, status 2) — version match alone is not " +
+            "proof of identical content"
+        );
         if (installed !== pkg) {
           console.log("-> versions differ; run: dcs install");
         }
       }
     } else {
-      // payload_check.py not found — fall back to string comparison
+      // payload_check.py not found — content was NOT verified; never let
+      // this fall through silently on a version-string match.
+      console.log(
+        "content check: NOT performed (payload_check.py not found) — " +
+          "version match alone is not proof of identical content"
+      );
       if (installed !== pkg) {
         console.log("-> versions differ; run: dcs install");
       }
@@ -187,8 +198,10 @@ function bump(version) {
     console.log("usage: dcs bump <version>");
     return;
   }
-  // Validate semver-like: at least d.d.d
-  if (!/^\d+\.\d+\.\d+/.test(version)) {
+  // Validate semver-like: d.d.d, optionally followed by a
+  // -prerelease/+build suffix (alphanumeric, dots, hyphens only).
+  // Anchored at both ends so trailing garbage is rejected.
+  if (!/^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/.test(version)) {
     console.error(`error: version must be semver-like (e.g. 0.7.1), got: ${version}`);
     process.exit(1);
   }
@@ -204,6 +217,7 @@ function bump(version) {
     process.exit(1);
   }
   const originalJson = JSON.stringify(pkgJson, null, 2) + "\n";
+  const oldVersion = pkgJson.version;
   pkgJson.version = version;
 
   // Write package.json first
@@ -218,12 +232,23 @@ function bump(version) {
   try {
     fs.writeFileSync(versionFile, version + "\n", "utf8");
   } catch (e) {
-    fs.writeFileSync(pkgFile, originalJson, "utf8");
-    console.error(`error: cannot write dcs/VERSION: ${e.message} — package.json restored`);
+    try {
+      fs.writeFileSync(pkgFile, originalJson, "utf8");
+      console.error(`error: cannot write dcs/VERSION: ${e.message} — package.json restored`);
+    } catch (rollbackErr) {
+      console.error(`error: cannot write dcs/VERSION: ${e.message}`);
+      console.error(`error: rollback of package.json also failed: ${rollbackErr.message}`);
+      console.error(
+        `WARNING: ${pkgFile} and ${versionFile} may now be INCONSISTENT — ` +
+          "reconcile manually:\n" +
+          `  ${pkgFile}: may still contain version ${version} (rollback to ${oldVersion} failed)\n` +
+          `  ${versionFile}: write of ${version} failed, likely still at ${oldVersion} (or partially written)`
+      );
+    }
     process.exit(1);
   }
 
-  console.log(`version bumped: ${pkgJson.version} -> ${version}`);
+  console.log(`version bumped: ${oldVersion} -> ${version}`);
 }
 
 function postinstall() {
