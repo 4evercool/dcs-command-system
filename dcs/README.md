@@ -42,10 +42,15 @@ dcs/                      # this payload — shared, read-only source material
 │                           # per-project by /dcs-init to .dcs/ (tracked --
 │                           # not .dcs/esg/, which is gitignored wholesale);
 │                           # regenerate: python .dcs/register_view.py
-└── hooks/
-    ├── dcs_gate.py         # the PreToolUse gate, copied per-project by /dcs-init
-    └── register_view_regen.py  # PostToolUse: regenerates the register
-                               # view whenever REGISTER.md is edited
+├── hooks/
+│   ├── dcs_gate.py         # the PreToolUse gate, copied per-project by /dcs-init
+│   └── register_view_regen.py  # PostToolUse: regenerates the register
+│                              # view whenever REGISTER.md is edited
+└── tools/
+    └── preservation_map.py # ## 6c. bounded-amendment preservation-map
+                             # checker -- run standalone (see its own
+                             # module docstring for the invocation) or
+                             # imported by tests/test_doctrine_integrity.py
 
 agents/dcs-*.md             # flat files, alongside any other installed agents
 skills/dcs-*/SKILL.md        # one skill per command, thin @-include wrappers
