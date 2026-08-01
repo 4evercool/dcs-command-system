@@ -206,6 +206,19 @@ allowed to touch. Regenerate:
 python -c "import pathlib; d=pathlib.Path('dcs/references/doctrine.md').read_bytes().replace(b'\r\n',b'\n'); s=pathlib.Path('dcs/references/schemas.md').read_bytes().replace(b'\r\n',b'\n'); print(len(d)+len(s), 38*1024, 38*1024-len(d)-len(s))"
 ```
 
+**Fresh evidence, 2026-08-01 — the ratchet has since moved to 37 kB and
+the slack is now 50 B.** `revision-preservation-map`'s Safety Officer
+re-derived the hot path at close: `doctrine.md` 23,876 B + `schemas.md`
+13,962 B = 37,838 B against `HOT_PATH_BUDGET_KB=37` (37,888 B ceiling) —
+S3's own budget-planning left 402 B of headroom and spent 352 of it on
+one new schema section. **The next doctrine or schemas addition of any
+size, from any incident, turns the merge-time guard red on arrival.**
+Regenerate:
+
+```bash
+python -c "import pathlib; d=pathlib.Path('dcs/references/doctrine.md').read_bytes().replace(b'\r\n',b'\n'); s=pathlib.Path('dcs/references/schemas.md').read_bytes().replace(b'\r\n',b'\n'); print(len(d)+len(s), 37*1024, 37*1024-len(d)-len(s))"
+```
+
 ## 8. Hot-path budget check is line-ending-sensitive ✅ DONE
 
 **Closed 2026-07-25** by incident `hot-path-budget-eol-sensitivity`,
@@ -747,7 +760,40 @@ a legitimate outcome. **Territory collision:**
 `tests/test_doctrine_integrity.py`, shared with `check-14-hardening`
 (rank 3), `schemas-contract-format` and `json-examples-unparsed`.
 
-## 19. A narrow revision has no required check that it preserved every other criterion
+## 19. A narrow revision has no required check that it preserved every other criterion ✅ DONE
+
+> **Closed 2026-08-01 by incident `revision-preservation-map`** (Type 1,
+> integration commit `76976f3`, restart of a 2026-07-31 attempt abandoned
+> mid-execution — the abandoned branch was renamed to
+> `dcs/revision-preservation-map-abandoned-2026-07-31` and kept as
+> evidence only, never resumed). Delivered exactly the candidate fix
+> below: `dcs/tools/preservation_map.py`, a mechanism (not a prose
+> instruction) that a `## 6c.` amendment must run before re-stamping — it
+> re-derives, from the artifact's current bytes every time, whether every
+> untouched 202 criterion's preserved anchor is still present, and never
+> trusts a map's self-reported `output` (the false-fidelity defect this
+> item's own second instance named). Proven against a frozen fixture
+> reproducing this item's exact defect shape (`dropped-criterion/`), read
+> through both the new comparator (catches it) and the old lint rule
+> (misses it) — no git ref anywhere. `schemas.md` #9 documents the shape;
+> `doctrine-appendix.md` gained a W4 provenance entry.
+>
+> **The abandoned attempt's own first try is worth recording as what NOT
+> to repeat:** it shipped a step-7 prose instruction plus a test that only
+> grepped `plan.md` for the phrase "preservation map" — validating that
+> the words were said, never that any incident's map was real. The
+> restarted stem built an executable instead, precisely because the
+> discipline-only version had already been tried and had already failed.
+>
+> Safety: pass, 0 refutations, 5 advisories (3 folded into the
+> integration commit — a docstring typo, an added false-fidelity forgery
+> test case, and citations by section number replaced with regenerating
+> ones since `field-lesson-guard-vacuity` (rank 4) will renumber this
+> file's sections; 1 was log hygiene; 1 is the hot-path headroom note
+> carried to item 7 below). Full account:
+> `.dcs/incidents/2026-08-01-revision-preservation-map/AAR.md`.
+
+### As originally filed
 
 **Registered at the close of `register-field-repair-path`, 2026-07-27.**
 That incident's period 1 halted twice: once on a stale external fact
