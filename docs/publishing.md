@@ -14,9 +14,11 @@ install (all errors degrade to a warning + manual instruction). Note npm
 ≥7 hides lifecycle-script output by default, so the auto-install is
 silent unless `--foreground-scripts` is passed — the behavior still
 happens; `dcs doctor` confirms it. All three branches are
-tarball-install-tested (2026-07-22): existing target → 28 payload files
-land; missing target → nothing created, npm install still succeeds;
-opt-out → untouched.
+tarball-install-tested (2026-07-22): existing target → the whole payload
+lands; missing target → nothing created, npm install still succeeds;
+opt-out → untouched. (The payload is not a fixed size — count it at any
+time with `python tests/payload_check.py --repo . --installed ~/.claude`,
+which is the same comparison `dcs doctor` runs.)
 
 ## End-user experience (what the README should show)
 
@@ -62,6 +64,10 @@ Repeat this whole sequence for every update, not just the first one.
    ```bash
    npm pack --dry-run
    ```
+   `package.json`'s `files:` ends with a `"!**/__pycache__"` negation —
+   keep it. Without it npm ships compiled `.pyc` bytecode (0.7.1 went out
+   with three, one of them 50 kB), because a directory listed in `files:`
+   is included wholesale and `.gitignore` does not hold it back.
 4. Confirm you're logged in (`npm whoami`; re-run `npm login` if it
    errors) and that this version isn't already on the registry:
    `npm view dcs-command-system versions` shouldn't list `X.Y.Z` yet.

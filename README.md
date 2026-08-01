@@ -46,19 +46,24 @@ npm i -g dcs-command-system@latest
 ```
 
 **2. Re-run `/dcs-init` in the project.** This is what copies the current
-hooks into `<project>/.claude/hooks/`. It must come *after* step 1 —
-`/dcs-init` copies from `~/.claude/dcs/hooks/`, so running it first just
-reinstalls the old hook. Never run it while an incident is active.
+hooks into `<project>/.claude/hooks/` and the register-view generator into
+`<project>/.dcs/`. It must come *after* step 1 — `/dcs-init` copies from
+`~/.claude/dcs/`, so running it first just reinstalls the old files. Never
+run it while an incident is active.
 
-Check that it took:
+Check that it took — compare each project copy against the payload it came
+from, rather than grepping for a token from one particular release:
 
 ```bash
-grep -c halt_cycles .claude/hooks/dcs_gate.py
+for h in dcs_gate dcs_intake register_view_regen; do diff -q ".claude/hooks/$h.py" "$HOME/.claude/dcs/hooks/$h.py"; done
+diff -q .dcs/register_view.py "$HOME/.claude/dcs/esg/register_view.py"
 ```
 
-`0` means the project has the new documentation and the old enforcer —
-the worst of both, because the docs now describe a ceiling the project
-does not have. Anything above `0` means the hook is current.
+Silence means every copy is current. A reported difference means the
+project still has the old enforcer while the docs describe the new one —
+the worst of both. `No such file` for `register_view_regen.py` or
+`register_view.py` just means you declined those at onboarding; they are
+optional and nothing else depends on them.
 
 **3. Add any new `.dcs/config.json` keys by hand.** `/dcs-init` copies the
 config template **only when the file does not exist**, so it will never
@@ -127,7 +132,11 @@ expected to honor a protocol it lacks the tool to execute.
   behalf — logged, never silent. `/dcs-run` chains a whole incident with
   you only at real decisions; `/dcs-loop` sweeps the queue unattended
   under the Delegation (never runs architectural work unattended, never
-  deploys).
+  deploys). The register stays a plain markdown table — one source of
+  truth, diffable, no database — and a bundled generator renders it as a
+  sortable, filterable HTML view beside it, refreshed automatically by a
+  hook whenever the register is edited. The view is read-only and
+  disposable: it is never committed, and deleting it costs nothing.
 - **An audit trail regulators would recognize.** Every incident leaves an
   append-only decision log, hash-bound human approvals with attribution,
   versioned delegations of authority, adversarial verification records,
@@ -145,7 +154,7 @@ expected to honor a protocol it lacks the tool to execute.
 
 | Command | What it does |
 |---|---|
-| `/dcs-init` | Onboard a project: `.dcs/` state + the approval-gate hook |
+| `/dcs-init` | Onboard a project: `.dcs/` state, the three hooks, the register-view generator |
 | `/dcs-run <intake>` | Drive a full incident: stem → plan → execute → close, pausing only at Owner gates (`--next` pulls the top queued register item) |
 | `/dcs-new` / `/dcs-plan` / `/dcs-execute` / `/dcs-close` | The individual phases, for stepwise use or resuming |
 | `/dcs-status` | Sitrep; `--campaign` for the whole portfolio |
@@ -170,8 +179,9 @@ day one: every failure mode observed in the field (dispatchers skipping
 command points, self-reported "done" without artifacts, verification
 staged before commits existed, forgotten worktrees) became a mechanical
 check — entry gates that audit the command chain at every phase boundary,
-a facts-only rule for close-out reports, hash-bound approvals, and a
-14+-case test suite for the gate hook. The full constitution is in
+a facts-only rule for close-out reports, hash-bound approvals, and a gate
+test suite that has grown a case per field failure ever since (`npm test`
+prints each suite's own count). The full constitution is in
 [dcs/references/doctrine.md](dcs/references/doctrine.md) — workflows and
 agents quote it; if they ever disagree, doctrine wins.
 

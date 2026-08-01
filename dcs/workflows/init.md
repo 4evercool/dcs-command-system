@@ -50,42 +50,44 @@ and an onboarded-but-idle project should have no active incident.
 ## 3a. Gitignore the per-worktree/main-only state (v0.3)
 
 Ensure `<project>/.gitignore` contains `.dcs/ACTIVE`, `.dcs/CLOSED`, and
-`.dcs/esg/` — append them (creating `.gitignore` if it doesn't exist yet)
-if missing, never removing or reordering anything already there. These
-three are deliberately per-worktree or main-checkout-only state (doctrine
-"Parallel operation" / `docs/spec-v0.3-parallel.md`'s state-split table):
-a tracked `ACTIVE` would ride an incident's merge into main and wedge the
-gate for every future incident; a tracked `esg/` would diverge across
-every branch instead of staying the single portfolio source of truth.
-`.dcs/config.json` and `.dcs/incidents/` stay tracked as before —
-unaffected by this step.
+`.dcs/esg/` — append if missing (creating `.gitignore` if absent), never
+removing or reordering what is already there. These three are
+per-worktree or main-checkout-only state (doctrine "Parallel operation" /
+`docs/spec-v0.3-parallel.md`'s state-split table): a tracked `ACTIVE`
+would ride an incident's merge into main and wedge the gate for every
+future incident; a tracked `esg/` would diverge across every branch
+instead of staying one portfolio source of truth. `.dcs/config.json` and
+`.dcs/incidents/` stay tracked, unaffected by this step.
 
 ## 3b. Copy the register view generator
 
 Copy `$HOME/.claude/dcs/esg/register_view.py` to
 `<project>/.dcs/register_view.py` — NOT `.dcs/esg/`, which step 3a just
-gitignored wholesale. Unlike `REGISTER.md`, this is a static tool, not
-per-worktree data, so it must survive a plain `git clone`: same tracked
-treatment as step 4's hooks, always freshly overwritten on re-init.
-Reads `.dcs/esg/REGISTER.md`, writes the sibling `register-view.html`
-there (creating `.dcs/esg/` if needed), never touches `REGISTER-LOCK`.
-Inert until run by hand or the regen hook below is wired.
+gitignored. Unlike `REGISTER.md` this is a static tool, not per-worktree
+data, so it must survive a plain `git clone`: tracked like step 4's
+hooks, freshly overwritten on re-init. Reads `.dcs/esg/REGISTER.md`,
+writes the sibling `register-view.html` (creating `.dcs/esg/` if needed),
+never touches `REGISTER-LOCK`. Inert until run by hand or the hook below
+is wired.
 
 ## 4. Copy the hooks
 
 Copy all **three** hooks to `<project>/.claude/hooks/`, creating the
 directory if needed — `$HOME/.claude/dcs/hooks/dcs_gate.py`,
-`dcs_intake.py`, and `register_view_regen.py`. New files under the
-project's own `.claude/`, not shared references: each must be
-self-contained (stdlib only) since it runs from the project's own hook
-invocation.
+`dcs_intake.py`, and `register_view_regen.py`. These are project-owned
+copies, not shared references: each is self-contained (stdlib only)
+because it runs from the project's own hook invocation.
 
 - **`dcs_gate.py`** (PreToolUse) — the approval gate. Blocking.
 - **`dcs_intake.py`** (UserPromptSubmit, v0.6.0) — one short note on the
   first prompt of each session: offer `/dcs-run` for a bug/feature ask,
   or report an active incident's slug/type/phase. **Advisory, never
   blocking**, once per session — the gate is silent when no incident is
-  active, so nothing else would mention that one was an option.
+  active, so nothing else would mention that one was an option. Tell the
+  Owner this part: since v0.7.2 it also appends one JSON line per session
+  to `.dcs/esg/intake-telemetry.log` — timestamp, hashed session id, which
+  note fired, the project's absolute path. Local and gitignored, nothing
+  leaves the machine, but **no opt-out short of declining the hook**.
 - **`register_view_regen.py`** (PostToolUse) — regenerates
   `register-view.html` whenever the project's own `REGISTER.md` is
   edited, so the view can't go stale between manual runs. **Can never
@@ -107,11 +109,9 @@ add is a whole new `hooks.PreToolUse` array (or a new array if `hooks`
 exists but has no `PreToolUse` key).
 
 **b. File has a `hooks.PreToolUse` array already** (e.g. a project that
-already ships its own Bash guards). The new matcher is **appended** as an
-additional entry in that array — existing entries are never replaced,
-reordered, or removed. This is exactly the kind of drift the project's own
-guard hooks exist to prevent; DCS's hook must not create the same kind of
-invisible surprise it's trying to prevent for source edits.
+already ships its own Bash guards). The new matcher is **appended** —
+existing entries are never replaced, reordered, or removed. DCS's own hook
+must not create the drift that a project's guard hooks exist to prevent.
 
 **Upgrading a project onboarded before v0.5.8:** an existing entry whose
 matcher is the old `Edit|Write|NotebookEdit` still gates edits correctly

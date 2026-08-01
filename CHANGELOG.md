@@ -25,6 +25,196 @@ release commit's own message instead:
 
 ---
 
+## 0.7.2 — 2026-08-01
+
+**Re-run `/dcs-init` in each onboarded project after upgrading.** This
+release changes `dcs_intake.py` and adds a third hook, and per-project
+hook copies are never written by an install — see
+[Upgrading](README.md#upgrading).
+
+### Added
+
+- **A sortable, filterable HTML view of the incident register.**
+  `dcs/esg/register_view.py` parses `.dcs/esg/REGISTER.md` and writes
+  `.dcs/esg/register-view.html` beside it: click-to-sort columns, a text
+  filter, per-row detail panes, dark-mode support, no external assets.
+  Stdlib only and read-only over the register — it never writes
+  `REGISTER.md` and never takes `REGISTER-LOCK`. The register stays a
+  plain markdown table; this is a disposable view, gitignored and never
+  committed. `/dcs-init` copies the generator to
+  `<project>/.dcs/register_view.py` — tracked, and deliberately *outside*
+  the wholesale-gitignored `.dcs/esg/`, so it survives a plain clone.
+  Regenerate by hand with `python .dcs/register_view.py`.
+  - A row that does not split into exactly 12 cells is **never dropped**:
+    it renders raw in a visible "Unparsed rows" section and is counted in
+    the console summary. Cells may contain pipes inside backtick spans;
+    the splitter is backtick-aware.
+- **`register_view_regen.py`, a PostToolUse hook** that regenerates that
+  view whenever the project's own `REGISTER.md` is edited, so it cannot
+  go stale between manual runs. It can never deny or block a tool call
+  (PostToolUse fires after the edit has already happened), fails open on
+  every error, and is a silent no-op in a project that declined the
+  generator. Optional — `/dcs-init` asks per hook, not for the bundle.
+- **Telemetry for the session intake nudge** — in the payload since
+  2026-07-31 and **undocumented until now**, which is why this entry
+  spells it out. `dcs_intake.py` appends one JSON line per session to
+  `<project>/.dcs/esg/intake-telemetry.log`: a UTC timestamp, a 12-char
+  sha256 prefix of session-id plus project-root, which note fired
+  (`nudge_offered` or `active_reported`), and **the project's absolute
+  path in cleartext** — which on a typical install embeds your username.
+  The file is local and gitignored, and nothing leaves the machine: the
+  only sink is a local `open(..., "a")` and the hook contains no network
+  code. It fails open and cannot block or deny a prompt.
+  - **There is no opt-out switch** — no config key, no environment
+    variable. The only way to prevent the file is to decline the
+    `UserPromptSubmit` hook at `/dcs-init`, which also gives up the nudge
+    itself. `/dcs-init` now discloses this before asking.
+  - It records only **that** the nudge fired, never whether you accepted
+    it. Firing rate is measurable from this log; nudge effectiveness is
+    not.
+- **A citation convention for field lessons**, documented in
+  `dcs/references/doctrine-appendix.md`: lessons from 2026-07-25 onward
+  name the originating incident slug, earlier ones give a version, and
+  the rest carry the literal `(predates self-hosting)`. Integrity
+  **check 20** now fails the suite if a shipped field-lesson claim
+  carries no identifier.
+
+### Changed
+
+- **14 field-lesson citations** across doctrine, workflows and templates
+  gained identifiers — 9 `(predates self-hosting)`, 4 versions, 1
+  incident slug. (Counted from `git show 710cf52 -U0 -- dcs/`. That
+  incident's AAR says 15, split 5/7/3; the breakdown does not reconcile
+  with the diff, and the diff is authoritative.)
+- `/dcs-init` now installs three hooks plus the register-view generator,
+  and asks for consent per hook rather than for the set.
+
+### Fixed
+
+- **`/dcs-status` no longer prints a register state that does not
+  exist.** `dcs/workflows/status.md` instructed a stale four-state enum
+  including `CLOSED`, which has not been a register state since v0.3; it
+  now matches the canonical seven.
+- **The npm tarball no longer ships compiled Python bytecode.** 0.7.1 and
+  earlier included three `__pycache__/*.pyc` files, one of them 50 kB,
+  because a directory listed in `files:` is packed wholesale and
+  `.gitignore` does not hold it back. `package.json`'s `files:` now ends
+  with a `"!**/__pycache__"` negation — 76 files packed, down from 79.
+
+### Config
+
+No new keys. Note there is still **no** telemetry toggle — see above.
+
+---
+
+## 0.7.1 — 2026-07-30
+
+Published to npm on 2026-07-30, but never tagged, never released on
+GitHub, and never written up here. This entry and the `v0.7.1` tag were
+both added retroactively on 2026-08-01. The tag points at `aa9b00b`
+because the published tarball is byte-identical to that tree — verified
+by downloading `dcs-command-system@0.7.1` and comparing per-file sha256
+(68 payload files, 0 differing, 0 missing).
+
+**No hook changed in this release** — `git log v0.7.0..aa9b00b --
+'dcs/hooks/**'` is empty — so re-running `/dcs-init` was never required
+for 0.7.1. It *is* required for 0.7.2.
+
+### Added
+
+- **`dcs doctor` compares content, not version strings.** It shells out
+  to `tests/payload_check.py` for a per-file sha256 comparison of the
+  installed payload against the package, mapping exit codes to
+  identical / identical-with-stale-extras / DIFFERS / degraded-fallback.
+  The previous check was version-string equality, which a same-version
+  reship made meaningless.
+- **`dcs bump <version>`** — writes `dcs/VERSION` and `package.json` in
+  one step from Node (no BOM), rolling `package.json` back if the
+  `VERSION` write fails. It retires the PowerShell re-encoding hazard
+  that had corrupted files before. (`git show f3af8f5 --numstat`:
+  3 files, +107/−13.)
+- **`.dcs/provision`, a worktree provisioning hook point.** A project may
+  drop an executable there; DCS runs it after `git worktree add` with the
+  worktree path and the main-checkout root. Exit 0 proceeds, non-zero
+  warns and proceeds, absent is skipped silently. DCS ships the hook
+  point only, never a script.
+- **`worktree_root` now reaches ops specialists** — a section in the 204
+  template, an `<inputs>` field in the specialist charter, and an
+  `execute.md` rule deriving it from `git worktree list --porcelain`.
+  Specialists had been editing the main checkout instead of the incident
+  worktree.
+- **Close-time worktree-removal diagnostics.** `/dcs-close` no longer
+  falls straight back to `.dcs/CLOSED` when `git worktree remove` fails:
+  it first checks whether the closing session's own cwd sits inside the
+  worktree, then runs platform lock-holder diagnostics. (The Windows
+  branch filters `Get-Process` on the executable image path, so in the
+  motivating case — a shell parked inside the worktree — it finds nothing
+  and only the Sysinternals `handle` fallback works. Tracked as
+  `close-md-lock-diagnostic-inert`.)
+
+### Changed
+
+- **Incident artifacts must be written in English**, reversing v0.1's
+  "inherit the conversation language" rule — the repo is public and
+  published on npm. The existing corpus was not swept at the time.
+- **Four workflow files were trimmed to the 250-line ceiling**:
+  `plan.md` 682→246, `execute.md` 451→250, `deploy.md` 282→246,
+  `close.md` 282→243 (`git show bca0b56 --numstat`: 6 files, +463/−1193
+  — the register's "+530/−1193" is the 8-file merge total, a different
+  scope). Anyone who has read these will find them substantially
+  rewritten — **and see Known regressions below.**
+- `/dcs-esg` step 4 now writes register rows for decision cluster (b).
+- Integrity check 14's bare-`N of M` census rule extends to
+  `doctrine-appendix.md`, and four zero-citation sites gained explicit
+  citations.
+
+### Fixed
+
+- **Integrity check 14 no longer passes vacuously** — a declaring
+  paragraph that drops its charter citation entirely now fails instead of
+  going green.
+
+### Known regressions
+
+Found after release, by the review that produced this entry. **The
+workflow and hot-path trims above dropped operative content, not just
+prose.** Three losses verified directly against the v0.7.0 and `aa9b00b`
+trees:
+
+- `plan.md`'s no-`DELEGATION.md` fallback lost its `guarded_paths`
+  condition. At v0.7.0, auto-approval on that path required Type 3 **and**
+  `auto_approve_type3` **and** that the IAP touch nothing matching a
+  `guarded_paths` glob. At `aa9b00b` the word `guarded_paths` appears in
+  no workflow, agent or doc file at all — a safety condition now stated
+  nowhere in the shipped package.
+- `execute.md`'s `escalate_owner` handling went from three passages to
+  one.
+- `doctrine.md` lost its unattended-operation clause requiring the loop
+  to notify at any uncovered Owner gate when a tool is available.
+
+Incident `trim-content-loss-restoration` is open to restore these; they
+are **not** fixed in 0.7.2. The trim's own AAR claimed "no operational
+steps removed from any file," which is why the losses went unnoticed at
+the time.
+
+Two more things worth knowing about this release. The emergency hot-path
+trim (`e3d4bcc`) recovered 1,881 B and ratcheted `HOT_PATH_BUDGET_KB`
+38→36, but `provisioning-script-upstreaming` spent most of it back three
+commits later and ratcheted to 37 — **across the whole release the hot
+path went 37,882 B → 37,455 B and the budget constant returned to where
+it started**, so the "−1,880 B recovered" figure is true of one commit
+and misleading about the release. And `dcs doctor`/`dcs bump` shipped
+with known defects, tracked as `doctor-silent-pass-and-bump-defects`:
+when `payload_check.py` exits 2 or is missing and the version strings
+match, `doctor` prints nothing at all — a silent pass indistinguishable
+from a verified install, the exact trap it was written to close.
+
+### Config
+
+No new keys.
+
+---
+
 ## 0.7.0 — 2026-07-29
 
 ### Added
