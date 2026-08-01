@@ -1342,3 +1342,49 @@ command to do so.
 command, same pattern as trigger (c) uses for IAP-APPROVED:
 `grep -c -E '^\[[^]]*\]\s+SAFETY-HALT:'` — one line, no new
 infrastructure needed.
+
+## 29. `execute.md`'s "advisories fold into 9b" default has no carve-out for a security-relevant load-bearing line
+
+**Evidence.** `dcs/workflows/execute.md` step 9, "Advisories on a pass":
+"a `pass` carrying `advisories[]` is normal. The IC fixes them now,
+folding into the integration commit at 9b — they are artifact edits
+inside territory; routing through fix-taskings wastes a cycle." No
+exception is named for an advisory whose fix would edit the load-bearing
+line of a security-relevant check. During `release-provenance-guard`
+period 1 (2026-08-01), the second Safety Officer pass found exactly this
+shape: advisory 1 (`check_tag_at_head`'s `refs/tags/`-qualified lookup
+still resolves through git's disambiguation table and false-accepts a
+branch literally named `refs/tags/<tag>`) touches the one line the whole
+incident exists to get right. `dcs-commander`, ruling at command point 4,
+overrode the default on its own initiative — reasoning the default's
+stated rationale ("artifact edits inside territory") does not describe a
+rewrite of a security guard's load-bearing line, and that folding it in
+would ship an unverified change under an already-spent Safety pass, "the
+exact pattern that produced this period's first halt." The commander
+routed it to a follow-up incident (`tag-refname-disambiguation-hole`,
+QUEUED) instead. The override was correct, but it depended on the
+commander noticing and reasoning it through from scratch — the workflow
+text gave no signal to make the call routine.
+
+**Why it matters.** A less careful IC (or a command point running without
+a commander spawn, e.g. a Fable main session applying the written default
+literally) could fold a security-relevant, unverified fix straight into
+9b on the strength of a verdict that was never run against it — silently
+reintroducing the same class of gap the original halt caught. The
+existing text treats all advisories as fungible ("artifact edits inside
+territory"), but this incident's own halt-then-pass arc shows the class
+that matters is narrower and identifiable: an advisory whose fix touches
+the same lines a Safety verdict just certified as correct.
+
+**Candidate fix.** Add an explicit carve-out to step 9's "Advisories on a
+pass": an advisory whose proposed fix would edit a line the current
+period's Safety verification treated as load-bearing (a check the
+incident exists to enforce, not incidental script plumbing) routes to a
+follow-up incident by default, not a 9b fold-in — regardless of whether a
+commander happens to be spawned to catch it. Cross-reference the
+`release-provenance-guard` SAFETY.md verdict-disposition ruling
+(`.dcs/incidents/2026-08-01-release-provenance-guard/SAFETY.md`) as the
+worked example. Should ship as a `dcs/workflows/execute.md` text change
+(and, if generalized, a `dcs/references/doctrine.md` principle) — not
+built here; this incident's own close is not the place to edit a hot-path
+workflow file as a side effect.

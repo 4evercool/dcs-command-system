@@ -1079,6 +1079,76 @@ file lived in a different tree from the files being edited.
 
 **Why it matters:** two Windows-hosted, locale-dependent decoding defaults (`awk`'s byte-counting `length()`, Python's `subprocess.run(text=True)` platform-preferred-encoding) independently produced false negatives against correct work, in the same incident, both triggered by the same single non-ASCII character. Neither is a DCS defect — both are host-environment facts a cross-platform tasking author cannot assume away. **Candidate hardening, not built here:** any tasking dictating a per-line length check or a text-mode subprocess read should either specify the expected values in the host's actual counting unit (bytes, verified live) or force UTF-8 explicitly (`LANG=en_US.UTF-8 awk ...`, `.decode('utf-8')` on raw bytes) rather than trusting a locale default that varies by host.
 
+## 28. Qualifying a ref lookup to a namespace is not the same as making it disambiguation-free — and a security-relevant advisory earned its own incident rather than a silent fold-in
+
+**When:** `release-provenance-guard` (2026-08-01) — Type 3, the incident
+building DCS's own npm publish-time provenance gate (`dcs/VERSION` and
+`package.json` version-synced, a matching git tag at `HEAD`, and a
+truthful `CHANGELOG.md` entry, checked in `prepublishOnly`).
+
+**What happened, part one:** the first Safety Officer verdict halted on
+`check_tag_at_head` resolving the tag via a plain `git rev-parse
+tag^{commit}` — no namespace qualification at all — so a branch or
+remote ref named `vV` satisfied the check with zero real tags present.
+The fix-tasking qualified the lookup to `refs/tags/` with `--verify`,
+closing that hole; the re-verification pass confirmed it (the exact halt
+fixture now correctly exits `1`). But the same Safety Officer, re-running
+its own adversarial sweep rather than trusting the fix as done, found the
+qualification was not actually disambiguation-free: `git rev-parse
+--verify refs/tags/<tag>^{commit}` still runs the *qualified string*
+through git's full refname resolution table, which includes `refs/heads/
+<refname>` — so a branch literally named `refs/tags/<tag>` (the
+already-namespaced string, not the bare tag name) still satisfies the
+check with zero real tags. Reproduced independently twice more (by
+`dcs-commander` at command point 4, before ruling on it, and originally
+by the Safety Officer that found it) before either party accepted it as
+real.
+
+**What happened, part two:** the commander ruled the residual hole an
+advisory, not a halt — unreachable by accident (no convention, refspec,
+or fetch produces that branch name; anyone who could create it could tag
+for real instead, so it grants no capability) — but then declined to
+apply `execute.md`'s own default of folding pass-time advisories into the
+9b integration commit. Its reasoning: the fix rewrites the load-bearing
+line of the exact security guard the period just spent two Safety passes
+verifying, so folding it in post-verdict would ship an unverified change
+under an already-spent pass — "the exact pattern that produced this
+period's first halt." It routed the fix to a follow-up incident
+(`tag-refname-disambiguation-hole`, QUEUED) instead, keeping the proven
+gate merging on schedule.
+
+**How it was caught:** entirely by the Safety Officer's own discipline of
+building fixtures from scratch rather than accepting a fix as closing the
+class it was tasked against — the fix-tasking's evidence requirements
+asked for the *named* fixture (branch named plainly `vV`) to pass, and it
+did; nothing forced re-probing the qualified-string form. The officer
+probed it anyway, unprompted, because the *general shape* (a ref
+namespace admitting an unexpected literal name) was still open even
+though the *named* instance was closed.
+
+**Why it matters:** "qualify the lookup to a namespace" reads like it
+should be the complete, disambiguation-free fix — the mental model most
+engineers reach for is "restricting to `refs/tags/` means only tags can
+match." It doesn't hold once the qualification is applied *as a string
+prefix fed back into a tool that still disambiguates*, rather than as a
+constraint on *which resolution rule fires*. The disambiguation-free form
+is a lookup with no fallback table at all (`git show-ref --verify
+refs/tags/<tag>`, exact full refname only) — qualifying the input to
+`rev-parse` is not equivalent to bypassing `rev-parse`'s own resolution
+logic. Separately: this incident's "fold advisories into 9b" default
+almost absorbed an unverified security-line edit into a commit riding on
+a verdict that never saw it — caught only because the commander reasoned
+past the written default rather than applying it literally.
+
+**Candidate hardening, not built here:** (1) any future git-ref existence
+check in this codebase should default to `show-ref --verify` for
+exact-refname matching, never a qualified string passed to `rev-parse`;
+(2) `execute.md` step 9's advisory-folding default should carve out
+advisories whose fix touches a line the current period's own Safety
+verification just certified — see Backlog #29 for the concrete text
+change, not applied here to avoid editing a hot-path workflow file as a
+side effect of an unrelated incident's close.
+
 ## Links
 
 - [[Post-mortems/energy-cost-model-rework]] — the incident behind v0.5.12
