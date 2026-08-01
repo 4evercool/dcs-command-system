@@ -1,64 +1,62 @@
 # DCS Structured Return Schemas
 
-Fixed JSON return schema closes the "I did the task" gap; provenance in `doctrine-appendix.md`.
-
-Agents return the JSON block; the IC alone transcribes it to disk (single writer per artifact, `doctrine-appendix.md`).
+Fixed JSON return schema closes the "I did the task" gap. Agents return the JSON block; the IC alone transcribes it (single writer per artifact) — provenance in `doctrine-appendix.md`.
 
 ## 1. Situation-analyst findings (feeds 201-BRIEF.md)
 
 Returned by `dcs-situation-analyst`.
 
 ```json
-{"summary": "One paragraph: what the incident is and why it matters", "evidence": ["error-log row: category=error, actor_id=123, ts=2026-07-22T03:14Z, traceback tail: ...", "call graph: get_blocking_ingredients has 3 callers, none touch the delivery_date window"], "affected_files": ["src/db/inventory_repo.py", "src/plugins/reminder_plugin.py"], "repro_path": "1. Create order for tomorrow  2. Run get_blocking_ingredients  3. Order flagged as stuck", "prior_art": "docs/pitfalls.md #12 — same symptom, different root cause, closed earlier"}
+{"summary": "One paragraph: what the incident is and why it matters", "evidence": ["log row: category=error, actor_id=123, ts=2026-07-22T03:14Z", "call graph: get_blocking_ingredients has 3 callers, none touch delivery_date"], "affected_files": ["src/db/inventory_repo.py", "src/plugins/reminder_plugin.py"], "repro_path": "1. Create order for tomorrow 2. Run get_blocking_ingredients 3. Order flagged stuck", "prior_art": "docs/pitfalls.md #12 — same symptom, different cause"}
 ```
 
 | Field | Type | Notes |
 |---|---|---|
 | `summary` | string | One paragraph, no hedging — feeds 201's Symptom section |
-| `evidence` | string[] | Each item cites its source (log query, codegraph query, grep, test run) — no unsourced claims |
-| `affected_files` | string[] | Best-guess blast radius; the Planning Chief refines it, not trusts it blindly |
+| `evidence` | string[] | Each item cites its source (log/codegraph query, grep, test run) — no unsourced claims |
+| `affected_files` | string[] | Best-guess blast radius the Planning Chief refines, not blindly trusts |
 | `repro_path` | string | Numbered steps, or `"not reproducible: <why>"` |
 | `prior_art` | string | Reference to project memory (vault, tasks/lessons.md, prior incident) or `"none found"` |
 
 ## 2. Chief plan (feeds 203-ORG.md, 204-TASKING/\*.md, IAP.md)
 
-Returned by `dcs-planning-chief` (and, for deploy/env/migration concerns only, `dcs-logistics-chief` — see #3). Contract producer: `dcs-planning-chief`.
+Returned by `dcs-planning-chief` (and, for deploy/env/migration only, `dcs-logistics-chief` — see #3). Contract producer: `dcs-planning-chief`.
 
 ```json
-{"objectives_feedback": "202's acceptance criteria are testable as written; no changes requested", "tactics": ["Add a delivery_date window check inside get_blocking_ingredients' existing transaction", "Update the reminder plugin's stale-order heuristic to respect the same window"], "taskings": [{"id": "S1", "task": "Add delivery_date window to get_blocking_ingredients per 202 acceptance criterion 1", "territory": ["src/db/inventory_repo.py"], "forbidden": ["src/plugins/**"], "evidence_required": ["pytest tests/test_inventory_repo.py -x output"]}, {"id": "S2", "task": "Stop flagging future-dated orders as stale per 202 acceptance criterion 2", "territory": ["src/plugins/reminder_plugin.py"], "forbidden": ["src/db/**"], "evidence_required": ["pytest tests/test_reminder_plugin.py -x output"]}], "partition_ok": true, "risks": ["Both files import db/connection.py — read-only import, not a write conflict"], "verification_plan": "Run both test files, then a manual repro of the 201 repro_path against a scratch order"}
+{"objectives_feedback": "202's criteria are testable as written; no changes requested", "tactics": ["Add a delivery_date window check to get_blocking_ingredients' transaction", "Update the reminder plugin's stale-order heuristic for it"], "taskings": [{"id": "S1", "task": "Add delivery_date window to get_blocking_ingredients per criterion 1", "territory": ["src/db/inventory_repo.py"], "forbidden": ["src/plugins/**"], "evidence_required": ["pytest tests/test_inventory_repo.py -x"]}, {"id": "S2", "task": "Stop flagging future-dated orders as stale per criterion 2", "territory": ["src/plugins/reminder_plugin.py"], "forbidden": ["src/db/**"], "evidence_required": ["pytest tests/test_reminder_plugin.py -x"]}], "partition_ok": true, "risks": ["Both import db/connection.py — read-only, no write conflict"], "verification_plan": "Run both test files, then repro 201's path against a scratch order"}
 ```
 
 | Field | Type | Notes |
 |---|---|---|
-| `objectives_feedback` | string | Chief may push back on unmeasurable/untestable 202 criteria — IC decides whether to revise 202 |
+| `objectives_feedback` | string | Chief may push back on unmeasurable/untestable criteria — IC decides on 202's revision |
 | `tactics` | string[] | The "how", one level above individual taskings |
 | `taskings` | object[] | See tasking table below — becomes 204-TASKING/\*.md, one file per entry |
 | `partition_ok` | boolean | `true` only if every `territory` is disjoint; `false` must be justified in `risks` (staging or worktree isolation), else IC re-spawns |
-| `risks` | string[] | Partition risk, ordering risk, anything threatening the "disjoint files, parallel execution" assumption |
-| `verification_plan` | string | Feeds the Safety Officer's brief — what "done" should look like end to end |
+| `risks` | string[] | Partition or ordering risk — anything threatening the "disjoint files, parallel execution" assumption |
+| `verification_plan` | string | Feeds the Safety Officer's brief — what "done" looks like end to end |
 
 **Tasking object** (each entry in `taskings`):
 
 | Field | Type | Notes |
 |---|---|---|
 | `id` | string | `S1`, `S2`, ... — matches the 204 filename (`204-TASKING/S1.md`) |
-| `task` | string | Specific, references a 202 acceptance criterion by number |
-| `territory` | string[] | Glob(s) this specialist may edit; must be disjoint from every other tasking's territory unless staged sequentially |
+| `task` | string | Specific, references a 202 criterion by number |
+| `territory` | string[] | Glob(s) this specialist may edit; disjoint from every other tasking's territory unless staged sequentially |
 | `forbidden` | string[] | Explicit "do not touch" globs — usually the other specialists' territories |
-| `evidence_required` | string[] | Concrete command(s) to run and report real output from — cite decisive excerpt, never full transcript |
+| `evidence_required` | string[] | Concrete command(s) to run, reporting real output — cite decisive excerpt, never full transcript |
 
 ## 3. Logistics-chief plan (Type 1 only — feeds IAP.md's deploy section)
 
 Returned by `dcs-logistics-chief`.
 
 ```json
-{"deploy_path": "deploy/deploy.sh (full deploy — migration touches backend and frontend build)", "env_deps": ["No new env vars", "requirements.txt: add alembic==1.13.1"], "migration_ordering": "Run the schema migration before restarting the api service, not after", "rollback_plan": "Migration is additive (new nullable column) — rollback is redeploying the prior commit; no down-migration needed", "risks": ["low-memory host — avoid running the frontend build and the migration concurrently"]}
+{"deploy_path": "deploy/deploy.sh (full deploy — migration touches backend and frontend)", "env_deps": ["No new env vars", "requirements.txt: add alembic==1.13.1"], "migration_ordering": "Run the schema migration before restarting the api service", "rollback_plan": "Migration is additive (new nullable column) — rollback is the prior commit, no down-migration needed", "risks": ["low-memory host — avoid frontend build and migration running concurrently"]}
 ```
 
 | Field | Type | Notes |
 |---|---|---|
 | `deploy_path` | string | Full or scoped target |
-| `env_deps` | string[] | Env vars, dependencies, config |
+| `env_deps` | string[] | Env vars, deps, config |
 | `migration_ordering` | string | Restart ordering, or none |
 | `rollback_plan` | string | Stated even if none needed |
 | `risks` | string[] | What could turn deploy into its own incident |
@@ -68,29 +66,29 @@ Returned by `dcs-logistics-chief`.
 Returned by `dcs-ops-specialist`.
 
 ```json
-{"status": "done", "files_touched": ["src/db/inventory_repo.py"], "tests_run": ["pytest tests/test_inventory_repo.py -x"], "evidence": "5 passed in 1.2s (full pytest output pasted below)", "deviation": null}
+{"status": "done", "files_touched": ["src/db/inventory_repo.py"], "tests_run": ["pytest tests/test_inventory_repo.py -x"], "evidence": "5 passed in 1.2s (output below)", "deviation": null}
 ```
 
-Deviation shape (`status: "deviation"`), which needs the nested `deviation` object the table below describes:
+Deviation shape (`status: "deviation"`), needing the nested `deviation` object below:
 
 ```json
-{"status": "deviation", "files_touched": [], "tests_run": [], "evidence": "get_blocking_ingredients has no single transaction to add the window check into", "deviation": {"found": "The function is not atomic — it's three separate db_connection() calls, itself a TOCTOU bug the tasking didn't anticipate", "why_plan_wrong": "202/204 assumed the function already used db_transaction() based on the 201 evidence, which only showed output, not internals", "proposal": "Wrap the three calls in a single db_transaction() first, then add the window check — recommend as a 202 amendment, not a silent scope add"}}
+{"status": "deviation", "files_touched": [], "tests_run": [], "evidence": "get_blocking_ingredients has no single transaction for the check", "deviation": {"found": "Function not atomic — three separate db_connection() calls, a TOCTOU bug unanticipated", "why_plan_wrong": "202/204 assumed db_transaction() was already used, based on 201 evidence showing only output", "proposal": "Wrap the three calls in one db_transaction(), then add the window check — recommend as a 202 amendment"}}
 ```
 
 | Field | Type | Notes |
 |---|---|---|
-| `status` | `"done"` \| `"blocked"` \| `"deviation"` | `blocked` = external obstacle (missing credential, flaky env); `deviation` = the plan itself doesn't fit reality |
-| `files_touched` | string[] | Must be a subset of the tasking's `territory` — anything outside is a violation, not evidence |
-| `tests_run` | string[] | Commands actually executed, not commands that should be run |
-| `evidence` | string | Real output, not a paraphrase — the Safety Officer will refuse to trust and check again anyway; cite the decisive excerpt or `file:line`, never paste a full unabridged transcript |
-| `deviation` | object \| null | Present only when `status: "deviation"`; keys `found` / `why_plan_wrong` / `proposal`. `proposal` is a recommendation, not an action — the specialist never improvises the fix itself |
+| `status` | `"done"` \| `"blocked"` \| `"deviation"` | `blocked` = external obstacle (missing credential, flaky env); `deviation` = the plan doesn't fit reality |
+| `files_touched` | string[] | A subset of the tasking's `territory` — anything outside is a violation, not evidence |
+| `tests_run` | string[] | Commands actually executed, not what should run |
+| `evidence` | string | Real output, not a paraphrase — the Safety Officer re-checks regardless; cite the decisive excerpt or `file:line`, never a full transcript |
+| `deviation` | object \| null | Present only when `status: "deviation"`; keys `found` / `why_plan_wrong` / `proposal`. `proposal` is a recommendation, not an action the specialist takes |
 
 ## 5. Safety-officer verdict (feeds SAFETY.md)
 
 Returned by `dcs-safety-officer`.
 
 ```json
-{"verdict": "pass", "refutations": [], "advisories": [{"finding": "docstring of _check_batch_energy_identity states '16 batches violate the guard' with no regenerating command", "fix": "delete the count or add the query beside it (principle 15)"}], "checked": ["git diff src/db/inventory_repo.py — window check present, matches 202 criterion 1", "pytest tests/test_inventory_repo.py -x — 5 passed (ran independently)", "pytest tests/test_reminder_plugin.py -x — 8 passed", "manual repro of 201 repro_path — no longer flagged"]}
+{"verdict": "pass", "refutations": [], "advisories": [{"finding": "docstring states '16 batches violate the guard', no regenerating command", "fix": "delete the count or add the query beside it (principle 15)"}], "checked": ["git diff inventory_repo.py — window check present, matches criterion 1", "pytest tests/test_inventory_repo.py -x — 5 passed", "pytest tests/test_reminder_plugin.py -x — 8 passed", "repro of 201 path — no longer flagged"]}
 ```
 Advisory/refutation bar: `agents/dcs-safety-officer.md` step 6.
 
@@ -101,19 +99,19 @@ refutations do (bar: `agents/dcs-safety-officer.md` step 6).
 Halt shape, showing the `refutations` object:
 
 ```json
-{"verdict": "halt", "refutations": [{"claim": "S1 reported 'done' with tests_run: pytest test_inventory_repo.py -x, 5 passed", "evidence": "Re-ran it myself: 4 passed, 1 skipped (test_window_boundary marked xfail, never un-marked) — the boundary case from 202 criterion 1 is untested"}], "checked": ["git diff src/db/inventory_repo.py", "pytest tests/test_inventory_repo.py -x (independent re-run)"]}
+{"verdict": "halt", "refutations": [{"claim": "S1 reported 'done': pytest test_inventory_repo.py -x, 5 passed", "evidence": "Re-ran it: 4 passed, 1 skipped (test_window_boundary still marked xfail) — criterion 1's boundary case is untested"}], "checked": ["git diff inventory_repo.py", "pytest test_inventory_repo.py -x (re-run)"]}
 ```
 
 | Field | Type | Notes |
 |---|---|---|
 | `verdict` | `"pass"` \| `"halt"` | Binding on the IC — a `halt` cannot be argued past, only resolved (fix-tasking or re-plan) |
-| `refutations` | object[] | Empty on `pass`. Each has `claim` (what was asserted) and `evidence` (what the Safety Officer independently found). **Reserved for the acceptance criteria and the behaviour of the code** — the only findings that justify stopping a merge |
-| `advisories` | object[], optional | (v0.6.5) Artifact-hygiene findings that do **not** block: `finding` + `fix`. Principle-15 issues in docstrings, comments, logs and AARs live here unless they clear one of the three bars in `agents/dcs-safety-officer.md` step 6. The IC folds them into the integration commit |
-| `checked` | string[] | Everything the Safety Officer actually did — diff inspected, tests re-run itself, manual repro. Specialist self-reports are never listed here as the check itself, only as the claim being checked. Same for `refutations`/`advisories`: cite the decisive excerpt or `file:line`, never paste a full unabridged transcript |
+| `refutations` | object[] | Empty on `pass`; each has `claim` (what was asserted) and `evidence` (what the Safety Officer independently found). **Reserved for the acceptance criteria and code behaviour** — the only findings that justify stopping a merge |
+| `advisories` | object[], optional | (v0.6.5) Artifact-hygiene findings that don't block: `finding` + `fix`. Principle-15 issues in docstrings/comments/logs/AARs live here unless they clear one of the three bars in `agents/dcs-safety-officer.md` step 6; IC folds them into the integration commit |
+| `checked` | string[] | Everything the Safety Officer actually did — diff inspected, tests re-run, manual repro; specialist self-reports are the claim checked, never the check itself. Same for `refutations`/`advisories`: cite the decisive excerpt or `file:line`, never a full transcript |
 
 ## 6. Commander decisions (transfer of command — feeds 214-LOG.md)
 
-Returned by `dcs-commander`, one decision per invocation, at the four command points doctrine's "Transfer of command" defines. When the main session runs Fable it makes these calls itself and no spawn occurs — the decision is still logged in `214-LOG.md` the same way.
+Returned by `dcs-commander`, one decision per invocation, at the four command points doctrine's "Transfer of command" defines; if the main session runs Fable it decides directly, logged in `214-LOG.md` the same way.
 
 ```json
 {"command_point": "typing", "type": 3, "rationale": "3 files, fix pattern known, no schema impact", "open_questions": []}
@@ -122,7 +120,7 @@ Returned by `dcs-commander`, one decision per invocation, at the four command po
 Any decision may also carry an ESG-activation request (doctrine principle 14):
 
 ```json
-{"command_point": "deviation", "disposition": "escalate_owner", "rationale": "fix requires touching the payment flow", "directives": [], "esg_activation": {"requested": true, "reason": "payment flow is forbidden AND the pattern spans two other queued items -- strategic, not tactical"}}
+{"command_point": "deviation", "disposition": "escalate_owner", "rationale": "fix requires touching the payment flow", "directives": [], "esg_activation": {"requested": true, "reason": "payment flow is forbidden; spans two other items -- strategic, not tactical"}}
 ```
 
 | Field | Command point | Type | Notes |
@@ -140,16 +138,16 @@ Any decision may also carry an ESG-activation request (doctrine principle 14):
 
 ## 7. Delegation bounds (v0.2 — feeds `.dcs/esg/DELEGATION.md`, parsed by `plan.md`/`run.md`/`loop.md`)
 
-The fenced ```delegation-bounds``` JSON block inside `DELEGATION.md` — the only part of that file workflows parse; the surrounding prose is for humans only.
+The fenced ```delegation-bounds``` block inside `DELEGATION.md` — the only part workflows parse; surrounding prose is for humans only.
 
 ```json
-{"version": 1, "auto_approve_type3": false, "max_files": 4, "forbidden_globs": ["**/migrations.py", "**/auth/**", "**/payment*/**"], "forbidden_topics": ["schema migration", "payments", "auth/JWT", "deploy scripts"], "require_tests_green": true, "max_specialists": 2, "deploy": {"auto": false, "auto_after_close": false, "frontend_only": true, "forbidden_globs": ["**/migrations.py", "**/auth/**", "**/payment*/**"], "max_rows_per_train": 3}}
+{"version": 1, "auto_approve_type3": false, "max_files": 4, "forbidden_globs": ["**/migrations.py", "**/auth/**"], "forbidden_topics": ["schema migration", "payments", "auth/JWT"], "require_tests_green": true, "max_specialists": 2, "deploy": {"auto": false, "auto_after_close": false, "frontend_only": true, "forbidden_globs": ["**/migrations.py", "**/auth/**"], "max_rows_per_train": 3}}
 ```
 
 | Field | Type | Notes |
 |---|---|---|
 | `version` | number | Bumped every amendment; `DELEGATION.md` keeps every prior version block — this is the one currently in force |
-| `auto_approve_type3` | boolean | Master switch. `false` = identical to v0.1 behavior even with a `DELEGATION.md` present |
+| `auto_approve_type3` | boolean | Master switch; `false` = identical to v0.1 behavior even with a `DELEGATION.md` present |
 | `max_files` | number | Compared against the IAP's total partitioned file count |
 | `forbidden_globs` | string[] | Any 204 tasking's `territory` glob matching one of these voids auto-approval for that IAP |
 | `forbidden_topics` | string[] | Checked against the 201/202 text |
@@ -157,11 +155,33 @@ The fenced ```delegation-bounds``` JSON block inside `DELEGATION.md` — the onl
 | `max_specialists` | number | Compared against the 204 tasking count |
 | `deploy` (v0.4) | object, optional | Deploy delegation keys: `auto`, `auto_after_close`, `frontend_only`, `forbidden_globs`, `max_rows_per_train`. Behavior: `deploy.md` step 5, `run.md` step 7a. |
 
-`esg.max_periods_before_review` (principle 13, trigger c) is **not** part of this block — it lives in `config.json`'s `esg` key (default `3`); trigger (c) applies incident-wide regardless of Delegation.
+`esg.max_periods_before_review` (principle 13, trigger c) is **not** part of this block — it lives in `config.json`'s `esg` key (default `3`), applying incident-wide regardless of Delegation.
 
 ## 8. 209 sitrep (v0.2 — feeds `.dcs/esg/SITREPS/<slug>-p<N>.md`)
 
 Relocated to `$HOME/.claude/dcs/templates/209-SITREP.md`: its prose headings carry the
-same fields, plus a trigger enum, `Decided at`, and `Notes` that this
-section never had. The number `8` stays reserved on purpose, so every
-existing citation of this section keeps pointing here.
+same fields, plus a trigger enum, `Decided at`, and `Notes` this section
+never had. The number `8` stays reserved, keeping existing citations
+pointing here.
+
+## 9. Preservation map (6c amendment pre-stamp proof)
+
+The JSON block a `## 6c.` amendment appends to `214-LOG.md` beside its
+re-stamp, proving every 202 criterion it doesn't name still holds in the
+artifact as it stands. Checked by `dcs/tools/preservation_map.py`.
+
+```json
+{"preservation_map": {"amendment_entry": "6c re-stamp, criterion 6", "amended_criteria": [6], "preserved": [{"criterion": 5, "artifact": "IAP.md", "section": "Criterion 5, answered", "anchor": "criterion 5 restored", "verified_by": "grep -n -F \"criterion 5 restored\" IAP.md", "output": "34:criterion 5 restored"}]}}
+```
+
+| Field | Type | Notes |
+|---|---|---|
+| `amendment_entry` | string | The triggering `## 6c.` re-stamp's log line |
+| `amended_criteria` | number[] | Criteria the amendment names — excluded below |
+| `preserved[]` | object[] | One entry per un-amended criterion, paired to its satisfying section |
+| `criterion` | number | The criterion proved satisfied |
+| `artifact` | string | `IAP.md`, `203-ORG.md`, or a `204-TASKING/*.md` |
+| `section` | string | The satisfying heading or passage in `artifact` |
+| `anchor` | string | Literal text present in `artifact`'s bytes — the proof itself |
+| `verified_by` | string | Command confirming `anchor`'s presence |
+| `output` | string | Self-reported result — the validator re-derives it from disk, never trusts it |

@@ -1872,5 +1872,179 @@ else:
     print("\nINFO: outbound field guard -- no missing-required-field "
           "discrepancies found in .dcs/incidents/*/ artifacts")
 
+# --- 22. preservation-map mechanism (revision-preservation-map) -------------
+# `dcs/workflows/plan.md`'s `## 6c.` bounded-amendment path can re-stamp the
+# approval marker after touching only a narrow slice of the IAP -- and
+# `register-field-repair-path` (2026-07-27) showed that path silently
+# dropping a different, already-satisfied 202 criterion's section while
+# doing so, with nothing mechanical catching it. `dcs/tools/preservation_map.py`
+# is the mechanism: a `## 6c.` amendment must carry a preservation map (a
+# fenced JSON block in 214-LOG.md) naming, for every criterion the
+# amendment itself does not touch, the screened artifact and anchor text
+# that proves it still holds -- re-derived from the artifact's current
+# bytes every time, never trusted from the map's own self-report (the
+# AAR.md:82-89 false-fidelity defect). Imported via the same
+# `importlib.util.spec_from_file_location` idiom check 12 uses for
+# dcs_gate.py, never re-implemented here.
+_pm_spec = importlib.util.spec_from_file_location(
+    "preservation_map", REPO / "dcs" / "tools" / "preservation_map.py")
+pm = importlib.util.module_from_spec(_pm_spec)
+_pm_spec.loader.exec_module(pm)
+
+_PM_FIXTURES_ROOT = REPO / "tests" / "fixtures" / "preservation-map"
+_PM_SCENARIOS = ("clean", "dropped-criterion", "no-map")
+
+# (i) degeneracy guard: without a non-empty, three-scenario fixture
+# population, every case below would pass vacuously.
+_pm_scenario_dirs = (
+    {p.name for p in _PM_FIXTURES_ROOT.iterdir() if p.is_dir()}
+    if _PM_FIXTURES_ROOT.is_dir() else set()
+)
+check("preservation map: fixture population is non-empty and covers all "
+      "three scenarios (degeneracy guard -- without it every case below "
+      "passes vacuously)",
+      _PM_FIXTURES_ROOT.is_dir() and set(_PM_SCENARIOS) <= _pm_scenario_dirs,
+      f"found scenario dirs under {_PM_FIXTURES_ROOT}: {sorted(_pm_scenario_dirs)}")
+
+# (ii) clean/ -- an amendment naming criterion 6 whose map re-proves
+# criteria 1-5 against this fixture's own IAP.md bytes. Admissible.
+_pm_clean_dir = _PM_FIXTURES_ROOT / "clean"
+_pm_clean_findings = pm.verify(_pm_clean_dir)
+check("preservation map: clean/ is accepted -- verify() returns []",
+      not _pm_clean_findings, "; ".join(_pm_clean_findings))
+
+# (iii) no-map/ -- a `## 6c.` re-stamp entry with no preservation-map block
+# at all. Rejected.
+_pm_nomap_dir = _PM_FIXTURES_ROOT / "no-map"
+_pm_nomap_findings = pm.verify(_pm_nomap_dir)
+check("preservation map: no-map/ is rejected -- verify() returns a finding",
+      bool(_pm_nomap_findings), "verify() returned [] -- expected a finding")
+
+# (iv) THE REGRESSION PAIR on dropped-criterion/ (register-field-repair-path's
+# defect shape): verify() must name criterion 5 by number, AND the PRE-FIX
+# comparator (prefix_coverage(), which only checks "maps to a tasking id")
+# must return [] on the SAME fixture -- proving its blindness is real, not
+# asserted. One case each, so the contrast fails by name.
+_pm_dropped_dir = _PM_FIXTURES_ROOT / "dropped-criterion"
+_pm_dropped_findings = pm.verify(_pm_dropped_dir)
+check("preservation map: dropped-criterion/ -- verify() names criterion 5",
+      any(re.search(r"\bcriterion 5\b", f) for f in _pm_dropped_findings),
+      f"findings: {_pm_dropped_findings}")
+_pm_dropped_prefix = pm.prefix_coverage(_pm_dropped_dir)
+check("preservation map: dropped-criterion/ -- prefix_coverage() (the "
+      "pre-fix comparator) returns [] on the same fixture (every criterion "
+      "still maps to a tasking id; this is its documented blind spot)",
+      _pm_dropped_prefix == [], f"prefix_coverage(): {_pm_dropped_prefix}")
+
+# (v) in-memory forgery proof (idiom of the schema field contract carrier's
+# own in-memory forgery cases -- cited by name, not section number, since
+# this file's section numbers are due to shift when field-lesson-guard-vacuity
+# fixes the duplicate-20 defect): take clean/'s IAP.md text and its map's
+# first preserved entry, delete that entry's anchor's OWN LINE in memory,
+# and rerun the SAME comparator (preserved_findings) against the forged
+# text -- proving it reads content rather than passing whatever it is
+# handed. No file on disk is modified.
+_pm_clean_log_text = (_pm_clean_dir / "214-LOG.md").read_text(encoding="utf-8")
+_pm_clean_iap_text = (_pm_clean_dir / "IAP.md").read_text(encoding="utf-8")
+_pm_clean_block = pm.find_map(_pm_clean_log_text) or {}
+_pm_clean_entries = (_pm_clean_block.get(pm.MAP_KEY) or {}).get("preserved") or []
+_pm_victim = _pm_clean_entries[0] if _pm_clean_entries else None
+if _pm_victim:
+    _pm_victim_anchor = _pm_victim.get("anchor", "")
+    _pm_forged_text = "\n".join(
+        ln for ln in _pm_clean_iap_text.splitlines() if _pm_victim_anchor not in ln
+    )
+    _pm_forged_findings = pm.preserved_findings(_pm_victim, _pm_forged_text, "IAP.md")
+    check("preservation map negative proof: deleting clean/'s first preserved "
+          "entry's anchor line in memory is caught by the SAME comparator "
+          "(preserved_findings) -- no file on disk touched",
+          bool(_pm_forged_findings), f"findings after forging: {_pm_forged_findings}")
+else:
+    check("preservation map negative proof: clean/'s map has a preserved "
+          "entry to forge against",
+          False, "no preserved entries found in clean/'s preservation map")
+
+# (v-b) the false-fidelity forgery proof (AAR.md:82-89's exact defect
+# shape): take clean/'s first preserved entry AS-IS (anchor still present,
+# artifact untouched) but mutate ONLY its self-reported `output` field to a
+# plausible-looking lie, and confirm preserved_findings() -- the same
+# comparator, not a second implementation -- still catches the disagreement
+# even though the anchor itself is fine. This is the branch (v)'s
+# anchor-deletion proof does not exercise: a map can lie about `output`
+# while the anchor is genuinely present, and that lie must be caught too.
+if _pm_victim:
+    _pm_lying_entry = dict(_pm_victim)
+    _pm_lying_entry["output"] = "this line was never in the artifact"
+    _pm_lying_findings = pm.preserved_findings(
+        _pm_lying_entry, _pm_clean_iap_text, "IAP.md")
+    check("preservation map false-fidelity proof: a preserved entry whose "
+          "anchor is genuinely present but whose self-reported output is "
+          "a lie is still caught by preserved_findings() -- output is "
+          "never trusted as the proof",
+          bool(_pm_lying_findings), f"findings: {_pm_lying_findings}")
+
+# (vi) the carrier case: INVOCATION, read from the imported module (never
+# typed as a literal here), must appear in dcs/workflows/plan.md compared
+# on whitespace-collapsed text (markdown hard-wraps) -- reusing _ws_norm(),
+# never a third normaliser. S2 writes this literal into plan.md; if this
+# case is red because S2 has not landed it yet, that is reported as red by
+# name, not described as "expected to pass later".
+_pm_plan_text = read("dcs/workflows/plan.md")
+check("preservation map carrier: INVOCATION (from the imported module) "
+      "appears in dcs/workflows/plan.md, whitespace-collapsed",
+      _ws_norm(pm.INVOCATION) in _ws_norm(_pm_plan_text),
+      f"INVOCATION: {pm.INVOCATION!r}")
+
+# (vii) the field half: every REAL .dcs/incidents/*/214-LOG.md `## 6c.`
+# re-stamp entry -- recognised via the imported dcs_gate.py grammar
+# (sentinel_of() == 'stamp'), never a re-derived regex, plus the literal
+# "re-stamp" plan.md step 8 uses for this disposition's own log line --
+# whose timestamp is on or after the pinned effective date below must pass
+# verify() clean. Entries before the pin are OUT OF SCOPE, not silently
+# skipped: the count in scope is printed even at zero, since this
+# mechanism cannot retroactively bind a log entry written before it
+# existed.
+#
+# Effective date: 2026-08-02, the day after revision-preservation-map (this
+# incident) opened (2026-08-01) -- pinned so a zero-in-scope result today
+# is the expected, visible state, not a silent gap.
+_PM_EFFECTIVE_DATE = "2026-08-02"  # revision-preservation-map, period 1
+
+_pm_entry_ts_re = re.compile(r"^\[([^\]]*)\]\s+")
+_pm_incidents_root = REPO / ".dcs" / "incidents"
+_pm_in_scope = []
+if _pm_incidents_root.is_dir():
+    for _pm_inc_dir in sorted(_pm_incidents_root.iterdir()):
+        if not _pm_inc_dir.is_dir():
+            continue
+        _pm_log_path = _pm_inc_dir / "214-LOG.md"
+        if not _pm_log_path.is_file():
+            continue
+        for _pm_line in _pm_log_path.read_text(encoding="utf-8").splitlines():
+            if _gate.sentinel_of(_pm_line) == "stamp" and "re-stamp" in _pm_line.lower():
+                _pm_m = _pm_entry_ts_re.match(_pm_line)
+                if _pm_m and _pm_m.group(1) >= _PM_EFFECTIVE_DATE:
+                    _pm_in_scope.append((_pm_inc_dir, _pm_m.group(1)))
+
+print(
+    f"\npreservation map field guard: {len(_pm_in_scope)} `## 6c.` re-stamp "
+    f"entr{'y' if len(_pm_in_scope) == 1 else 'ies'} in scope "
+    f"(effective date {_PM_EFFECTIVE_DATE}; entries before it are out of "
+    "scope, not silently skipped)"
+)
+
+for _pm_inc_dir, _pm_ts in _pm_in_scope:
+    _pm_rel = _pm_inc_dir.relative_to(REPO).as_posix()
+    try:
+        _pm_field_findings = pm.verify(_pm_inc_dir)
+    except OSError as _pm_exc:
+        check(f"preservation map field guard: {_pm_rel}'s 6c re-stamp at "
+              f"{_pm_ts} -- verify() returns []",
+              False, f"verify() raised: {_pm_exc}")
+        continue
+    check(f"preservation map field guard: {_pm_rel}'s 6c re-stamp at "
+          f"{_pm_ts} -- verify() returns []",
+          not _pm_field_findings, "; ".join(_pm_field_findings))
+
 print(f"\n{checks - len(failures)}/{checks} passed")
 sys.exit(1 if failures else 0)

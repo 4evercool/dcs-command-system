@@ -135,8 +135,7 @@ Use `AskUserQuestion` (**not** plan mode). Summarize 202 objectives + IAP (tacti
 
 ## 6c. The proportionate amendment path
 
-A cheaper route to step 7, for a change that is genuinely narrow — never
-a way to keep a real re-plan away from the Owner's eyes.
+A cheaper route to step 7, for a change that is genuinely narrow — never a way to keep a real re-plan away from the Owner's eyes.
 
 **Entry — who may reach it, and only from here:**
 - from `execute.md` step 6, with an already-logged `command: deviation ->
@@ -150,9 +149,7 @@ a way to keep a real re-plan away from the Owner's eyes.
   already-logged `command: verdict -> close` / `-> next_period` entry
   (command point 4), cited by its timestamp.
 
-None of the three is self-authorizing — each must clear every boundary
-condition below. Each cited entry must postdate the `IAP-APPROVED` stamp
-currently in force.
+None of the three is self-authorizing — each must clear every boundary condition below. Each cited entry must postdate the `IAP-APPROVED` stamp currently in force.
 
 **Halt-ceiling clamp.** `## 6c.` may not re-stamp while the halt tally
 (`dcs_gate.py --halt-count <incident_dir>`) stands at
@@ -216,8 +213,13 @@ lightweight approve/reject path, never a silent auto-approval.
 stamp never auto-approves — it always takes the Owner approve/reject
 round-trip.
 
-Then: proceed to **step 7** and **step 8** exactly as written below — 6c
-does not fork or restate their mechanics.
+**Preservation-map duty (pre-stamp, 6c-only).** Before the marker is re-stamped, every 202 acceptance criterion the triggering amendment does not name is paired with the artifact section that satisfies it in the artifact as it now stands — schemas.md #9 (preservation map); each pairing carries a literal anchor from that section plus the command output showing it present; the map is appended to `214-LOG.md` as a fenced JSON block indented off column zero (`dcs_gate.py`'s grammar: a line at column zero without a bracketed timestamp is not an entry, so the fence must be indented). Verify it by running, verbatim and on one line:
+
+`python "$HOME/.claude/dcs/tools/preservation_map.py" <incident_dir>`
+
+A non-zero exit is a hard stop — no re-stamp until the artifact or the map is repaired.
+
+Then: proceed to **step 7** and **step 8** exactly as written below — 6c does not fork or restate their mechanics.
 
 ## 7. On approval: stamp the marker
 

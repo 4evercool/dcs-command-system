@@ -654,3 +654,24 @@ Incident `workflow-file-trim-grandfathered` (commit `bca0b56`, 2026-07-31) trimm
 > — predates self-hosting; regenerate with `git show bca0b56^:dcs/workflows/execute.md`, old lines 430-435.
 
 W1's rule still lives at `plan.md` step 4a's preamble, W2's at `plan.md` lint check 3a, and W3's at `execute.md` step 9b and in this appendix's "## The lifecycle (Planning P mapped to software)" section above.
+
+### W4: plan.md's `## 6c.` amendment path — a preservation map, not just a boundary check (field lesson 2026-07-27, incident `register-field-repair-path`)
+
+> That incident's own `AAR.md` records two instances from a single repair.
+> A rewrite of `IAP.md` fixing a criterion-6 halt silently dropped the
+> already-Safety-verified "Criterion 5, answered" section (`AAR.md`:67-72)
+> — the plan's only protection was a pinned hash over payload files, and
+> criterion 5's deliverable was `.dcs/**` prose, outside both the pin and
+> `dcs_gate.py`'s reach. The repair that restored the section then repeated
+> the same defect shape one level up: reported as "restored verbatim" from
+> two cited sources, when neither source in fact contained the text — a
+> reconstruction misdescribed as a recovery (`AAR.md`:82-89). Full
+> write-up: `vault/Meta/building-dcs-lessons.md` §18.
+> — incident `register-field-repair-path`, 2026-07-27.
+
+A 2026-07-31 attempt at this same fix, branch
+`dcs/revision-preservation-map-abandoned-2026-07-31` @ `497dcd4`, shipped
+prose plus a phrase-grep check that only confirmed `plan.md` mentioned
+"preservation map" — it never inspected any incident's actual map. Prior
+art only, superseded by this incident's mechanical check
+(`dcs/tools/preservation_map.py`, `schemas.md` #9 (preservation map)).
