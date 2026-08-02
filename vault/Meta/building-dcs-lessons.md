@@ -1,6 +1,6 @@
 ---
 tags: [dcs, meta, lessons]
-updated: 2026-07-28
+updated: 2026-08-02
 ---
 
 # Meta: lessons about building DCS
@@ -1148,6 +1148,62 @@ advisories whose fix touches a line the current period's own Safety
 verification just certified — see Backlog #29 for the concrete text
 change, not applied here to avoid editing a hot-path workflow file as a
 side effect of an unrelated incident's close.
+
+## 29. An incident's own intake description is a derived claim too — and can be corrected by the specialist work it commissions
+
+**When:** `record-integrity-corrections` (2026-08-02) — Type 3, one period,
+correcting four record-integrity failures from an external review (a fifth,
+a missing CHANGELOG entry, turned out already resolved by an unrelated
+commit and was dropped at the stem), under a "append corrections, never
+edit" mandate that was the whole point of the incident.
+
+**What happened:** the register row that queued this incident stated the
+defect as "`halt-enumeration-grammar-drift` cites nonexistent merge
+`b4af6e4` (no merge of its code exists — 48ea59a is linear on main)." The
+first half is true; the second half is not. `48ea59a` genuinely has one
+parent and is not itself a merge — but the incident's own specialist,
+instructed to re-derive rather than paraphrase, found the code DID reach
+main via two real merge commits (`f7e0cc9`, `838adea`); `48ea59a` simply
+reached main *through* one of them. The appended correction states this
+accurately, quietly contradicting the very register row that commissioned
+it. The Safety Officer caught the discrepancy unprompted — nothing in the
+202 asked it to re-check the register row's own prose — and filed it as an
+advisory (no acceptance criterion covered it, and the IAP never authorised
+editing the register mid-incident), with the fix deferred to the close's
+own ACTIVE→MERGED register write, where the row is legitimately touched
+anyway.
+
+**Why it matters:** every intake description, however carefully sourced,
+is a claim with a lifetime like any other principle-15 fact — including
+the ones that commission an incident to fix claims with a lifetime.
+Writing "verify, don't trust" into a 202/204 does not exempt the *writer*
+of that 202/204 from the same rule for their own framing. A smaller-scale
+echo of Meta §21 ("the verifier's own record is not exempt from the rule it
+just wrote"), landing on the *intake* side of the pipeline instead of the
+*verification* side.
+
+**Also this incident:** an Ops Specialist completed its tasking correctly
+— three new files, right content, every constraint honoured — and returned
+a long, accurate, well-evidenced prose report with no `schemas.md #4` JSON
+block anywhere in it. Task-correctness and schema-compliance are
+independent axes; a specialist can score full marks on the first and zero
+on the second. The Dispatcher declined to hand-transcribe JSON from the
+prose (constructing the record a specialist was supposed to hand over is
+exactly the shortcut this incident existed to discourage) and instead
+spawned a second, narrowly-scoped instance — explicitly read-only,
+forbidden from re-touching any file — whose only job was to confirm the
+existing state and emit the missing block. Cheap (no re-work, no risk to
+already-correct files) and cleanly distinct from a doctrine-9b "revision"
+(the tasking never changed; only the return's form did).
+
+**Candidate hardening, not built here:** a specialist return with a
+`status` line and real evidence but no parseable JSON block is currently
+caught only by the Dispatcher noticing prose where a fence was expected —
+nothing mechanical flags it before the IC reads the whole response. A
+one-line grep for a JSON-shaped fence in the raw return, run immediately
+after any `dcs-ops-specialist`/`dcs-planning-chief`/`dcs-safety-officer`
+spawn, would catch this class before the Dispatcher has to notice it by
+eye.
 
 ## Links
 
