@@ -21,21 +21,17 @@ cat "<project>/.dcs/ACTIVE"
 cat "<incident_dir>/SAFETY.md" 2>/dev/null
 ```
 
-If no `ACTIVE`: nothing to close. If `SAFETY.md`'s latest recorded verdict
-for the current period is not `pass`: **stop.** Tell the Owner
-`/dcs-execute` must complete with a `pass` verdict first — doctrine
-principle 7/10: no incident closes over an unresolved refutation. There is
-no override for this from within `/dcs-close`.
+If no `ACTIVE`: nothing to close. If `SAFETY.md`'s latest verdict for the
+current period isn't `pass`: **stop** — tell the Owner `/dcs-execute` must
+finish with a pass first (doctrine principle 7/10: no close over an
+unresolved refutation); no override from within `/dcs-close`.
 
 **Integration-commit check (mechanical, not Safety's job):** the
-integration commit from `execute.md` step 9b must exist — find it via
-`214-LOG.md`'s `integration commit <sha>` entry (or `git log` if the entry
-is missing, and note the logging gap). Verify with `git show --stat <sha>`
-that it touches ONLY territory files and its message references the intake
-source ids. If there is no commit, or it sweeps in unrelated files:
-**stop** — route back to the IC to commit properly (or split the commit)
-before closing. If the Owner-UAT section of the IAP's verification plan is
-unfinished, remind the Owner it gates close too.
+`execute.md` step 9b integration commit must exist — find its sha via
+`214-LOG.md`'s `integration commit <sha>` entry (else `git log`, noting
+the gap) — `git show --stat <sha>` must confirm ONLY territory files and
+a message citing the intake source ids, else **stop**, route back to the
+IC to commit properly (or split it). Unfinished Owner-UAT also gates close.
 
 ## 2. Gather the incident's history
 
@@ -46,11 +42,9 @@ phase-transition entries in `214-LOG.md`.
 
 ## 3. Write AAR.md
 
-**(v0.3)** If this incident lives in a worktree (the standard case for
-Type 3/1 since v0.3), this write — and step 4's memory-routing writes —
-happen **in the worktree**, on the incident's branch. They get committed
-there (step 5a below) and ride the merge into main; there is no separate
-"copy the AAR into main" step.
+**(v0.3)** In a worktree incident (standard for Type 3/1), this write and
+step 4's writes happen **in the worktree** on the incident's branch — committed
+there (step 5a) and carried into main by the merge; no separate "copy into main" step.
 
 Using `$HOME/.claude/dcs/templates/AAR.md`: outcome (final goal state vs.
 the last period's acceptance criteria), what worked (tactics that survived
@@ -58,24 +52,23 @@ Safety Officer review without refutation), lessons (concrete, reusable —
 not vague), deviation history (or "none"), and the Safety Officer's final
 verdict copied verbatim from `SAFETY.md`.
 
-**Facts-only rule (field lesson, 2026-07-22 (predates self-hosting) — the first live AAR claimed
-a deploy that hadn't happened and lessons that were never written):**
+**Facts-only rule (field lesson 2026-07-22, predates self-hosting — an
+early AAR claimed an undone deploy and unwritten lessons):**
 
-- Every "written / deployed / verified / done" claim MUST cite an
-  artifact checked at write time. Intentions stay in future tense
-  ("pending", "to be done by X").
-- **Deviation history comes from `214-LOG.md`, not from memory** — list
-  every halt, deviation, and command correction the log records. "None"
-  is only writable when the log shows none.
-- **Owner-UAT status is a mandatory AAR field** when the IAP defines a
-  UAT step: done (with what was checked) / pending (what gates what).
-  Close may proceed with UAT pending only if the Owner explicitly says
-  so — record that decision.
-- **Deploy status is a mandatory AAR field** when the fix requires
-  deploy: verify per `dcs/workflows/deploy.md` step 7; "not deployed —
-  loop completes after deploy" is honest, a false "deployed" is not.
-- Timestamps in `214-LOG.md` use the real clock, never copied from
-  earlier entries.
+- Every "written / deployed / verified / done" claim MUST cite an artifact
+  checked at write time; intentions stay future-tense ("pending", "to be
+  done by X").
+- **Deviation history comes from `214-LOG.md`, not memory** — list every
+  halt, deviation and command correction it records; "none" is only
+  writable when the log shows none.
+- **Owner-UAT status is a mandatory AAR field** when the IAP defines a UAT
+  step: done (what was checked) / pending (what gates what) — close may
+  proceed pending only if the Owner explicitly says so; record it.
+- **Deploy status is a mandatory AAR field** when the fix requires deploy
+  (verify per `dcs/workflows/deploy.md` step 7): "not deployed — loop
+  completes after deploy" is honest, a false "deployed" is not.
+- Timestamps in `214-LOG.md` use the real clock, never copied from earlier
+  entries.
 
 ## 4. Route lessons to the project's memory system
 
@@ -100,17 +93,15 @@ a new file.
 If `201-BRIEF.md`'s "Intake source" names something external (e.g. an
 `audit_results` row id, a ticket): **do not** write to it directly.
 
-**First check who owns closure.** Read the project's `CLAUDE.md` and
-the 201: if a documented routine closes items itself upon observing the
-fix (e.g. a daily validate-findings routine that stamps rows when the
-fixing commit is deployed), then the correct action is **no action** —
-record in AAR.md that closure is DELEGATED, name the routine, and note
-what it needs to observe the fix. Manually closing what a routine owns
-creates a race and duplicates its write (field lesson 2026-07-22,
-predates self-hosting). Delegate only when the documentation is
-explicit — a vaguely-mentioned routine is NOT an owner; when in doubt,
-use the flag-for-Owner fallback (a duplicate flag is annoying; a
-silently-never-closed finding is a leak).
+**First check who owns closure**, reading the project's `CLAUDE.md` and
+the 201: a documented routine that closes items itself on observing the
+fix (e.g. a daily validate-findings routine stamping rows once the fix
+deploys) makes the correct action **no action** — record in AAR.md that
+closure is DELEGATED, name the routine, note what it must observe.
+Manually closing what a routine owns creates a race and duplicates its
+write (field lesson 2026-07-22, predates self-hosting). Delegate only on
+EXPLICIT documentation — a vague mention is not an owner; when in doubt,
+flag the Owner instead (a duplicate flag is annoying, a silent leak isn't).
 
 **Only if no owner is documented:** flag it for the Owner — print the
 exact identifier and suggested action (e.g. "mark `audit_results` row
@@ -156,6 +147,19 @@ to step 6.
    makes two branches claiming the same identifier produce a *real merge
    conflict* — the check that cannot be skipped is the one git performs
    itself.
+
+1b. **Run the record-integrity check, unconditionally (v0.8.0).** First,
+   commit anything `git status --short <incident_dir>` still shows (step
+   1 commits only the AAR and step 4's writes) — `git add <incident_dir>`
+   (never `-A`/`.`) and commit, message referencing the slug. Then run
+   `python "$HOME/.claude/dcs/tools/record_integrity.py" <incident_dir>
+   --commit-range <base>..dcs/<slug> --also-clean <path>` unconditionally,
+   no project opt-in — one `--also-clean <path>` per destination step 4
+   actually wrote (the workflow supplies the path, never the tool);
+   `--commit-range` reuses step 2's own range since the tool's default
+   under-covers. Exit 0 continues to step 2; exit 1 (findings) or 2
+   (environment error) is **fail-closed** — stop, do not merge, escalation
+   trigger (a) (doctrine principle 13): file a 209, never resolved silently.
 
 2. **Merge into the integration branch.** The merge target is **whatever
    branch the primary checkout (`esg_root`) currently has checked out** —

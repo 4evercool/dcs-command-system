@@ -529,6 +529,30 @@ or not. This is doctrine's only deliberately fail-closed exception to
 "the gate only reads the approval marker" (principle 11) — a closed
 incident's directory should never accidentally become a live one again.
 
+**Relocated: the "three surfaces" summary sentence (incident
+`close-integrity-guard-bundle`, 2026-08-02).** `doctrine.md`'s own
+"Parallel operation" section, immediately after the worktree-audit
+checklist, used to carry a one-sentence restatement of the point just
+made above, moved here verbatim to fund principle 16's (close-time record
+integrity) hot-path cost:
+
+> Three surfaces make an audit finding an actual fix: the audit finds it;
+> `/dcs-esg` agenda item (f) is where the Owner decides (finish/park/kill),
+> and **parking always removes the worktree**; the gate's `.dcs/CLOSED`
+> zombie rule makes one that slipped past both unusable meantime (principle
+> 11's one deliberate fail-closed exception).
+
+No compressed remnant was left in the core: every fact this sentence
+stated survives independently elsewhere — "parking always removes the
+worktree" is principle 10's own "(v0.3) No dangling incidents or
+worktrees ... close/park/kill all remove it"; the `.dcs/CLOSED`
+zombie-rule/principle-11 link is stated at the worktree audit's own step 5
+("`dcs_gate.py`'s zombie rule (principle 11) denies guarded edits while it
+exists"); and the "last line of defense" framing is the fuller paragraph
+immediately above. The one detail with no other home is the specific
+`/dcs-esg` agenda item letter (f) that owns the finish/park/kill decision,
+preserved here rather than dropped.
+
 **Project-supplied provision hook provenance (incident `provisioning-script-upstreaming`, 2026-07-30).** The `.dcs/provision` hook point generalises a pattern first developed in the bread_bot project (commit `4ae52377`), where a worktree-provisioning script automated environment setup for each new incident worktree. Three bread_bot incidents exercised the pattern independently before it was upstreamed into DCS as a general convention:
 
 - **`cost-dynamics-labor-toggle`** — the provision script installed project-specific tooling the incident's specialists needed before their first operational period.
