@@ -114,7 +114,14 @@ reproduce is a halt.
 
 1. `close-integrity-guard-bundle` — measures 1 (SHA guard), 2, 3, 6's
    close-time checks. Territory: tests + close.md. Likely Type 1 (it
-   *is* enforcement mechanism).
+   *is* enforcement mechanism). **SHIPPED 2026-08-03, Type 1 confirmed
+   (merge `b8921c0`, v0.8.0) — full write-up:
+   [[Post-mortems/close-integrity-guard-bundle]].** The term census
+   (below) rode with it, per the Owner's explicit override of the IC's
+   recommendation to queue it separately. Not shipped as part of this
+   row: measure 1's log-append helper (item 2, below, unaffected) and
+   documenting the `RECORD-CORRECTION:` convention in shipped prose
+   (queued as a fresh follow-up at this incident's own close).
 2. `log-append-helper` — measure 1's tool + entry format with operator
    identity. `dcs/hooks/**` → Type 1.
 3. `independence-fail-closed-and-model-floor` — measures 4 + 5's
