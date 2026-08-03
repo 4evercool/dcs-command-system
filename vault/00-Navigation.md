@@ -29,6 +29,7 @@ only ever be read while improving DCS itself, it belongs here.
 
 - [[Post-mortems/energy-cost-model-rework|Post-mortem: energy-cost-model-rework]] — the 31-hour incident that produced v0.5.12
 - [[Post-mortems/deepseek-period-review|Post-mortem: external review of the 2026-07-29 → 07-31 period]] — findings of the 2026-08-01 review; intake source for the ten rows queued from it
+- [[Post-mortems/close-integrity-guard-bundle|Post-mortem: close-integrity-guard-bundle]] — the unconditional close-time record-integrity gate (v0.8.0); a Safety halt on a self-checking term census and an append-only-unfixable false positive found by running the new tool against the incident's own directory; a disclosed, contained prompt-injection attempt against a sub-agent
 - [[Metrics/incident-metrics|Incident metrics]] — comparative numbers across every incident, with the command that regenerates them
 - [[Meta/building-dcs-lessons|Meta: lessons about building DCS]] — the patterns that keep recurring in the *construction*, not the doctrine
 - [[Decisions/distribution-and-scheduling|Decision: distribution and scheduling]] — choices deliberately kept out of doctrine

@@ -529,6 +529,30 @@ or not. This is doctrine's only deliberately fail-closed exception to
 "the gate only reads the approval marker" (principle 11) — a closed
 incident's directory should never accidentally become a live one again.
 
+**Relocated: the "three surfaces" summary sentence (incident
+`close-integrity-guard-bundle`, 2026-08-02).** `doctrine.md`'s own
+"Parallel operation" section, immediately after the worktree-audit
+checklist, used to carry a one-sentence restatement of the point just
+made above, moved here verbatim to fund principle 16's (close-time record
+integrity) hot-path cost:
+
+> Three surfaces make an audit finding an actual fix: the audit finds it;
+> `/dcs-esg` agenda item (f) is where the Owner decides (finish/park/kill),
+> and **parking always removes the worktree**; the gate's `.dcs/CLOSED`
+> zombie rule makes one that slipped past both unusable meantime (principle
+> 11's one deliberate fail-closed exception).
+
+No compressed remnant was left in the core: every fact this sentence
+stated survives independently elsewhere — "parking always removes the
+worktree" is principle 10's own "(v0.3) No dangling incidents or
+worktrees ... close/park/kill all remove it"; the `.dcs/CLOSED`
+zombie-rule/principle-11 link is stated at the worktree audit's own step 5
+("`dcs_gate.py`'s zombie rule (principle 11) denies guarded edits while it
+exists"); and the "last line of defense" framing is the fuller paragraph
+immediately above. The one detail with no other home is the specific
+`/dcs-esg` agenda item letter (f) that owns the finish/park/kill decision,
+preserved here rather than dropped.
+
 **Project-supplied provision hook provenance (incident `provisioning-script-upstreaming`, 2026-07-30).** The `.dcs/provision` hook point generalises a pattern first developed in the bread_bot project (commit `4ae52377`), where a worktree-provisioning script automated environment setup for each new incident worktree. Three bread_bot incidents exercised the pattern independently before it was upstreamed into DCS as a general convention:
 
 - **`cost-dynamics-labor-toggle`** — the provision script installed project-specific tooling the incident's specialists needed before their first operational period.
@@ -675,3 +699,49 @@ prose plus a phrase-grep check that only confirmed `plan.md` mentioned
 "preservation map" — it never inspected any incident's actual map. Prior
 art only, superseded by this incident's mechanical check
 (`dcs/tools/preservation_map.py`, `schemas.md` #9 (preservation map)).
+
+### Principle 16 — a mechanism that checks itself is not a check (field lesson 2026-08-02/03, incident `close-integrity-guard-bundle`)
+
+> Period 1's Safety Officer halted on two refutations, both found by doing
+> the same thing: running the new close-time gate against real, live
+> targets instead of only its own fixtures. (1) The load-bearing-term
+> census scanned `tests/` as part of its own population — and lived in
+> `tests/`. Every census term was a literal string inside the file that
+> defined it, so `_term_missing` was provably always `[]`: the check would
+> have passed with every other file in the package deleted. The fix was
+> not a better term list; it was excluding the census's own defining file
+> from the population it checks, by resolved-path identity, so a rename
+> cannot silently re-open the hole. (2) Running the new tool against this
+> incident's own directory — the sanity check criterion 14 exists
+> specifically to force — found a *permanent, unremediable* finding: an
+> earlier planning entry had to quote `"sha 3df43fc8"` verbatim to explain
+> an accepted false-positive class, and `214-LOG.md` is append-only, so
+> the citation could never be un-written. The shipped suppression
+> mechanism could not clear it: it fired on a mere prose *mention* of its
+> own sentinel (a false positive in the other direction) while being
+> structurally unable to clear a genuinely corrected citation at all. A
+> mechanism whose own governing incident cannot pass it is not a
+> deployable mechanism, however correct its unit tests look in isolation.
+>
+> `dcs-commander` ruled `replan`, not `fix_taskings`, because the honest
+> fix — a grammar-recognized `RECORD-CORRECTION:` **entry** (never a
+> body-anywhere substring match) that **names its target** and clears
+> every occurrence of that token **anywhere in the file** — revises what
+> the Definition of Done actually promises (an append-only-compatible
+> remedy exists), not merely how it is implemented. The re-verification
+> pass also caught a related trap: two test cases asserted a criterion-3
+> "finding" that was satisfied by unrelated criterion-2 noise (every
+> fixture in this incident is untracked, so criterion 2 always fires) —
+> correct by accident, not by construction. Full chronology, every claim
+> independently re-measured at each command point rather than trusted:
+> `.dcs/incidents/2026-08-02-close-integrity-guard-bundle/214-LOG.md`.
+> — incident `close-integrity-guard-bundle`, 2026-08-02/03.
+
+Principle 16's rule ("a close runs a mechanical record-integrity check
+... unconditionally, not behind a project's opt-in") lives at
+`doctrine.md`; this is its provenance. The generalizable lesson, stated
+once so a future guard-writing incident does not have to rediscover it:
+**a check that can pass by construction (self-reference, or a shared
+side-effect from a sibling check) is not evidence of anything — run the
+new mechanism against something real, especially the incident that built
+it, before trusting a green suite.**

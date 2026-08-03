@@ -47,10 +47,16 @@ dcs/                      # this payload — shared, read-only source material
 │   └── register_view_regen.py  # PostToolUse: regenerates the register
 │                              # view whenever REGISTER.md is edited
 └── tools/
-    └── preservation_map.py # ## 6c. bounded-amendment preservation-map
-                             # checker -- run standalone (see its own
-                             # module docstring for the invocation) or
-                             # imported by tests/test_doctrine_integrity.py
+    ├── preservation_map.py # ## 6c. bounded-amendment preservation-map
+    │                        # checker -- run standalone (see its own
+    │                        # module docstring for the invocation) or
+    │                        # imported by tests/test_doctrine_integrity.py
+    └── record_integrity.py # close-time record-integrity check --
+                             # commit-citation existence, artifact-set
+                             # completeness, SAFETY.md schema, clean tree,
+                             # non-degenerate commit messages -- run
+                             # standalone (see its own module docstring) or
+                             # invoked unconditionally by dcs/workflows/close.md
 
 agents/dcs-*.md             # flat files, alongside any other installed agents
 skills/dcs-*/SKILL.md        # one skill per command, thin @-include wrappers

@@ -6,6 +6,15 @@ to edit it. "IC-transcribed" means a subagent's structured JSON return
 becomes this file's content, but the IC does the actual writing — subagents
 never write directly into the incident directory.
 
+**The canonical artifact set is 9 files**, in this order: `201-BRIEF.md`,
+`202-OBJECTIVES.md`, `203-ORG.md` (conditional — a Type 3 incident may
+doctrine-compliantly skip it under its default activation, provided the
+skip is logged in `214-LOG.md`; a Type 1 incident never skips it),
+`204-TASKING/` (one directory entry, however many specialist files it
+holds), `IAP.md`, `IAP-APPROVED`, `214-LOG.md`, `SAFETY.md`, `AAR.md`. A
+compliant `203-ORG.md` skip does not shrink the set to 8 — it is a
+conditional member of the canonical 9, not a tenth optional file.
+
 | File | Author | Written during | Contains |
 |---|---|---|---|
 | `201-BRIEF.md` | IC, from situation-analyst findings | Stem (`/dcs-new`) | Symptom, evidence (action-log/codegraph/prior-art findings per the analyst-findings schema), blast radius, TYPE + rationale |

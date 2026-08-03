@@ -25,6 +25,41 @@ release commit's own message instead:
 
 ---
 
+## 0.8.0 — 2026-08-03
+
+### Added
+
+- **`/dcs-close` runs a mechanical record-integrity check over the
+  incident's own artifacts, unconditionally, before the merge — a red
+  result is fail-closed.** `dcs/tools/record_integrity.py` (stdlib-only)
+  checks five properties scoped to the one incident being closed: every
+  citation-position commit sha in `214-LOG.md`/`AAR.md` actually resolves
+  to a commit; the canonical nine-file artifact set (`201-BRIEF.md`,
+  `202-OBJECTIVES.md`, `203-ORG.md`, `204-TASKING/`, `IAP.md`,
+  `IAP-APPROVED`, `214-LOG.md`, `SAFETY.md`, `AAR.md`) is present and
+  tracked; a genuine `SAFETY.md` verdict fence (not a prose mention)
+  matches `schemas.md #5, Safety-officer verdict`'s field table; the tree
+  is clean after the archive commit; and no commit message carries a bare
+  `@`-only line.
+  `dcs/workflows/close.md` step 5a.1b invokes it unconditionally — no
+  project opt-in, unlike step 5a.1a's existing merge-time-guard slot —
+  with the real `<base>..dcs/<slug>` merge range (the tool's own default
+  under-covers) and one `--also-clean <path>` per memory-routing
+  destination the run actually wrote. Exit 0 proceeds to the merge; exit 1
+  (findings) or 2 (environment error) is fail-closed: stop, do not merge,
+  escalation trigger (a), never silently resolved.
+- **Doctrine principle 16, "Close-time record integrity is mechanical, not
+  behavioral"** (`dcs/references/doctrine.md`), states the rule the step
+  above enforces and cites its mechanism by path. `dcs/references/forms.md`
+  now states the canonical artifact set as 9 files explicitly, with the
+  `203-ORG.md` Type-3-skip conditional named.
+
+### Config
+
+No new keys — the check is unconditional, not project-configurable.
+
+---
+
 ## 0.7.2 — 2026-08-01
 
 **Re-run `/dcs-init` in each onboarded project after upgrading.** This

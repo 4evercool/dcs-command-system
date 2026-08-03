@@ -373,6 +373,101 @@ for sub in SHIPPED_DIRS:
         candidates += [p for p in base.rglob("*") if p.is_file()]
 candidates += [REPO / f for f in SHIPPED_FILES if (REPO / f).is_file()]
 
+# (close-integrity-guard-bundle, incident) The English mandate (CLAUDE.md)
+# binds this repo's OWN incident artifacts too, not only the shipped payload
+# above -- but a repo-wide historical sweep would go permanently red against
+# real data (34 incident directories total; Cyrillic measured in 81 artifact
+# files across ~15 of them, the still-queued russian-artifacts-translation),
+# so the incident-artifact half is date-pinned and built as a SECOND,
+# SEPARATE list rather than folded into `candidates` -- check 10 (CRLF)
+# below iterates `candidates` alone, unmodified, and must stay that way:
+# adding incident directories to `candidates` would silently widen CRLF
+# enforcement over this repo's ~292 incident markdown files, a scope change
+# nobody authorized.
+#
+# _NE_EFFECTIVE_DATE is deliberately the SAME value as
+# dcs/tools/record_integrity.py's own SAFETY_FENCE_EFFECTIVE_DATE as of this
+# incident, but a SEPARATE constant for a separate reason: that one ships
+# and binds every downstream project's SAFETY.md fence check universally;
+# this one is repo-only and pins THIS project's own English mandate going
+# forward. The two are deliberately not coupled by an equality assertion --
+# they may legitimately diverge in the future.
+# CORRECTED (close-integrity-guard-bundle, period 1 attempt 2, criterion
+# 6(C)): this constant previously read "2026-08-03", an off-by-one-day
+# bug -- the pin must be LITERALLY "2026-08-02", the same value
+# dcs/tools/record_integrity.py's own SAFETY_FENCE_EFFECTIVE_DATE was
+# independently corrected to (a separate constant, not asserted equal,
+# per that module's own comment). _ne_dir_in_scope's own comparison just
+# below (`m.group(1) > pin`) was ALREADY strict-greater-than before this
+# fix and is UNCHANGED by it -- only the pinned VALUE was wrong, never
+# the comparison's sense. Measured no-op: no `.dcs/incidents/` directory
+# on disk is dated after 2026-08-02 (the newest two are dated exactly ON
+# it), so this correction changes zero real in-scope/excluded directories
+# -- see the printed "non-English mandate" line below, identical before
+# and after this fix (0 in scope, 34 excluded, both times).
+_NE_EFFECTIVE_DATE = "2026-08-02"  # close-integrity-guard-bundle, period 1
+
+_NE_DIRNAME_RE = re.compile(r"^(\d{4}-\d{2}-\d{2})-.+$")
+
+
+def _ne_dir_in_scope(dirname, pin=_NE_EFFECTIVE_DATE):
+    """True iff an incident directory's own leading YYYY-MM-DD is strictly
+    after `pin`. A name with no parseable date is out of scope (never
+    guessed at) -- the unparseable-date disposition mirrors
+    _PM_EFFECTIVE_DATE's precedent in check 22; the comparison sense does
+    NOT -- this is deliberately exclusive (`>`) where check 22's is
+    inclusive (`>=`), so do not 'align' them (Safety Officer advisory,
+    attempt 2: attempt 1's off-by-one pin bug came from exactly that kind
+    of well-intentioned alignment)."""
+    m = _NE_DIRNAME_RE.match(dirname)
+    return bool(m) and m.group(1) > pin
+
+
+def _ne_dirname_from_path(path_str):
+    """The `<date>-<slug>` incident-directory path component of a path
+    string (POSIX or Windows separators), or None if the path names no
+    directory directly under `.dcs/incidents/`."""
+    parts = Path(path_str.replace("\\", "/")).parts
+    for i, part in enumerate(parts):
+        if part == "incidents" and i + 1 < len(parts) and _NE_DIRNAME_RE.match(parts[i + 1]):
+            return parts[i + 1]
+    return None
+
+
+def _ne_finding(path_str, text, pin=_NE_EFFECTIVE_DATE):
+    """The single predicate for the incident-artifact half: is (path,
+    text) a non-English finding? True iff `path_str` sits inside a
+    post-pin incident directory (_ne_dir_in_scope) AND `text` contains
+    Cyrillic. Used both to scan real incident-artifact candidates below
+    and, standalone, for the in-memory non-vacuity proof that follows
+    check 9's own verdict (never a fixture planted under
+    .dcs/incidents/, per this incident's own tasking constraint)."""
+    dirname = _ne_dirname_from_path(path_str)
+    if dirname is None or not _ne_dir_in_scope(dirname, pin):
+        return False
+    return bool(CYRILLIC.search(text))
+
+
+_ne_incidents_root = REPO / ".dcs" / "incidents"
+_ne_all_dirs = (
+    sorted((d for d in _ne_incidents_root.iterdir() if d.is_dir()), key=lambda d: d.name)
+    if _ne_incidents_root.is_dir() else []
+)
+_ne_in_scope_dirs = [d for d in _ne_all_dirs if _ne_dir_in_scope(d.name)]
+_ne_out_of_scope_dirs = [d for d in _ne_all_dirs if not _ne_dir_in_scope(d.name)]
+
+incident_candidates = []
+for _ne_d in _ne_in_scope_dirs:
+    incident_candidates += [p for p in _ne_d.rglob("*") if p.is_file()]
+
+print(
+    f"\nnon-English mandate (check 9 widened scope): effective date "
+    f"{_NE_EFFECTIVE_DATE}; {len(_ne_in_scope_dirs)} incident director"
+    f"{'y' if len(_ne_in_scope_dirs) == 1 else 'ies'} in scope, "
+    f"{len(_ne_out_of_scope_dirs)} excluded as on-or-before the pin "
+    "(never silently skipped)"
+)
+
 mojibake = []
 for p in candidates:
     if EXCLUDED_DIRS & set(p.parts):
@@ -385,8 +480,198 @@ for p in candidates:
         continue
     if CYRILLIC.search(text):
         mojibake.append(str(p.relative_to(REPO)))
-check("no Cyrillic anywhere in the shipped package", not mojibake,
-      "; ".join(sorted(set(mojibake))))
+# Second, separate scan (this incident): the same content rule, applied to
+# the incident-artifact candidate list built above -- two loops feeding one
+# shared `mojibake` list and one shared verdict below, so check 9 stays ONE
+# named case while check 10 (unmodified, next) keeps reading `candidates`
+# alone.
+for p in incident_candidates:
+    if EXCLUDED_DIRS & set(p.parts):
+        continue
+    if p.suffix.lower() not in TEXT_SUFFIXES:
+        continue
+    try:
+        text = p.read_text(encoding="utf-8")
+    except (UnicodeDecodeError, OSError):
+        continue
+    rel = str(p.relative_to(REPO)).replace("\\", "/")
+    if _ne_finding(rel, text):
+        mojibake.append(rel)
+check("no Cyrillic anywhere in the shipped package or in this repo's own "
+      "post-pin incident artifacts (widened scope, close-integrity-guard-"
+      "bundle)",
+      not mojibake, "; ".join(sorted(set(mojibake))))
+
+# Non-vacuity proof (in memory, no fixture planted under .dcs/incidents/,
+# per this incident's own tasking constraint): the SAME predicate
+# (_ne_finding) the real scan above uses, called directly with synthetic
+# inputs. A post-pin path + Cyrillic text must flag; the SAME Cyrillic text
+# under a pre-pin path must not -- proving the date predicate inside
+# _ne_finding is load-bearing, not decorative window dressing.
+_ne_cyrillic_sample = chr(0x0442) + chr(0x0435) + chr(0x0441) + chr(0x0442)  # Cyrillic "test", built via chr() (CYRILLIC's own idiom above) so this file stays pure ASCII
+_ne_post_pin_path = ".dcs/incidents/2026-08-10-sample-incident/201-BRIEF.md"
+_ne_pre_pin_path = ".dcs/incidents/2026-07-01-sample-incident/201-BRIEF.md"
+check("check 9 non-vacuity: a post-pin path + Cyrillic text is flagged by "
+      "_ne_finding (the same predicate the real scan above uses)",
+      _ne_finding(_ne_post_pin_path, _ne_cyrillic_sample) is True,
+      f"_ne_finding({_ne_post_pin_path!r}, <Cyrillic sample>) = "
+      f"{_ne_finding(_ne_post_pin_path, _ne_cyrillic_sample)!r}")
+check("check 9 non-vacuity: the SAME Cyrillic text under a pre-pin path is "
+      "excluded by _ne_finding's date predicate, not by content",
+      _ne_finding(_ne_pre_pin_path, _ne_cyrillic_sample) is False,
+      f"_ne_finding({_ne_pre_pin_path!r}, <Cyrillic sample>) = "
+      f"{_ne_finding(_ne_pre_pin_path, _ne_cyrillic_sample)!r}")
+
+# =============================================================================
+# LOAD-BEARING-TERM CENSUS (criterion 6, other half) -- own banner, distinct
+# from section 23's below, so a reviewer skimming the diff can tell "check
+# 9's widened scope" (immediately above) apart from this at a glance
+# (command-point-2 cosmetic note). A curated list of terms that are
+# genuinely operative in the shipped package's current content (the same
+# `candidates` population check 9 already built, spanning
+# dcs/agents/skills/bin/docs/tests) -- if any of them silently vanished,
+# something real would break: a config key the gate reads, a sentinel the
+# halt-ceiling counter parses, a schema field the IC's own plan-lint
+# rejects on. Each entry is a (term, why-it-breaks) pair -- the reason is
+# mandatory, so a red case names the CONSEQUENCE, not just the missing
+# string.
+# =============================================================================
+_TERM_CENSUS = [
+    ("guarded_paths", "dcs_gate.py's load_config() reads this exact "
+     "config.json key; a rename here silently stops a project's own "
+     "guarded-path override from ever being read"),
+    ("unguarded_paths", "load_config()'s counterpart key; a rename "
+     "silently stops a project's own unguarded_paths override from ever "
+     "being read, gating paths it was supposed to exempt"),
+    ("IAP-APPROVED:", "one of the three sentinels dcs_gate.py's "
+     "halt-ceiling counter (sentinel_of()/STAMP_RE) parses out of "
+     "214-LOG.md; losing this string from prose orphans its own citation "
+     "of the grammar it depends on"),
+    ("SAFETY-HALT:", "the halt sentinel dcs_gate.py's halt_cycles() "
+     "counts -- same consequence as IAP-APPROVED: above"),
+    ("SAFETY-PASS:", "the reset sentinel dcs_gate.py's halt_cycles() "
+     "anchors on -- same consequence"),
+    ("esg_activation", "escalation trigger (e)'s own field name (doctrine "
+     "principle 14); losing it from prose orphans the field from its "
+     "documented rationale"),
+    ("partition_ok", "the chief-plan schema field the IC's plan-lint "
+     "rejects a taskings[] return on when false/absent; losing it from "
+     "prose leaves that rejection undocumented"),
+    ("WORKFLOW_BUDGET_LINES", "the merge-time guard's own workflow "
+     "line-count budget constant (this file); CLAUDE.md's coding-rules "
+     "section cites it by this exact name"),
+    # (close-integrity-guard-bundle, period 1 attempt 2, criterion 6(B))
+    # REPLACES a former "HOT_PATH_BUDGET_KB" entry, removed rather than
+    # kept: measured (candidates population minus this file, plus
+    # CLAUDE.md -- the exact corrected population below) that
+    # HOT_PATH_BUDGET_KB has ZERO occurrences outside the file that
+    # defines it, even after adding CLAUDE.md, so it could never survive
+    # the corrected, non-tautological census -- and its own stated reason
+    # ("CLAUDE.md cites it by this exact name") was independently false:
+    # CLAUDE.md's coding-rules section names WORKFLOW_BUDGET_LINES and
+    # WORKFLOW_GRANDFATHERED_LINES, never HOT_PATH_BUDGET_KB. ONE
+    # regenerating command for both facts:
+    #   python -c "from pathlib import Path; import re; r=Path('CLAUDE.md').read_text(encoding='utf-8'); print('HOT_PATH_BUDGET_KB' in r, 'WORKFLOW_GRANDFATHERED_LINES' in r)"
+    # -> False True (re-run from the repo root to reproduce).
+    ("WORKFLOW_GRANDFATHERED_LINES", "the merge-time guard's own "
+     "grandfather-exemption table for workflow files already over the "
+     "line-count budget when this check was introduced (this file); "
+     "CLAUDE.md's coding-rules section cites it by this exact name "
+     "(twice), describing it as recorded, temporary debt"),
+]
+
+check("load-bearing-term census: term list is non-empty (degeneracy guard "
+      "-- without it every case below passes vacuously)",
+      bool(_TERM_CENSUS), "population is empty")
+
+# (close-integrity-guard-bundle, period 1 attempt 2, criterion 6(A) --
+# refutation 1) This file (`tests/test_doctrine_integrity.py`) is itself
+# one of `candidates` (SHIPPED_DIRS contains "tests"), and every term in
+# _TERM_CENSUS above is, by construction, a literal string inside this
+# same file (the census entry that names it). Scanning this file as part
+# of the SATISFYING population therefore made `_term_missing` provably
+# always [] -- every term trivially "found itself". The fix is
+# PATH-IDENTITY exclusion: resolve this file's own path once, resolve
+# each candidate, and skip the one whose resolved path matches -- never
+# name-matching (`p.name == "test_doctrine_integrity.py"` would silently
+# stop excluding anything the day this file is renamed) and never list
+# surgery on `candidates` itself (candidates stays exactly what check 10,
+# next, iterates unmodified -- see that check's own comment on why it
+# must not widen).
+_census_self_path = Path(__file__).resolve()
+
+_term_census_texts = []
+for p in candidates:
+    if p.resolve() == _census_self_path:
+        continue
+    if EXCLUDED_DIRS & set(p.parts):
+        continue
+    if p.suffix.lower() not in TEXT_SUFFIXES:
+        continue
+    try:
+        _term_census_texts.append(p.read_text(encoding="utf-8"))
+    except (UnicodeDecodeError, OSError):
+        continue
+
+# The project's root CLAUDE.md is the real citing site for
+# WORKFLOW_BUDGET_LINES and WORKFLOW_GRANDFATHERED_LINES's coding-rule
+# mentions (measured above: both are otherwise zero-occurrence outside
+# this census file) -- added to the CENSUS POPULATION ONLY. It is
+# deliberately NOT added to `candidates` itself: `candidates` is also
+# what check 10 (CRLF, next) iterates unmodified, and the comment above
+# `candidates`'s own definition already warns that widening it would
+# silently widen CRLF enforcement over files nobody authorized for that
+# check -- CLAUDE.md is deliberately unguarded by the merge-time gate
+# (CLAUDE.md's own "Self-hosting notes" section), and folding it into
+# `candidates` would contradict that for a check that has nothing to do
+# with the term census.
+_claude_md_path = REPO / "CLAUDE.md"
+if _claude_md_path.is_file():
+    try:
+        _term_census_texts.append(_claude_md_path.read_text(encoding="utf-8"))
+    except (UnicodeDecodeError, OSError):
+        pass
+
+
+def _term_found(term, texts):
+    """The one predicate both the real census check and its non-vacuity
+    proof below call -- a term counts as found iff it is a substring of
+    at least one text in `texts`. Factored out so the non-vacuity case
+    exercises the EXACT SAME logic the real check uses, rather than a
+    parallel re-implementation that could itself drift and pass
+    vacuously."""
+    return any(term in t for t in texts)
+
+
+_term_missing = [
+    f"{term!r} -- {why}"
+    for term, why in _TERM_CENSUS
+    if not _term_found(term, _term_census_texts)
+]
+check("load-bearing-term census: every curated term appears at least once "
+      "in the shipped package's current content, OTHER than the file "
+      "that defines the census itself (path-identity exclusion, "
+      "criterion 6(A))",
+      not _term_missing, "; ".join(_term_missing))
+
+# Non-vacuity proof (criterion 6(B)): a synthetic term deliberately built
+# so it cannot exist anywhere in the scanned population (a random suffix,
+# never typed anywhere else in this repository) must be reported as
+# NOT found by the exact same predicate (_term_found) the real check
+# above uses. This is distinct from -- and stronger than -- the
+# empty-census degeneracy guard just above: that guard only proves
+# _TERM_CENSUS itself is non-empty, never that a present-but-vanished
+# term would actually be caught. If _term_found degenerated to "always
+# True" (e.g. the self-exclusion above silently stopped excluding this
+# file, restoring the tautology), this case would go red.
+_term_census_synthetic_absent = "DCS_CENSUS_PROBE_KNOWN_ABSENT_7f3c1a9d"
+check("load-bearing-term census non-vacuity: a synthetic term known to "
+      "exist nowhere in the scanned population is reported as NOT found "
+      "by the same predicate the real check uses",
+      not _term_found(_term_census_synthetic_absent, _term_census_texts),
+      f"_term_found({_term_census_synthetic_absent!r}, <corrected "
+      f"population, {len(_term_census_texts)} texts>) = "
+      f"{_term_found(_term_census_synthetic_absent, _term_census_texts)!r}")
 
 # --- 10. no CRLF in the shipped package -------------------------------------
 # The line-ending policy itself lives in .gitattributes (text eol=lf), but
@@ -2045,6 +2330,428 @@ for _pm_inc_dir, _pm_ts in _pm_in_scope:
     check(f"preservation map field guard: {_pm_rel}'s 6c re-stamp at "
           f"{_pm_ts} -- verify() returns []",
           not _pm_field_findings, "; ".join(_pm_field_findings))
+
+# --- 23. record-integrity mechanism (close-integrity-guard-bundle) ---------
+# `dcs/tools/record_integrity.py` (S1's territory this incident) is the
+# shipped, project-agnostic close-time record-integrity check: citation-
+# position sha existence, 9-artifact-set completeness, SAFETY.md real-fence
+# schema conformance, a clean tree, non-degenerate commit messages -- all
+# running unconditionally at close, never opt-in (doctrine principle 16).
+# Imported via the SAME `importlib.util.spec_from_file_location` idiom
+# check 22 uses for preservation_map.py, never re-implemented here (T1).
+#
+# Unlike check 22's pm import, this one is GUARDED: this incident runs four
+# specialists in parallel and S1's module is a read dependency this file
+# does not control the landing order of -- a bare, unguarded import
+# (section 22's own style) would raise on a missing file and abort this
+# whole script before its final "N/M passed" line ever printed. Every case
+# below that depends on the import degrades to a named red finding instead
+# of a crash when `ri` is None or lacks an expected attribute, per this
+# incident's own tasking: "your suite is legitimately red until S1/S3/S4
+# land ... report red-by-name" -- the convention section 22 case (vi)
+# already states for its own plan.md carrier.
+import subprocess
+
+_ri_path = REPO / "dcs" / "tools" / "record_integrity.py"
+_ri_import_error = None
+try:
+    _ri_spec = importlib.util.spec_from_file_location("record_integrity", _ri_path)
+    ri = importlib.util.module_from_spec(_ri_spec)
+    _ri_spec.loader.exec_module(ri)
+except Exception as _ri_exc:  # noqa: broad on purpose -- see comment above
+    ri = None
+    _ri_import_error = _ri_exc
+
+_RI_FIXTURES_ROOT = REPO / "tests" / "fixtures" / "record-integrity"
+_RI_SCENARIOS = (
+    "fabricated-sha", "suppressed-stamp", "suppressed-correction",
+    "missing-artifact", "type1-no-skip", "prose-fence", "boundary-pin",
+)
+
+# (i) degeneracy guard: without a non-empty fixture population covering
+# every named scenario, every case below would pass vacuously.
+_ri_scenario_dirs = (
+    {p.name for p in _RI_FIXTURES_ROOT.iterdir() if p.is_dir()}
+    if _RI_FIXTURES_ROOT.is_dir() else set()
+)
+check("record integrity: fixture population is non-empty and covers all "
+      "named scenarios (degeneracy guard -- without it every case below "
+      "passes vacuously)",
+      _RI_FIXTURES_ROOT.is_dir() and set(_RI_SCENARIOS) <= _ri_scenario_dirs,
+      f"found scenario dirs under {_RI_FIXTURES_ROOT}: {sorted(_ri_scenario_dirs)}")
+
+
+def _ri_run(incident_dir):
+    """Invoke record_integrity.py as a subprocess against `incident_dir`
+    -- mirrors S1's OWN evidence-gathering shape (a CLI run against a
+    real directory) for criteria 1/2/3, which S1's tasking does not
+    expose as guessable-at pure functions the way criteria 4/5 are.
+    Returns (returncode, combined stdout+stderr). subprocess.run does
+    NOT raise merely because the target script does not exist yet --
+    Python's own launcher reports that on stderr with a non-zero exit --
+    so this helper needs no import-style try/except."""
+    proc = subprocess.run(
+        [sys.executable, str(_ri_path), str(incident_dir)],
+        cwd=REPO, capture_output=True, text=True,
+        encoding="utf-8", errors="replace")
+    return proc.returncode, (proc.stdout or "") + (proc.stderr or "")
+
+
+# (ii) fabricated-sha/ -- one fabricated token in citation position.
+_ri_rc, _ri_out = _ri_run(_RI_FIXTURES_ROOT / "fabricated-sha")
+check("record integrity: fabricated-sha/ -- a fabricated citation-"
+      "position token is a named, non-empty finding",
+      _ri_rc != 0 and "deadbeef0" in _ri_out,
+      f"exit={_ri_rc}; output: {_ri_out!r}")
+
+# (iii) suppressed-stamp/ -- suppression (a), genuinely reached: the token
+# must not be reported as a finding, and a suppression line naming it
+# must be emitted. Every line mentioning the token must ALSO mention
+# "suppress" (case-insensitive) -- i.e. no OTHER, non-suppression line
+# calls it out, which is what "not reported as a finding" means here
+# without hardcoding S1's exact finding-line wording.
+_ri_rc, _ri_out = _ri_run(_RI_FIXTURES_ROOT / "suppressed-stamp")
+_ri_token = "35fce4016641deadbeef"
+_ri_token_lines = [ln for ln in _ri_out.splitlines() if _ri_token in ln]
+check("record integrity: suppressed-stamp/ -- the stamp entry's own "
+      "digest, re-cited with a commit keyword in the same entry, is "
+      "suppressed (not a finding) and a suppression line names it",
+      bool(_ri_token_lines) and all("suppress" in ln.lower() for ln in _ri_token_lines),
+      f"exit={_ri_rc}; lines mentioning {_ri_token!r}: {_ri_token_lines}; "
+      f"full output: {_ri_out!r}")
+
+# (iv) suppressed-correction/ -- suppression (b), S1's corrected, two-pass,
+# file-scoped mechanism (close-integrity-guard-bundle, period 1 attempt 2's
+# fix to the Safety Officer's refutation 2): a genuine, entry-INITIAL
+# RECORD-CORRECTION: entry (dcs_gate.py's own entry grammar -- never a
+# body-anywhere substring match) suppresses every occurrence, anywhere in
+# the same 214-LOG.md, of the token it names; a mere MID-LINE prose
+# mention of the literal "RECORD-CORRECTION:" string suppresses nothing
+# (required behavior (i)). Proven as a genuine PAIR (criterion 13's own
+# required shape) rather than the prior fixture's single self-correcting
+# entry, which tested nothing about clearing an EARLIER, separate
+# occurrence and only passed under the discarded substring rule:
+# uncorrected/214-LOG.md carries the unresolvable citation plus the
+# mid-line mention and NO correction entry; corrected/214-LOG.md is
+# uncorrected/214-LOG.md byte-for-byte plus ONE appended, correctly-formed
+# RECORD-CORRECTION: entry naming that exact token (verified below by
+# reading both files directly, not merely asserted). Assertions are
+# CRITERION-1-SCOPED, never whole-tool exit code: every fixture under
+# tests/fixtures/ is untracked, so criteria 2/4 fire regardless of
+# criterion 1's own correctness -- the whole-tool exit-0 claim stays on
+# the REAL clean incident (record-integrity-corrections, below), never on
+# a fixture.
+_ri_corr_token = "cafef00d1"
+_ri_corr_uncorrected_dir = _RI_FIXTURES_ROOT / "suppressed-correction" / "uncorrected"
+_ri_corr_corrected_dir = _RI_FIXTURES_ROOT / "suppressed-correction" / "corrected"
+
+_ri_rc, _ri_out = _ri_run(_ri_corr_uncorrected_dir)
+_ri_corr_uncorrected_findings = [
+    ln for ln in _ri_out.splitlines()
+    if ln.startswith("criterion 1: FINDING") and f"'{_ri_corr_token}'" in ln
+]
+_ri_corr_uncorrected_suppressed = [
+    ln for ln in _ri_out.splitlines()
+    if ln.startswith("criterion 1: SUPPRESSED") and f"'{_ri_corr_token}'" in ln
+]
+check("record integrity: suppressed-correction/uncorrected/ -- the "
+      "earlier, unresolvable citation is a criterion 1 FINDING naming "
+      "the token, and the different entry's mid-line RECORD-CORRECTION: "
+      "mention (not entry-initial) suppresses nothing (zero SUPPRESSED "
+      "lines)",
+      bool(_ri_corr_uncorrected_findings) and not _ri_corr_uncorrected_suppressed,
+      f"exit={_ri_rc}; criterion 1 FINDING lines naming {_ri_corr_token!r}: "
+      f"{_ri_corr_uncorrected_findings}; SUPPRESSED lines: "
+      f"{_ri_corr_uncorrected_suppressed}; full output: {_ri_out!r}")
+
+_ri_rc, _ri_out = _ri_run(_ri_corr_corrected_dir)
+_ri_corr_corrected_findings = [
+    ln for ln in _ri_out.splitlines()
+    if ln.startswith("criterion 1: FINDING") and f"'{_ri_corr_token}'" in ln
+]
+_ri_corr_corrected_suppressed = [
+    ln for ln in _ri_out.splitlines()
+    if ln.startswith("criterion 1: SUPPRESSED") and f"'{_ri_corr_token}'" in ln
+]
+check("record integrity: suppressed-correction/corrected/ -- byte-"
+      "identical to uncorrected/214-LOG.md plus one appended, genuine "
+      "entry-initial RECORD-CORRECTION: entry naming the token clears "
+      "EVERY earlier occurrence (zero criterion 1 FINDING lines) and "
+      "prints a SUPPRESSED line naming it",
+      not _ri_corr_corrected_findings and bool(_ri_corr_corrected_suppressed),
+      f"exit={_ri_rc}; FINDING lines: {_ri_corr_corrected_findings}; "
+      f"SUPPRESSED lines: {_ri_corr_corrected_suppressed}; full output: "
+      f"{_ri_out!r}")
+
+_ri_corr_uncorrected_log = (_ri_corr_uncorrected_dir / "214-LOG.md").read_text(encoding="utf-8")
+_ri_corr_corrected_log = (_ri_corr_corrected_dir / "214-LOG.md").read_text(encoding="utf-8")
+_ri_corr_appended = _ri_corr_corrected_log[len(_ri_corr_uncorrected_log):]
+check("record integrity: suppressed-correction/ pair -- corrected/"
+      "214-LOG.md is uncorrected/214-LOG.md byte-for-byte plus exactly "
+      "one appended line (never a rewrite of any existing line), and "
+      "that appended line is itself a genuine, entry-initial "
+      "RECORD-CORRECTION: entry naming the token",
+      _ri_corr_corrected_log.startswith(_ri_corr_uncorrected_log)
+      and _ri_corr_appended.count("\n") <= 1
+      and re.match(r"^\[[^\]]*\]\s+RECORD-CORRECTION:", _ri_corr_appended) is not None
+      and _ri_corr_token in _ri_corr_appended,
+      f"uncorrected length {len(_ri_corr_uncorrected_log)}; corrected "
+      f"length {len(_ri_corr_corrected_log)}; corrected startswith "
+      f"uncorrected: {_ri_corr_corrected_log.startswith(_ri_corr_uncorrected_log)}; "
+      f"appended text: {_ri_corr_appended!r}")
+
+# (v) missing-artifact/ -- Type 3, one required artifact (AAR.md) absent,
+# NO skip note -> finding. Plus type1-no-skip/ -- Type 1, 203-ORG.md
+# absent, skip note PRESENT -> still a finding (the skip exemption is
+# Type-3-only). Two named cases, so the Type asymmetry fails by name.
+_ri_rc, _ri_out = _ri_run(_RI_FIXTURES_ROOT / "missing-artifact")
+check("record integrity: missing-artifact/ -- Type 3 with one artifact "
+      "(AAR.md) absent and no skip note is a finding naming AAR.md",
+      _ri_rc != 0 and "AAR.md" in _ri_out,
+      f"exit={_ri_rc}; output: {_ri_out!r}")
+
+_ri_rc, _ri_out = _ri_run(_RI_FIXTURES_ROOT / "type1-no-skip")
+check("record integrity: type1-no-skip/ -- Type 1 with 203-ORG.md absent "
+      "is a finding even though a skip note is present (the skip "
+      "exemption is Type-3-only, never Type-1)",
+      _ri_rc != 0 and "203-ORG" in _ri_out,
+      f"exit={_ri_rc}; output: {_ri_out!r}")
+
+# (vi) prose-fence/ -- a post-pin incident whose SAFETY.md only mentions a
+# fence in prose -> finding. Paired with the REAL record-integrity-
+# corrections/SAFETY.md (line 33's naive-substring trap: "```json" inside
+# prose about the ABSENCE of fences), which must NOT be flagged. That real
+# incident is dated 2026-08-02 (on the pin, out of scope by date alone),
+# and S1's own required evidence (204-TASKING/S1.md) states exit 0 against
+# it -- a stronger, better-grounded assertion than guessing S1's exact
+# "out of scope" wording.
+_ri_prose_fence_dir = _RI_FIXTURES_ROOT / "prose-fence" / "2026-08-10-prose-fence"
+_ri_rc, _ri_out = _ri_run(_ri_prose_fence_dir)
+_ri_prose_fence_c3_findings = [
+    ln for ln in _ri_out.splitlines() if ln.startswith("criterion 3: FINDING")
+]
+check("record integrity: prose-fence/ -- a post-pin SAFETY.md that only "
+      "mentions a fence in prose (no genuine fenced block) is a criterion "
+      "3 finding specifically -- filtered to the criterion-3-prefixed "
+      "line, never a bare substring test, since every fixture here is "
+      "untracked and criterion 2 always emits its own unrelated "
+      "'SAFETY.md is present ... not tracked' finding regardless of what "
+      "criterion 3 finds (Safety Officer advisory, attempt 2)",
+      bool(_ri_prose_fence_c3_findings),
+      f"exit={_ri_rc}; criterion 3 FINDING lines: {_ri_prose_fence_c3_findings}; "
+      f"full output: {_ri_out!r}")
+
+# (vi-b) boundary-pin/ -- criterion 3's exact boundary (close-integrity-
+# guard-bundle, period 1 attempt 2, criterion 3's own revision note): a
+# directory dated EXACTLY one day after the corrected
+# SAFETY_FENCE_EFFECTIVE_DATE pin (2026-08-03, vs. prose-fence/'s safely
+# eight-days-later 2026-08-10 above) is IN SCOPE, and its prose-only
+# SAFETY.md (no genuine fence at all) is flagged -- the boundary the
+# previous attempt never tested.
+_ri_boundary_dir = _RI_FIXTURES_ROOT / "boundary-pin" / "2026-08-03-boundary-pin"
+_ri_rc, _ri_out = _ri_run(_ri_boundary_dir)
+_ri_boundary_c3_findings = [
+    ln for ln in _ri_out.splitlines() if ln.startswith("criterion 3: FINDING")
+]
+check("record integrity: boundary-pin/ -- a directory dated exactly one "
+      "day after SAFETY_FENCE_EFFECTIVE_DATE is in scope (criterion 3's "
+      "own 'in scope' line) and produces a criterion-3-prefixed finding "
+      "specifically, not merely criterion 2's untracked-fixture noise "
+      "(Safety Officer advisory, attempt 2 -- this case is what actually "
+      "discriminates the pin fix: reverting the pin to the prior "
+      "off-by-one value makes this case's 'in scope' conjunct false)",
+      "in scope" in _ri_out and bool(_ri_boundary_c3_findings),
+      f"exit={_ri_rc}; criterion 3 FINDING lines: {_ri_boundary_c3_findings}; "
+      f"full output: {_ri_out!r}")
+
+_ri_real_dir = REPO / ".dcs" / "incidents" / "2026-08-02-record-integrity-corrections"
+_ri_real_rc, _ri_real_out = _ri_run(_ri_real_dir)
+check("record integrity: the REAL record-integrity-corrections/ "
+      "(2026-08-02, on-the-pin) exits clean -- S1's own evidence contract "
+      "for this exact fixture (204-TASKING/S1.md) requires exit 0, which "
+      "in particular means its SAFETY.md line 33 naive-substring trap "
+      "('```json' inside prose about the ABSENCE of fences) is not "
+      "flagged as a genuine fence",
+      _ri_real_rc == 0,
+      f"exit={_ri_real_rc}; output: {_ri_real_out!r}")
+
+# (vii) in-memory proofs for criteria 4 and 5 -- git stores neither an
+# untracked file nor a corrupt commit message, so these are pure-function
+# calls against synthetic text, never a fixture/file/git touch (T3).
+if ri is None or not hasattr(ri, "clean_tree_findings"):
+    _ri_reason = (f"record_integrity.py not importable yet (S1 has not "
+                   f"landed): {_ri_import_error!r}") if ri is None else (
+                   "module has no clean_tree_findings attribute")
+    check("record integrity in-memory proof: clean_tree_findings(<non-"
+          "empty porcelain>, label) is a non-empty finding list",
+          False, _ri_reason)
+    check("record integrity in-memory proof: clean_tree_findings('', "
+          "label) is an empty finding list",
+          False, _ri_reason)
+else:
+    _ri_dirty_porcelain = " M tests/fixtures/record-integrity/example.md\n?? tests/fixtures/record-integrity/new.md\n"
+    try:
+        _ri_dirty_findings = ri.clean_tree_findings(_ri_dirty_porcelain, "fixture-check")
+        check("record integrity in-memory proof: clean_tree_findings(<non-"
+              "empty porcelain>, label) is a non-empty finding list",
+              bool(_ri_dirty_findings), f"result: {_ri_dirty_findings!r}")
+    except Exception as _ri_exc:
+        check("record integrity in-memory proof: clean_tree_findings(<non-"
+              "empty porcelain>, label) is a non-empty finding list",
+              False, f"raised {_ri_exc!r}")
+    try:
+        _ri_clean_findings = ri.clean_tree_findings("", "fixture-check")
+        check("record integrity in-memory proof: clean_tree_findings('', "
+              "label) is an empty finding list",
+              not _ri_clean_findings, f"result: {_ri_clean_findings!r}")
+    except Exception as _ri_exc:
+        check("record integrity in-memory proof: clean_tree_findings('', "
+              "label) is an empty finding list",
+              False, f"raised {_ri_exc!r}")
+
+if ri is None or not hasattr(ri, "degenerate_message_findings"):
+    _ri_reason = (f"record_integrity.py not importable yet (S1 has not "
+                   f"landed): {_ri_import_error!r}") if ri is None else (
+                   "module has no degenerate_message_findings attribute")
+    check("record integrity in-memory proof: degenerate_message_findings"
+          "([<message with a bare @ line>]) is a non-empty finding list",
+          False, _ri_reason)
+    check("record integrity in-memory proof: degenerate_message_findings"
+          "([<message without a bare @ line>]) is an empty finding list",
+          False, _ri_reason)
+else:
+    # degenerate_message_findings() takes a list of (commit_ref,
+    # message_text) PAIRS, per its own docstring -- not bare message
+    # strings; commit_ref lets several checked commits stay
+    # distinguishable in its own finding text.
+    _ri_bad_message = "Fix the record-integrity fixture\n\n@\n"
+    try:
+        _ri_bad_findings = ri.degenerate_message_findings(
+            [("deadbeef1", _ri_bad_message)])
+        check("record integrity in-memory proof: degenerate_message_"
+              "findings([(ref, <message with a bare @ line>)]) is a "
+              "non-empty finding list",
+              bool(_ri_bad_findings), f"result: {_ri_bad_findings!r}")
+    except Exception as _ri_exc:
+        check("record integrity in-memory proof: degenerate_message_"
+              "findings([(ref, <message with a bare @ line>)]) is a "
+              "non-empty finding list",
+              False, f"raised {_ri_exc!r}")
+    _ri_good_message = "Fix the record-integrity fixture\n\nDetails about the fix, no bare @ line.\n"
+    try:
+        _ri_good_findings = ri.degenerate_message_findings(
+            [("deadbeef2", _ri_good_message)])
+        check("record integrity in-memory proof: degenerate_message_"
+              "findings([(ref, <message without a bare @ line>)]) is an "
+              "empty finding list",
+              not _ri_good_findings, f"result: {_ri_good_findings!r}")
+    except Exception as _ri_exc:
+        check("record integrity in-memory proof: degenerate_message_"
+              "findings([(ref, <message without a bare @ line>)]) is an "
+              "empty finding list",
+              False, f"raised {_ri_exc!r}")
+
+# (viii) carrier cases -- constants read from the IMPORTED module, never
+# retyped as literals here (T5). If a carrier is red because S3 or S4 has
+# not landed yet, it is reported RED BY NAME below, never described as
+# "expected to pass later" (section 22 case (vi)'s convention).
+if ri is None or not hasattr(ri, "INVOCATION"):
+    _ri_reason = (f"record_integrity.py not importable yet (S1 has not "
+                   f"landed): {_ri_import_error!r}") if ri is None else (
+                   "module has no INVOCATION attribute")
+    check("record integrity carrier: INVOCATION (from the imported "
+          "module) appears in dcs/workflows/close.md, whitespace-"
+          "collapsed",
+          False, _ri_reason)
+else:
+    _close_text = read("dcs/workflows/close.md")
+    check("record integrity carrier: INVOCATION (from the imported "
+          "module) appears in dcs/workflows/close.md, whitespace-"
+          "collapsed",
+          _ws_norm(ri.INVOCATION) in _ws_norm(_close_text),
+          f"INVOCATION: {ri.INVOCATION!r}")
+
+
+def _ri_find_artifact_set(mod):
+    """Discover S1's canonical-9-artifact-set constant by SHAPE (a
+    module-level list/tuple of exactly nine strings) rather than by a
+    guessed literal attribute name -- S1's tasking (204-TASKING/S1.md)
+    names the constant's CONTENT (the nine filenames, in order) but not
+    a Python attribute name, and this file must never retype those nine
+    strings as literals (T5). Returns a list of (name, tuple(values))
+    candidates; the carrier case below reports ambiguity (more than one
+    match) or absence (zero matches) as its own named red case rather
+    than guessing wrong and misreporting what is actually missing."""
+    found = []
+    for name in dir(mod):
+        if name.startswith("_"):
+            continue
+        val = getattr(mod, name)
+        if (isinstance(val, (list, tuple)) and len(val) == 9
+                and all(isinstance(x, str) for x in val)):
+            found.append((name, tuple(val)))
+    return found
+
+
+if ri is None:
+    check("record integrity carrier: S1's module exports exactly one "
+          "9-entry string constant (the canonical artifact set), "
+          "discovered by shape rather than a guessed name",
+          False, f"record_integrity.py not importable yet (S1 has not "
+          f"landed): {_ri_import_error!r}")
+    _ri_artifact_set = None
+else:
+    _ri_artifact_candidates = _ri_find_artifact_set(ri)
+    check("record integrity carrier: S1's module exports exactly one "
+          "9-entry string constant (the canonical artifact set), "
+          "discovered by shape rather than a guessed name",
+          len(_ri_artifact_candidates) == 1,
+          f"candidates found by shape: {[n for n, _ in _ri_artifact_candidates]!r}")
+    _ri_artifact_set = (
+        _ri_artifact_candidates[0][1] if len(_ri_artifact_candidates) == 1 else None)
+
+if _ri_artifact_set is None:
+    check("record integrity carrier: every entry of S1's 9-artifact set "
+          "appears in dcs/references/forms.md, and forms.md states the "
+          "count as 9",
+          False, "no single 9-entry artifact-set constant resolved above")
+else:
+    _forms_text = read("dcs/references/forms.md")
+    _ri_missing_entries = [e for e in _ri_artifact_set if e not in _forms_text]
+    _ri_states_nine = bool(re.search(r"\b9\s+files\b", _forms_text)) or bool(
+        re.search(r"artifact set is 9\b", _forms_text, re.I))
+    check("record integrity carrier: every entry of S1's 9-artifact set "
+          "appears in dcs/references/forms.md, and forms.md states the "
+          "count as 9",
+          not _ri_missing_entries and _ri_states_nine,
+          f"artifact set: {_ri_artifact_set!r}; missing from forms.md: "
+          f"{_ri_missing_entries}; states count as 9: {_ri_states_nine}")
+
+# (ix) field half (informational, criterion 7): how many of this repo's
+# OWN incident directories are in scope for S1's SAFETY-fence pin
+# (SAFETY_FENCE_EFFECTIVE_DATE, read from the imported module -- never
+# retyped -- so this number tracks S1's actual pin even if it diverges
+# from _NE_EFFECTIVE_DATE above in the future, per T4). Reuses
+# _ne_all_dirs/_ne_dir_in_scope from check 9's own generalization above
+# rather than re-deriving the incident-directory walk. A print, not a
+# check(): informational only, never a blocking historical sweep.
+if ri is not None and hasattr(ri, "SAFETY_FENCE_EFFECTIVE_DATE"):
+    _ri_field_pin = ri.SAFETY_FENCE_EFFECTIVE_DATE
+    _ri_field_in_scope = [
+        d for d in _ne_all_dirs if _ne_dir_in_scope(d.name, pin=_ri_field_pin)
+    ]
+    print(
+        f"\nrecord integrity field half (informational, criterion 7): "
+        f"{len(_ri_field_in_scope)} of this repo's own incident "
+        f"director{'y' if len(_ri_field_in_scope) == 1 else 'ies'} in "
+        f"scope by S1's SAFETY_FENCE_EFFECTIVE_DATE pin ({_ri_field_pin})"
+    )
+else:
+    print(
+        "\nrecord integrity field half (informational, criterion 7): 0 "
+        "-- record_integrity.py not importable yet (S1 has not landed), "
+        "so SAFETY_FENCE_EFFECTIVE_DATE cannot be resolved"
+    )
 
 print(f"\n{checks - len(failures)}/{checks} passed")
 sys.exit(1 if failures else 0)
