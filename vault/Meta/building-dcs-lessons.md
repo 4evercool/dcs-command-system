@@ -1205,6 +1205,64 @@ after any `dcs-ops-specialist`/`dcs-planning-chief`/`dcs-safety-officer`
 spawn, would catch this class before the Dispatcher has to notice it by
 eye.
 
+## 30. A capability check before drafting objectives is cheaper than discovering the gap after
+
+**When:** `spawn-effort-control` (2026-08-03) — Type 1, one period, adding
+per-spawn capability-tier selection to doctrine.md after the stem's own
+blast-radius guess (13 files) turned out to cover a mechanism that didn't
+actually exist yet.
+
+**What happened:** the Owner's intake assumed reasoning/thinking effort
+could be set per subagent spawn, dynamically, the same way `model` already
+can be. Before drafting `202-OBJECTIVES.md`, the Dispatcher spawned
+`claude-code-guide` to check the premise directly rather than design
+against it. The answer split cleanly: subagent frontmatter does support a
+static `effort:` key, but the interactive Agent/Task tool every DCS
+workflow spawns through exposes no per-invocation effort override — only
+`model` — and the Workflow tool's scripted `opts.effort` was itself
+unconfirmed as shipping. Drafting objectives around the assumed capability
+would have produced acceptance criteria the Planning Chief could only have
+discovered were unbuildable after a spawn, costing a reject cycle at
+command point 2 at best. Instead the 202 was written around what
+verifiably works today — tier *substitution* via the existing `model`
+override — and the Planning Chief's tactics followed directly: generalize
+doctrine.md's existing Fable availability-fallback paragraph into one rule
+spanning both axes, rather than invent a new mechanism the tree had no
+budget for anyway (17 bytes of hot-path slack at planning time, re-measured
+down from the stem's stale 50-byte figure once `close-integrity-guard-bundle`
+merged in the interim). Reusing an existing, already-budgeted mechanism is
+what made a Type 1 doctrine change fit inside a budget that couldn't have
+funded a new principle from scratch.
+
+**Why it matters:** "verify the premise, not just the evidence" (the
+throughline of most of this file) applies to *platform capabilities* the
+same way it applies to file contents and register rows. A capability claim
+in an intake description is exactly the kind of derived fact principle 15
+warns about — it has a lifetime, it can be wrong even when sincerely
+believed, and the cheapest point to check it is before it shapes every
+downstream artifact, not after a chief has planned against it.
+
+**Also this incident:** the Ops Specialist funded the byte budget by
+compressing not just the paragraph it was rewriting but an unrelated,
+already-compressible passage elsewhere in the same file — broader than
+the tasking's literal wording ("compress the paragraph you are already
+rewriting; only if insufficient, relocate *a* self-contained passage")
+suggested, though still inside its declared territory (the whole file)
+and still honouring "relocate, never delete" for both passages. The
+Dispatcher did not pre-judge this while assembling evidence for the
+Safety Officer — it named the exact question ("was this necessary, is the
+relocated content complete, is this legitimate judgment or scope creep")
+and let the adversarial check answer it. The Safety Officer's own
+independent byte-comparison confirmed nothing was lost, but separately
+caught something neither the specialist nor the Dispatcher had: the new
+appendix entry's own disclosure text *mis-described* one of its two
+compressions as a "relocation" when it was actually an in-place edit, and
+overstated where an earlier passage's wording had first appeared. A
+specialist can execute a scope-broadening decision correctly and still get
+the *paperwork describing that decision* wrong — two independent axes,
+same as Meta §15's schema-format-vs-guard split, this time inside one
+specialist's own return.
+
 ## Links
 
 - [[Post-mortems/energy-cost-model-rework]] — the incident behind v0.5.12
