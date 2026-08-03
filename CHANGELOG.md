@@ -53,10 +53,28 @@ release commit's own message instead:
   above enforces and cites its mechanism by path. `dcs/references/forms.md`
   now states the canonical artifact set as 9 files explicitly, with the
   `203-ORG.md` Type-3-skip conditional named.
+- **The IC can now choose a spawn's capability tier by that spawn's own
+  complexity, not only by availability.** `dcs/references/doctrine.md`'s
+  "Transfer of command" section generalizes the existing Fable
+  availability-fallback rule into one mechanism covering both axes: the
+  four command points keep their existing availability-only guarantee
+  unchanged — preferred tier first, re-tested per spawn, never cached —
+  while the other six seats (chiefs, Ops Specialists, Safety Officer,
+  situation analysts) may be spawned on a stronger or weaker tier than
+  their charter default, via the Agent tool's existing per-call `model`
+  override. There is no separate `effort:` parameter behind this — none
+  exists today for per-spawn use in the interactive Agent tool that every
+  DCS workflow spawns through, so the mechanism is tier substitution, not
+  a reasoning-budget dial. Phrased provider-agnostically ("the strongest
+  tier the work warrants, from what's available for that seat's
+  provider"), so it never asserts a Claude-specific effort vocabulary as
+  universal. Two worked examples and the platform-capability field lesson
+  behind this design are in `dcs/references/doctrine-appendix.md`.
 
 ### Config
 
-No new keys — the check is unconditional, not project-configurable.
+No new keys — the check is unconditional, not project-configurable, and
+the capability-tier rule adds no config surface either.
 
 ---
 
