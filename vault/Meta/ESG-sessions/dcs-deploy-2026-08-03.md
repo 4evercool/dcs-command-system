@@ -83,3 +83,48 @@ Release: https://github.com/4evercool/dcs-command-system/releases/tag/v0.8.0.
 Registry still shows `0.7.2` as latest (`npm view dcs-command-system
 version`) — `npm publish` is the one remaining step, and it is the
 Owner's.
+
+### `/dcs-deploy`, 2026-08-03 (second train, same day) — one-row train
+
+Ran after `independence-fail-closed-and-model-floor` closed (merge
+`f67f6d0`) via a same-day `/dcs-run --next`. Worktree audit clean: one
+worktree (main checkout only), zero orphans, zero stale actives. Same
+`dcs/revision-preservation-map-abandoned-2026-07-31` debris noted again
+— unchanged, still not backed by a `MERGED` row, still did not ship.
+Payload clean both scoped and whole-tree before the run.
+
+**Content-witness reconciliation (`python tests/payload_check.py`),
+both against integration-branch tip `783c4b9` (unchanged across the
+run):** before — **38 identical, 13 differing** (the incident's 13
+modified package files: `agents/dcs-safety-officer.md`,
+`dcs/references/doctrine.md`/`schemas.md`/`doctrine-appendix.md`,
+`dcs/templates/DELEGATION.md`, and 8 `dcs/workflows/*.md` files), **1
+repo-only** (`dcs/tools/verdict_rerun.py`, new). Only one `MERGED` row
+existed, so no reconciliation-away question arose — it shipped. After —
+**52 identical, 0 differing, 0 repo-only, 0 installed-only** →
+`DEPLOYED` per `deploy.md` step 7's identical disposition.
+
+**Shipped under Delegation v6 deploy authority** (`auto: true`, the
+row's 17-item territory hit no `forbidden_globs`, not migration-bearing,
+1 row well under `max_rows_per_train` 3) — announced in one visible
+line, per doctrine principle 12:
+
+- `independence-fail-closed-and-model-floor`: `MERGED`→`DEPLOYED` (merge
+  `f67f6d0`, 2026-08-03 → this train, same day). `dcs/independence-fail-closed-and-model-floor`
+  branch deleted. Ships the Safety-Officer-independence fail-closed gate
+  (`execute.md` step 8 spawn-liveness fallback, `close.md`'s unattended-close
+  refusal, new `dcs/tools/verdict_rerun.py`) and the Delegation model
+  floor (`approved_models` in `schemas.md` #7 and `templates/DELEGATION.md`,
+  gated at all 9 real bound-read sites across 6 workflows) — both now
+  live in `~/.claude/dcs/` for the next session that starts. This
+  deploying session itself already read the pre-deploy `doctrine.md`/
+  workflows at its own start, so the new independence/model-floor rules
+  govern sessions from here forward, not retroactively.
+
+Intake source (`vault/Decisions/non-anthropic-hardening.md` packaging
+item 3) updated from `MERGED (deploy pending)` to `DEPLOYED` at this
+step — the flag `close.md` raised became actionable exactly here, per
+`deploy.md` step 8's intake-closure linkage note.
+
+No GitHub release or npm publish this train — Owner did not direct
+either; both remain separate, Owner-gated acts per `docs/publishing.md`.

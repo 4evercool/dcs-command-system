@@ -126,10 +126,11 @@ reproduce is a halt.
    identity. `dcs/hooks/**` → Type 1.
 3. `independence-fail-closed-and-model-floor` — measures 4 + 5's
    Delegation change. Doctrine + close.md + Delegation schema; likely
-   Type 3, Owner-heavy by nature. **MERGED 2026-08-03 (deploy pending),
-   typed 1 by `dcs-commander` at planning (verified 17-file blast
-   radius exceeded Type 3's ceiling), Owner overrode to 3 — full
-   write-up: this incident's own `AAR.md`.** Measure 4 (independence
+   Type 3, Owner-heavy by nature. **DEPLOYED 2026-08-03 (content
+   witness: 52 identical, 0 differing after install), typed 1 by
+   `dcs-commander` at planning (verified 17-file blast radius exceeded
+   Type 3's ceiling), Owner overrode to 3 — full write-up: this
+   incident's own `AAR.md`.** Measure 4 (independence
    fail-closed) and measure 5 (Delegation model floor) both shipped in
    this one incident, as packaged. Not covered: `plan.md:130`'s
    no-DELEGATION.md fallback-to-`config.json` path has no model floor
