@@ -103,9 +103,15 @@ above. Still read-only — no writes, no subagent spawns.
    (deploy pending) | DEPLOYED | PARKED | KILLED | RESOLVED, all rows —
    MERGED, DEPLOYED, KILLED, and RESOLVED rows give the Owner history at a glance).
 3. Read `DELEGATION.md`'s latest version block and report the delegation
-   version in force plus `auto_approve_type3`'s current value (so the
-   Owner knows at a glance whether routine work is currently unattended-
-   capable).
+   version in force, `auto_approve_type3`'s raw value, and the model
+   floor's EFFECT for this session: whether the session's current
+   operating model appears in that block's `approved_models` (empty or
+   absent `approved_models` means no model is approved — full v0.1
+   everywhere). Report the two together — `auto_approve_type3: true`
+   with the model unlisted, or `approved_models` empty or absent, means
+   routine work is NOT actually unattended-capable here, whatever the
+   raw bound says — so the Owner knows at a glance whether routine work
+   is currently unattended-capable in practice.
 4. List any files under `SITREPS/` whose `Decision` field is still
    `{{continue | pivot | demobilize}}` (unfilled) or otherwise blank —
    these are pending sitreps awaiting an Owner decision; name each one.

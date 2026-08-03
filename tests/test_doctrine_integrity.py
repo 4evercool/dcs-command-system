@@ -2753,5 +2753,541 @@ else:
         "so SAFETY_FENCE_EFFECTIVE_DATE cannot be resolved"
     )
 
+# --- 24. verdict-rerun mechanism (independence-fail-closed-and-model-floor,
+# criteria 4/8(a)) ------------------------------------------------------
+# `dcs/tools/verdict_rerun.py` (S4's own territory this incident) is the
+# close-time check that selects one SAFETY.md `checked[]` entry by a
+# printed stability rule and asserts CONTAINMENT (never byte equality)
+# of its recorded observation in the fresh re-run output --
+# `dcs/workflows/close.md` step 1c runs it unconditionally, fail-closed
+# on exit 1/2, exactly like check 23's record_integrity.py and check
+# 22's preservation_map.py. Imported via the SAME
+# `importlib.util.spec_from_file_location` idiom those two checks use,
+# never re-implemented here (T1). Guarded like check 23's import: a
+# crashed import must never abort this whole script before its final
+# "N/M passed" line prints.
+_vr_path = REPO / "dcs" / "tools" / "verdict_rerun.py"
+_vr_import_error = None
+try:
+    _vr_spec = importlib.util.spec_from_file_location("verdict_rerun", _vr_path)
+    vr = importlib.util.module_from_spec(_vr_spec)
+    _vr_spec.loader.exec_module(vr)
+except Exception as _vr_exc:  # noqa: broad on purpose -- see comment above
+    vr = None
+    _vr_import_error = _vr_exc
+
+check("verdict-rerun: dcs/tools/verdict_rerun.py imports cleanly",
+      vr is not None, f"{_vr_import_error!r}" if _vr_import_error else "")
+
+_VR_FIXTURES_ROOT = REPO / "tests" / "fixtures" / "verdict-rerun"
+_VR_SCENARIOS = ("reproduces", "non-reproducing", "all-non-reproducible", "fence-robustness")
+
+# (i) degeneracy guard: without a non-empty fixture population covering
+# every named scenario, every case below would pass vacuously.
+_vr_scenario_dirs = (
+    {p.name for p in _VR_FIXTURES_ROOT.iterdir() if p.is_dir()}
+    if _VR_FIXTURES_ROOT.is_dir() else set()
+)
+check("verdict-rerun: fixture population is non-empty and covers all "
+      "named scenarios (degeneracy guard -- without it every case below "
+      "passes vacuously)",
+      _VR_FIXTURES_ROOT.is_dir() and set(_VR_SCENARIOS) <= _vr_scenario_dirs,
+      f"found scenario dirs under {_VR_FIXTURES_ROOT}: {sorted(_vr_scenario_dirs)}")
+
+
+def _vr_run(incident_dir):
+    """Invoke verdict_rerun.py as a subprocess against `incident_dir` --
+    the real CLI entry point, mirroring check 23's own `_ri_run` shape,
+    so this exercises main()'s argument parsing and exit-code contract,
+    not just the imported functions."""
+    proc = subprocess.run(
+        [sys.executable, str(_vr_path), str(incident_dir)],
+        cwd=REPO, capture_output=True, text=True,
+        encoding="utf-8", errors="replace")
+    return proc.returncode, (proc.stdout or "") + (proc.stderr or "")
+
+
+# (ii) reproduces/ -- two entries correctly skipped (a working-tree
+# git-diff, then unparseable prose), then a genuine, allowlisted entry
+# re-runs and its recorded observation is contained in the fresh output
+# -- exit 0.
+_vr_rc, _vr_out = _vr_run(_VR_FIXTURES_ROOT / "reproduces")
+check("verdict-rerun: reproduces/ -- a genuine checked[] entry re-runs "
+      "and its recorded observation is contained in the fresh output "
+      "-- exit 0",
+      _vr_rc == 0 and "reproduces cleanly" in _vr_out,
+      f"exit={_vr_rc}; output: {_vr_out!r}")
+
+# (iii) non-reproducing/ -- a real, allowlisted, selected entry whose
+# recorded observation is NOT contained in the fresh output -- exit 1,
+# finding names the selected entry (checked[1]) by index and command.
+_vr_rc, _vr_out = _vr_run(_VR_FIXTURES_ROOT / "non-reproducing")
+_vr_nonrepro_finding = [
+    ln for ln in _vr_out.splitlines()
+    if ln.startswith("verdict-rerun: FINDING") and "checked[1]" in ln
+]
+check("verdict-rerun: non-reproducing/ -- a selected entry that re-runs "
+      "but whose recorded observation is NOT contained in the fresh "
+      "output is exit 1, with a finding naming checked[1] by index and "
+      "command",
+      _vr_rc == 1 and bool(_vr_nonrepro_finding),
+      f"exit={_vr_rc}; FINDING lines naming checked[1]: "
+      f"{_vr_nonrepro_finding}; full output: {_vr_out!r}")
+
+# (iv) all-non-reproducible/ -- every entry is non-reproducible BY
+# DESIGN (a working-tree diff, unparseable prose, no em dash at all) --
+# design point (iii): a FINDING, never a silent exit 0.
+_vr_rc, _vr_out = _vr_run(_VR_FIXTURES_ROOT / "all-non-reproducible")
+check("verdict-rerun: all-non-reproducible/ -- every checked[] entry is "
+      "non-reproducible by design -- a FINDING ('no stable entry "
+      "found'), never a silent exit 0 (design point (iii))",
+      _vr_rc == 1 and "no stable, re-runnable checked[] entry found" in _vr_out,
+      f"exit={_vr_rc}; output: {_vr_out!r}")
+
+# (v) fence-robustness/ -- an inline, single-backtick "```json" mention
+# inside running prose (record_integrity.py:683-692's own documented
+# counterexample) must NOT be mistaken for a fence delimiter; the one
+# genuine fence elsewhere in the same file must still be found and its
+# one reproducing entry selected -- exit 0.
+_vr_rc, _vr_out = _vr_run(_VR_FIXTURES_ROOT / "fence-robustness")
+check("verdict-rerun: fence-robustness/ -- an inline '```json' mention "
+      "inside prose (never at a physical line's own start) is not "
+      "mistaken for a fence delimiter; the genuine fence elsewhere in "
+      "the file is found and its reproducing entry re-runs -- exit 0",
+      _vr_rc == 0 and "fence-robustness probe" in _vr_out,
+      f"exit={_vr_rc}; output: {_vr_out!r}")
+
+# (vi) in-memory proofs of the pure comparator functions -- same
+# rationale as check 23(vii): git/subprocess state (a working-tree
+# diff, a timed-out command) is not fixture-friendly, so these exercise
+# the functions directly.
+if vr is None:
+    check("verdict-rerun in-memory proof: split_checked_entry() on an "
+          "entry with no em dash returns (None, None)",
+          False, f"verdict_rerun.py not importable: {_vr_import_error!r}")
+    check("verdict-rerun in-memory proof: is_working_tree_diff() "
+          "distinguishes a bare `git diff` from one carrying a "
+          "commit-ish argument",
+          False, f"verdict_rerun.py not importable: {_vr_import_error!r}")
+    check("verdict-rerun in-memory proof: looks_like_command() refuses "
+          "prose and an unbalanced quote, accepts an allowlisted command",
+          False, f"verdict_rerun.py not importable: {_vr_import_error!r}")
+else:
+    check("verdict-rerun in-memory proof: split_checked_entry() on an "
+          "entry with no em dash returns (None, None)",
+          vr.split_checked_entry("no dash here at all") == (None, None),
+          f"result: {vr.split_checked_entry('no dash here at all')!r}")
+    _vr_bare_diff = vr.is_working_tree_diff("git diff some_file.py")
+    _vr_sha_diff = vr.is_working_tree_diff("git diff --stat 48ea59a")
+    check("verdict-rerun in-memory proof: is_working_tree_diff() "
+          "distinguishes a bare `git diff` (True -- skip) from one "
+          "carrying a commit-ish argument (False -- eligible)",
+          _vr_bare_diff is True and _vr_sha_diff is False,
+          f"bare: {_vr_bare_diff!r}; with sha: {_vr_sha_diff!r}")
+    _vr_prose_cmd = vr.looks_like_command("repro of 201 path")
+    _vr_unbalanced_cmd = vr.looks_like_command('python -c "unterminated')
+    _vr_real_cmd = vr.looks_like_command("git status")
+    check("verdict-rerun in-memory proof: looks_like_command() refuses "
+          "prose and an unbalanced quote, accepts an allowlisted command",
+          _vr_prose_cmd is False and _vr_unbalanced_cmd is False and _vr_real_cmd is True,
+          f"prose: {_vr_prose_cmd!r}; unbalanced: {_vr_unbalanced_cmd!r}; "
+          f"real: {_vr_real_cmd!r}")
+
+# (vii) carrier case -- INVOCATION, read from the imported module (never
+# retyped as a literal here, T5), must appear in dcs/workflows/close.md
+# whitespace-collapsed -- same idiom as checks 22(vi)/23(viii).
+if vr is None or not hasattr(vr, "INVOCATION"):
+    check("verdict-rerun carrier: INVOCATION (from the imported module) "
+          "appears in dcs/workflows/close.md, whitespace-collapsed",
+          False, f"verdict_rerun.py not importable or has no INVOCATION: "
+          f"{_vr_import_error!r}")
+else:
+    _vr_close_text = read("dcs/workflows/close.md")
+    check("verdict-rerun carrier: INVOCATION (from the imported module) "
+          "appears in dcs/workflows/close.md, whitespace-collapsed",
+          _ws_norm(vr.INVOCATION) in _ws_norm(_vr_close_text),
+          f"INVOCATION: {vr.INVOCATION!r}")
+
+
+# --- 25. model-gate coverage (independence-fail-closed-and-model-floor,
+# criterion 7/8(b)) ------------------------------------------------------
+# Criterion 7: every existing read site for `auto_approve_type3` /
+# `deploy.auto` / `deploy.auto_after_close` must be updated so the bound
+# holds only when the session's current operating model appears in
+# `approved_models` (the model floor). The ORIGINAL plan's coverage-check
+# design (derive the site population from the three literal bound-key
+# substrings alone) was REJECTED by dcs-commander at command point 2,
+# first pass, precisely because it would silently miss deploy.md's own
+# site, whose real phrasing (deploy.md:117-124) is "a `deploy` object
+# with `auto: true`" -- containing NO literal bound-key substring at all
+# (measured, confirmed by direct grep: zero class-A hits on that
+# sentence). This check's population is therefore DISCOVERED from TWO
+# named phrasing classes (IAP tactic T7), never from the bound-key
+# substrings alone, and never hardcodes "9 sites" anywhere below (IAP
+# tactic T11, doctrine principle 15) -- it asserts the INVARIANT (both
+# classes non-empty, every discovered site gated), never the instance.
+#
+# Corpus scope (dcs-commander's second-pass review, non-blocking
+# observation, directly this check's own): scoped to dcs/workflows/*.md
+# specifically, via workflows() (already defined above, never a second
+# enumerator) -- a broader corpus would self-announce red on
+# definitional class-A matches inside schemas.md's own JSON example and
+# templates/DELEGATION.md, which discuss these bound keys without
+# needing a model gate of their own.
+
+# CLASS A -- literal bound key: any of the three substrings, matched as
+# a single alternation over the WHOLE file text (never per-line) so
+# line-number recovery (counting "\n" before the match start) is the
+# ONE shared primitive both classes use -- see _mg_sites() below. These
+# three substrings can legitimately overlap in one physical span (e.g.
+# "deploy.auto_after_close" contains both "deploy.auto" and
+# "auto_after_close"); alternation + non-overlapping finditer already
+# collapses that into ONE match, never a double-count, because the
+# leftmost alternative that matches first consumes the span.
+_MG_CLASS_A_KEYS = ("auto_approve_type3", "auto_after_close", "deploy.auto")
+_MG_CLASS_A_RE = re.compile("|".join(re.escape(k) for k in _MG_CLASS_A_KEYS))
+
+# CLASS B -- deploy-object phrasing: deploy.md:117-124's own wording, "a
+# `deploy` object with `auto: true`" -- contains NO literal class-A
+# substring (non-vacuity case (iv) below proves this against the SAME
+# predicate the real walk uses). `\s+` between tokens already matches a
+# markdown hard-wrap's own newline (Python's \s includes \n), so this
+# needs no separate line-joining step to survive deploy.md wrapping the
+# phrase across two physical lines.
+_MG_CLASS_B_RE = re.compile(r"`deploy`\s+object\s+with\s+`auto:\s*true`", re.I)
+
+# The literal model-gate token, and how far away (in LINES, in the same
+# file) it may sit from a matched site and still count as "co-located".
+# Chosen generously against every site's OWN measured span in this
+# incident's 202-OBJECTIVES.md criterion 7 (the widest, loop.md:28-38,
+# is 11 lines; plan.md's step-6 block separates its `auto_approve_type3`
+# bullet from the paragraph stating the model-floor rule by 2-4 lines) --
+# wide enough that a model gate written as its own adjacent bullet or
+# sentence is still found, narrow enough that "co-located" remains a
+# real, bounded claim rather than "anywhere in the file".
+_MG_GATE_TOKEN = "approved_models"
+_MG_GATE_WINDOW_LINES = 20
+
+
+def _mg_sites(text, pattern):
+    """(line_no, matched_text) for every regex match in `text`, with
+    line_no computed by counting newlines before the match start -- the
+    ONE shared primitive both phrasing classes' site discovery uses.
+    Class A (three literal, single-token substrings, immune to a
+    markdown hard-wrap by construction -- none contains internal
+    whitespace) and class B (a multi-word phrase whose own `\\s+` joints
+    already span a hard-wrapped newline) are found the identical way, by
+    the SAME function, so neither gets a bespoke, separately-drifting
+    matcher."""
+    return [
+        (text.count("\n", 0, m.start()) + 1, _ws_norm(m.group(0)))
+        for m in pattern.finditer(text)
+    ]
+
+
+def _mg_class_a_hit(text):
+    """The class-A predicate, standalone -- used both by the real walk
+    (via _mg_sites) and by the non-vacuity proof below, so both call
+    the SAME compiled pattern rather than a parallel re-implementation."""
+    return bool(_MG_CLASS_A_RE.search(text))
+
+
+def _mg_class_b_hit(text):
+    """The class-B predicate, standalone -- same rationale as
+    _mg_class_a_hit."""
+    return bool(_MG_CLASS_B_RE.search(text))
+
+
+def _mg_gate_nearby(file_lines, line_no, window=_MG_GATE_WINDOW_LINES):
+    """True iff `_MG_GATE_TOKEN` occurs on some line within `window`
+    lines either side of `line_no` (1-indexed) in `file_lines` -- the
+    ONE co-location predicate both the real per-site cases and the
+    in-memory liveness proof below call, so neither drifts from the
+    other."""
+    lo = max(0, line_no - 1 - window)
+    hi = min(len(file_lines), line_no + window)
+    return any(_MG_GATE_TOKEN in ln for ln in file_lines[lo:hi])
+
+
+_mg_workflow_files = workflows()
+_mg_file_lines = {}
+_mg_file_text = {}
+for _mg_p in _mg_workflow_files:
+    _mg_rel = str(_mg_p.relative_to(REPO)).replace("\\", "/")
+    _mg_text = _mg_p.read_text(encoding="utf-8")
+    _mg_file_text[_mg_rel] = _mg_text
+    _mg_file_lines[_mg_rel] = _mg_text.splitlines()
+
+_mg_sites_a = []
+_mg_sites_b = []
+for _mg_rel, _mg_text in _mg_file_text.items():
+    _mg_seen_a, _mg_seen_b = set(), set()
+    for _mg_line_no, _mg_snippet in _mg_sites(_mg_text, _MG_CLASS_A_RE):
+        if _mg_line_no in _mg_seen_a:
+            continue
+        _mg_seen_a.add(_mg_line_no)
+        _mg_sites_a.append((_mg_rel, _mg_line_no, _mg_snippet))
+    for _mg_line_no, _mg_snippet in _mg_sites(_mg_text, _MG_CLASS_B_RE):
+        if _mg_line_no in _mg_seen_b:
+            continue
+        _mg_seen_b.add(_mg_line_no)
+        _mg_sites_b.append((_mg_rel, _mg_line_no, _mg_snippet))
+_mg_sites_a.sort()
+_mg_sites_b.sort()
+
+# (iii) PER-CLASS INVENTORY, printed at run time -- class name, matched
+# count, every file:line -- so the evidence discloses WHICH phrasing
+# classes actually matched, not merely that the check passed.
+print(
+    f"\nmodel-gate coverage (criterion 7): CLASS A (literal bound key: "
+    f"{', '.join(_MG_CLASS_A_KEYS)}) -- {len(_mg_sites_a)} matched site(s):"
+)
+for _mg_rel, _mg_line_no, _mg_snippet in _mg_sites_a:
+    print(f"  {_mg_rel}:{_mg_line_no}")
+print(
+    f"model-gate coverage (criterion 7): CLASS B (deploy-object "
+    f"phrasing: \"a `deploy` object with `auto: true`\") -- "
+    f"{len(_mg_sites_b)} matched site(s):"
+)
+for _mg_rel, _mg_line_no, _mg_snippet in _mg_sites_b:
+    print(f"  {_mg_rel}:{_mg_line_no}")
+
+# (i) PER CLASS, its matched-site population is non-empty, as its OWN
+# named case -- an empty class is a FAILURE, never a silently skipped
+# loop.
+check("model-gate coverage: CLASS A (literal bound key) matched-site "
+      "population is non-empty",
+      bool(_mg_sites_a), f"matched sites: {_mg_sites_a!r}")
+check("model-gate coverage: CLASS B (deploy-object phrasing) "
+      "matched-site population is non-empty",
+      bool(_mg_sites_b), f"matched sites: {_mg_sites_b!r}")
+
+# (ii) per site, one named case each carrying file:line: a model gate
+# (the literal `approved_models`) is co-located with it -- so a
+# bound-read site added by a later incident fails BY NAME.
+for _mg_rel, _mg_line_no, _mg_snippet in _mg_sites_a:
+    _mg_gated = _mg_gate_nearby(_mg_file_lines[_mg_rel], _mg_line_no)
+    check(f"model-gate coverage: {_mg_rel}:{_mg_line_no} (CLASS A: "
+          f"literal bound key) has a co-located `approved_models` "
+          f"model gate within {_MG_GATE_WINDOW_LINES} lines",
+          _mg_gated, f"matched text: {_mg_snippet!r}")
+for _mg_rel, _mg_line_no, _mg_snippet in _mg_sites_b:
+    _mg_gated = _mg_gate_nearby(_mg_file_lines[_mg_rel], _mg_line_no)
+    check(f"model-gate coverage: {_mg_rel}:{_mg_line_no} (CLASS B: "
+          f"deploy-object phrasing) has a co-located `approved_models` "
+          f"model gate within {_MG_GATE_WINDOW_LINES} lines",
+          _mg_gated, f"matched text: {_mg_snippet!r}")
+
+# (iv) NON-VACUITY proof, calling the SAME predicates the real walk uses
+# (idiom of check 9's _ne_finding / the load-bearing-term census's
+# _term_found) on SYNTHETIC input: deploy.md's own deploy-object
+# sentence must return True under the class-B matcher AND False under
+# the class-A matcher -- proving class B is load-bearing and not
+# shadowed by class A.
+_MG_SYNTHETIC_DEPLOY_SENTENCE = (
+    "If it has a `deploy` object with `auto: true`, evaluate every row "
+    "about to ship against its bounds."
+)
+check("model-gate coverage non-vacuity: deploy.md's own deploy-object "
+      "phrasing (synthetic, mirroring deploy.md:117-124's real wording) "
+      "returns True under the CLASS-B predicate (the same predicate the "
+      "real walk uses)",
+      _mg_class_b_hit(_MG_SYNTHETIC_DEPLOY_SENTENCE) is True,
+      f"_mg_class_b_hit(...) = {_mg_class_b_hit(_MG_SYNTHETIC_DEPLOY_SENTENCE)!r}")
+check("model-gate coverage non-vacuity: the SAME synthetic sentence "
+      "returns False under the CLASS-A predicate -- proving class B is "
+      "load-bearing, not shadowed by class A",
+      _mg_class_a_hit(_MG_SYNTHETIC_DEPLOY_SENTENCE) is False,
+      f"_mg_class_a_hit(...) = {_mg_class_a_hit(_MG_SYNTHETIC_DEPLOY_SENTENCE)!r}")
+
+# PER-CLASS LIVENESS PROBE -- SUBSTITUTED, deliberately, from the
+# tasking's literal "edit dcs/workflows/deploy.md on disk, `git checkout
+# --` to restore" procedure. Full rationale (also in this specialist's
+# final report): dcs/workflows/** is S4's hard forbidden zone with zero
+# discretion, and S1/S2/S3 are concurrently editing these exact six
+# files in this SAME shared worktree right now -- a `git checkout --
+# <file>` revert step carries a real, concrete risk of discarding a
+# sibling's uncommitted work mid-flight, a risk no "check it's clean
+# first" fully closes (a sibling can write between the check and the
+# revert). This in-memory proof instead exercises the IDENTICAL
+# predicate (_mg_gate_nearby) the real per-site cases above call,
+# against a COPY of one real site's own surrounding lines with
+# `approved_models` deleted -- proving the SAME mechanism that gates the
+# real walk goes red when a gate is absent, by name and by class, with
+# NO disk write to dcs/workflows/** at all (same idiom as checks
+# 13(f)/14(e)/15's Rule-A negative proof/18(f)/22(v)'s in-memory
+# forgeries). Class B's forged target is asserted to be
+# dcs/workflows/deploy.md specifically -- MANDATORY per this incident's
+# own tasking.
+if _mg_sites_a:
+    _mg_forge_rel, _mg_forge_line, _ = _mg_sites_a[0]
+    _mg_forged_lines = [
+        ln.replace(_MG_GATE_TOKEN, "REDACTED") for ln in _mg_file_lines[_mg_forge_rel]
+    ]
+    _mg_forged_gated = _mg_gate_nearby(_mg_forged_lines, _mg_forge_line)
+    check(f"model-gate coverage liveness proof (CLASS A, target "
+          f"{_mg_forge_rel}:{_mg_forge_line}): deleting `approved_models` "
+          "from an IN-MEMORY copy of the file (dcs/workflows/** stays "
+          "untouched on disk) is caught by the SAME predicate "
+          "(_mg_gate_nearby) the real per-site cases call",
+          _mg_forged_gated is False, f"gated after forging: {_mg_forged_gated!r}")
+else:
+    check("model-gate coverage liveness proof: a CLASS A site exists to "
+          "forge against",
+          False, "_mg_sites_a is empty")
+
+if _mg_sites_b:
+    _mg_forge_rel_b, _mg_forge_line_b, _ = _mg_sites_b[0]
+    _mg_forged_lines_b = [
+        ln.replace(_MG_GATE_TOKEN, "REDACTED") for ln in _mg_file_lines[_mg_forge_rel_b]
+    ]
+    _mg_forged_gated_b = _mg_gate_nearby(_mg_forged_lines_b, _mg_forge_line_b)
+    check(f"model-gate coverage liveness proof (CLASS B, MANDATORY "
+          f"target {_mg_forge_rel_b}:{_mg_forge_line_b}): deleting "
+          "`approved_models` from an IN-MEMORY copy of the file "
+          "(dcs/workflows/** stays untouched on disk) is caught by the "
+          "SAME predicate (_mg_gate_nearby) the real per-site cases call",
+          _mg_forged_gated_b is False, f"gated after forging: {_mg_forged_gated_b!r}")
+    check("model-gate coverage liveness proof: CLASS B's forged target "
+          "is dcs/workflows/deploy.md (mandatory per this incident's "
+          "own tasking)",
+          _mg_forge_rel_b == "dcs/workflows/deploy.md",
+          f"actual target: {_mg_forge_rel_b!r}")
+else:
+    check("model-gate coverage liveness proof: a CLASS B site exists to "
+          "forge against",
+          False, "_mg_sites_b is empty")
+
+
+# --- 26. criterion 2 coverage (independence-fail-closed-and-model-floor,
+# Planning Chief's accepted feedback item 2) -----------------------------
+# 202-OBJECTIVES.md criterion 2: when independent Safety Officer spawn
+# cannot be established, dcs/workflows/close.md refuses to complete an
+# unattended close this period -- it either PARKs the incident (register
+# row state `PARKED`) or routes to the Owner via `AskUserQuestion`,
+# BEFORE the merge step. This case asserts both sanctioned dispositions
+# are named, and that they sit before the merge step, so a later edit
+# deleting either fails by name -- S3's territory (close.md), read here
+# by content, never a hardcoded line number.
+_c2cov_close_text = read("dcs/workflows/close.md")
+_C2COV_MERGE_MARKER_RE = re.compile(r"Merge into the integration branch", re.I)
+_C2COV_UNATTENDED_RE = re.compile(r"\bunattended\b", re.I)
+_C2COV_PARKED_RE = re.compile(r"`?PARKED`?")
+_C2COV_ASKUSERQUESTION_RE = re.compile(r"AskUserQuestion")
+
+_c2cov_merge_m = _C2COV_MERGE_MARKER_RE.search(_c2cov_close_text)
+check("criterion 2 coverage: close.md names its merge step (\"Merge "
+      "into the integration branch\") by content, discovered at run "
+      "time, never a hardcoded step number",
+      bool(_c2cov_merge_m),
+      "no 'Merge into the integration branch' text found in "
+      "dcs/workflows/close.md")
+
+if _c2cov_merge_m is None:
+    check("criterion 2 coverage: close.md's unattended-close gate names "
+          "BOTH sanctioned dispositions (a PARKED register-row state "
+          "and an AskUserQuestion route) before the merge step",
+          False,
+          "cannot scope 'before the merge step' -- no merge marker found")
+else:
+    _c2cov_unattended_m = _C2COV_UNATTENDED_RE.search(
+        _c2cov_close_text, 0, _c2cov_merge_m.start())
+    check("criterion 2 coverage: close.md's unattended-close gate (the "
+          "word 'unattended') appears before the merge step",
+          bool(_c2cov_unattended_m),
+          f"no 'unattended' text found in close.md before offset "
+          f"{_c2cov_merge_m.start()} (the merge marker)")
+    if _c2cov_unattended_m is None:
+        check("criterion 2 coverage: close.md's unattended-close gate "
+              "names BOTH sanctioned dispositions (a PARKED "
+              "register-row state and an AskUserQuestion route) before "
+              "the merge step",
+              False,
+              "no 'unattended' text found before the merge step -- "
+              "cannot scope the region to check")
+    else:
+        _c2cov_region = _c2cov_close_text[
+            _c2cov_unattended_m.start():_c2cov_merge_m.start()]
+        _c2cov_parked_in_region = bool(_C2COV_PARKED_RE.search(_c2cov_region))
+        _c2cov_ask_in_region = bool(_C2COV_ASKUSERQUESTION_RE.search(_c2cov_region))
+        check("criterion 2 coverage: close.md's unattended-close gate "
+              "names BOTH sanctioned dispositions -- a PARKED "
+              "register-row state and an AskUserQuestion route -- "
+              "between its own 'unattended' mention and the merge step, "
+              "so a later edit deleting either fails by name",
+              _c2cov_parked_in_region and _c2cov_ask_in_region,
+              f"PARKED found in region: {_c2cov_parked_in_region}; "
+              f"AskUserQuestion found in region: {_c2cov_ask_in_region}; "
+              f"region: {_c2cov_region!r}")
+
+
+# --- 27. criterion 3/6 schema-addition structural checks
+# (independence-fail-closed-and-model-floor, criterion 9) ---------------
+# 202-OBJECTIVES.md criterion 9: "if criteria 3/6's schema additions
+# warrant a corresponding structural check ... that check is added now
+# rather than left for a later incident to discover missing." Both
+# additions are S1's territory (schemas.md, dcs/templates/DELEGATION.md);
+# both are mechanised here by finding schemas.md's own section headings
+# BY TITLE TEXT, reusing check 18's own `_sfc_section_starts` parse of
+# schemas.md rather than re-deriving a second heading regex over the
+# same source text -- same "parse the source of truth at run time"
+# discipline as checks 13/14/15/18 above, since a section number is
+# exactly the kind of derived fact that shifts if an earlier section is
+# ever inserted or removed.
+def _c9_section_body(text, section_starts, title_substring):
+    """The body of the FIRST '## N. Title' section (from a pre-parsed
+    `section_starts` list of re.Match objects over `text`) whose title
+    contains `title_substring` (case-insensitive), up to the next
+    heading -- discovered by TITLE TEXT, never a hardcoded section
+    number. Returns None if no such heading exists."""
+    for i, m in enumerate(section_starts):
+        if title_substring.lower() in m.group(2).lower():
+            end = (section_starts[i + 1].start()
+                   if i + 1 < len(section_starts) else len(text))
+            return text[m.start():end]
+    return None
+
+
+_c9_safety_section = _c9_section_body(
+    schemas_md, _sfc_section_starts, "Safety-officer verdict")
+check("criterion 3 structural check: schemas.md's Safety-officer "
+      "verdict section is findable by title (never a hardcoded section "
+      "number)",
+      _c9_safety_section is not None,
+      "no '## N. ...Safety-officer verdict...' heading found in "
+      "schemas.md")
+if _c9_safety_section is not None:
+    check("criterion 3 structural check: schemas.md's Safety-officer "
+          "verdict section states the `checked` field must be a "
+          "'regenerable' command (criterion 3's own Verified clause, "
+          "mechanised)",
+          "regenerable" in _c9_safety_section.lower(),
+          f"section body (first 400 chars): {_c9_safety_section[:400]!r}")
+
+_c9_delegation_section = _c9_section_body(
+    schemas_md, _sfc_section_starts, "Delegation bounds")
+check("criterion 6 structural check: schemas.md's Delegation bounds "
+      "section is findable by title (never a hardcoded section number)",
+      _c9_delegation_section is not None,
+      "no '## N. ...Delegation bounds...' heading found in schemas.md")
+if _c9_delegation_section is not None:
+    check("criterion 6 structural check: schemas.md's Delegation bounds "
+          "section names the new `approved_models` field",
+          "approved_models" in _c9_delegation_section,
+          f"section body (first 400 chars): {_c9_delegation_section[:400]!r}")
+
+_c9_delegation_tpl_path = REPO / "dcs" / "templates" / "DELEGATION.md"
+if _c9_delegation_tpl_path.is_file():
+    _c9_delegation_tpl_text = _c9_delegation_tpl_path.read_text(encoding="utf-8")
+    check("criterion 6 structural check: dcs/templates/DELEGATION.md "
+          "(the founding template) carries the new `approved_models` "
+          "field",
+          "approved_models" in _c9_delegation_tpl_text,
+          "dcs/templates/DELEGATION.md does not contain 'approved_models'")
+else:
+    check("criterion 6 structural check: dcs/templates/DELEGATION.md "
+          "exists",
+          False, f"not found at {_c9_delegation_tpl_path}")
+
 print(f"\n{checks - len(failures)}/{checks} passed")
 sys.exit(1 if failures else 0)

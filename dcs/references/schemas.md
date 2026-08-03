@@ -99,7 +99,7 @@ refutations do (bar: `agents/dcs-safety-officer.md` step 6).
 Halt shape, showing the `refutations` object:
 
 ```json
-{"verdict": "halt", "refutations": [{"claim": "S1 reported 'done': pytest test_inventory_repo.py -x, 5 passed", "evidence": "Re-ran it: 4 passed, 1 skipped (test_window_boundary still marked xfail) — criterion 1's boundary case is untested"}], "checked": ["git diff inventory_repo.py", "pytest test_inventory_repo.py -x (re-run)"]}
+{"verdict": "halt", "refutations": [{"claim": "S1 reported 'done': pytest test_inventory_repo.py -x, 5 passed", "evidence": "Re-ran it: 4 passed, 1 skipped (test_window_boundary still marked xfail) — criterion 1's boundary case is untested"}], "checked": ["git diff inventory_repo.py — window check present, matches criterion 1", "pytest test_inventory_repo.py -x (re-run) — 4 passed, 1 skipped, test_window_boundary still xfail"]}
 ```
 
 | Field | Type | Notes |
@@ -107,7 +107,7 @@ Halt shape, showing the `refutations` object:
 | `verdict` | `"pass"` \| `"halt"` | Binding on the IC — a `halt` cannot be argued past, only resolved (fix-tasking or re-plan) |
 | `refutations` | object[] | Empty on `pass`; each has `claim` (what was asserted) and `evidence` (what the Safety Officer independently found). **Reserved for the acceptance criteria and code behaviour** — the only findings that justify stopping a merge |
 | `advisories` | object[], optional | (v0.6.5) Artifact-hygiene findings that don't block: `finding` + `fix`. Principle-15 issues in docstrings/comments/logs/AARs live here unless they clear one of the three bars in `agents/dcs-safety-officer.md` step 6; IC folds them into the integration commit |
-| `checked` | string[] | Everything the Safety Officer actually did — diff inspected, tests re-run, manual repro; specialist self-reports are the claim checked, never the check itself. Same for `refutations`/`advisories`: cite the decisive excerpt or `file:line`, never a full transcript |
+| `checked` | string[] | Everything the Safety Officer actually did — diff inspected, tests re-run, manual repro, each entry a **regenerable** command whose output a later reader can re-run and compare, never a description or a one-off manual observation; specialist self-reports are the claim checked, never the check itself. Same for `refutations`/`advisories`: cite the decisive excerpt or `file:line`, never a full transcript |
 
 ## 6. Commander decisions (transfer of command — feeds 214-LOG.md)
 
@@ -141,13 +141,14 @@ Any decision may also carry an ESG-activation request (doctrine principle 14):
 The fenced ```delegation-bounds``` block inside `DELEGATION.md` — the only part workflows parse; surrounding prose is for humans only.
 
 ```json
-{"version": 1, "auto_approve_type3": false, "max_files": 4, "forbidden_globs": ["**/migrations.py", "**/auth/**"], "forbidden_topics": ["schema migration", "payments", "auth/JWT"], "require_tests_green": true, "max_specialists": 2, "deploy": {"auto": false, "auto_after_close": false, "frontend_only": true, "forbidden_globs": ["**/migrations.py", "**/auth/**"], "max_rows_per_train": 3}}
+{"version": 1, "auto_approve_type3": false, "approved_models": ["fable"], "max_files": 4, "forbidden_globs": ["**/migrations.py", "**/auth/**"], "forbidden_topics": ["schema migration", "payments", "auth/JWT"], "require_tests_green": true, "max_specialists": 2, "deploy": {"auto": false, "auto_after_close": false, "frontend_only": true, "forbidden_globs": ["**/migrations.py", "**/auth/**"], "max_rows_per_train": 3}}
 ```
 
 | Field | Type | Notes |
 |---|---|---|
 | `version` | number | Bumped every amendment; `DELEGATION.md` keeps every prior version block — this is the one currently in force |
 | `auto_approve_type3` | boolean | Master switch; `false` = identical to v0.1 behavior even with a `DELEGATION.md` present |
+| `approved_models` | string[] | Session operating models allowed to use this Delegation's unattended bounds (`auto_approve_type3`, `deploy.auto`, `deploy.auto_after_close`) at any site reading them; **empty or absent = no model approved** — every site falls back to full v0.1 every-gate-is-an-Owner-gate behavior (fail-closed) |
 | `max_files` | number | Compared against the IAP's total partitioned file count |
 | `forbidden_globs` | string[] | Any 204 tasking's `territory` glob matching one of these voids auto-approval for that IAP |
 | `forbidden_topics` | string[] | Checked against the 201/202 text |

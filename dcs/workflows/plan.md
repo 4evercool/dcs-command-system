@@ -28,7 +28,7 @@ Determine period `N` — 1 on first pass, else increment from the last period in
 
 Read `201-BRIEF.md`. Draft goal (outcome-shaped) and numbered, verifiable acceptance criteria using `$HOME/.claude/dcs/templates/202-OBJECTIVES.md`. On a re-plan after deviation, fold the deviation's `proposal` into the criteria.
 
-**Delegation-aware confirm (v0.5):** if Type 3 AND `DELEGATION.md`'s latest `delegation-bounds` has `auto_approve_type3: true`, skip `AskUserQuestion` — write directly to `202-OBJECTIVES.md`, append `202 confirm deferred to IAP approval (Delegation v<N>)` to `214-LOG.md`. Otherwise present to Owner via `AskUserQuestion`. Write confirmed version to `202-OBJECTIVES.md`.
+**Delegation-aware confirm (v0.5):** if Type 3 AND `DELEGATION.md`'s latest `delegation-bounds` has `auto_approve_type3: true` AND the session's current operating model appears in that block's `approved_models` (model floor — `approved_models` empty or absent means no model is approved), skip `AskUserQuestion` — write directly to `202-OBJECTIVES.md`, append `202 confirm deferred to IAP approval (Delegation v<N>)` to `214-LOG.md`. Otherwise — including an unlisted model or the model-floor miss just described — present to Owner via `AskUserQuestion`, full v0.1 behavior. Write confirmed version to `202-OBJECTIVES.md`.
 
 ## 3. Spawn the Planning Chief (and Logistics Chief for Type 1)
 
@@ -123,11 +123,11 @@ Resolve `esg_root` (`git worktree list --porcelain`, first entry). Update row's 
 
 ## 6. Approve the IAP — Delegation-aware (v0.2)
 
-**Delegation check (Type 3):** if Type 3 AND `DELEGATION.md` exists, parse latest `delegation-bounds` JSON (schemas.md #7, Delegation bounds). Evaluate: `max_files` ≥ file count; no `territory[]` hits `forbidden_globs`; 201/202 misses `forbidden_topics`; `max_specialists` ≥ tasking count; `require_tests_green` → concrete tests named.
+**Delegation check (Type 3):** if Type 3 AND `DELEGATION.md` exists, parse latest `delegation-bounds` JSON (schemas.md #7, Delegation bounds). Evaluate: `max_files` ≥ file count; no `territory[]` hits `forbidden_globs`; 201/202 misses `forbidden_topics`; `max_specialists` ≥ tasking count; `require_tests_green` → concrete tests named; the session's current operating model appears in `approved_models` (model floor).
 
-**All bounds hold AND `auto_approve_type3: true`:** IC approves — skip 6b, stamp `approved_by: IC (Delegation v<N>)`. Log. Tell Owner.
+**All bounds hold (model floor included) AND `auto_approve_type3: true`:** IC approves — skip 6b, stamp `approved_by: IC (Delegation v<N>)`. Log. Tell Owner.
 
-**Any bound fails, no Delegation, or Type 1:** fall through to 6b — name failed bound(s). No DELEGATION.md → fallback to `config.json` (conservative, no per-bound audit): on that path auto-approve **only** if Type == 3 AND `auto_approve_type3: true` AND the IAP touches no file matching any `guarded_paths` glob outside the ordinary source tree — i.e. nothing that already looks unusual for a routine change. Anything else falls to 6b.
+**Any bound fails — model floor included: an unlisted model, or `approved_models` empty or absent (no model approved), is a failed bound on its own — no Delegation, or Type 1:** fall through to 6b — name failed bound(s), full v0.1 behavior. No DELEGATION.md → fallback to `config.json` (conservative, no per-bound audit): on that path auto-approve **only** if Type == 3 AND `auto_approve_type3: true` AND the IAP touches no file matching any `guarded_paths` glob outside the ordinary source tree — i.e. nothing that already looks unusual for a routine change. Anything else falls to 6b.
 
 ## 6b. Present the IAP to the Owner
 
