@@ -63,3 +63,23 @@ open pending the next `/dcs-esg`. Two new rows exist since that ranking
 and are both unranked: `spawn-effort-control` (Owner chat report) and
 `spawn-effort-control-d5-corrections` (follow-up, queued at that
 incident's own close).
+
+### GitHub release, same day (`docs/publishing.md` steps 1/5/6/9, Owner-directed)
+
+CHANGELOG.md's `0.8.0` entry was found incomplete during release prep —
+documented `close-integrity-guard-bundle` but not `spawn-effort-control`,
+even though both shipped in this same train — fixed and committed
+(`f13c791`), verified against the merge (`fd8740d`), not restated from
+memory, per the 0.7.2 lesson. `npm pack --dry-run`: 165 files, 283.7 kB,
+clean. Owner authorized the GitHub side explicitly; `npm publish` stays
+Owner-only (2FA), not attempted here.
+
+Ordered: `git push origin main` (`e25dc75..f13c791`) → tip gate confirmed
+(`git rev-parse HEAD origin/main` identical) → `git tag v0.8.0` → `git
+push --tags` → tag-at-HEAD confirmed → `python
+tests/release_provenance_check.py` now exits 0 (was: `no git tag v0.8.0
+exists`) → `gh release create v0.8.0` from the notes drafted during prep.
+Release: https://github.com/4evercool/dcs-command-system/releases/tag/v0.8.0.
+Registry still shows `0.7.2` as latest (`npm view dcs-command-system
+version`) — `npm publish` is the one remaining step, and it is the
+Owner's.
