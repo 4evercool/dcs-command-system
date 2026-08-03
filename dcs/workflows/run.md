@@ -67,12 +67,15 @@ Read `$HOME/.claude/dcs/workflows/plan.md` and execute its `<process>`
 steps 1 through 9 verbatim for the current operational period, including
 its v0.2 Delegation-aware approval step (6/6b) unchanged. Also read the
 files `plan.md`'s own `<required_reading>` block names, same reason as
-step 3 above. If bounds hold and `auto_approve_type3` is on, the IC
-approves without an Owner
-round-trip and `/dcs-run` continues straight through to step 5 in the same
-turn. Otherwise the Owner's `AskUserQuestion` approval gate pauses this
-turn exactly as it would for a standalone `/dcs-plan` — `/dcs-run` resumes
-the chain on the Owner's next message the same way a fresh session would
+step 3 above. If bounds hold — model floor included: the session's
+current operating model appears in the latest delegation-bounds'
+`approved_models` — and `auto_approve_type3` is on, the IC approves
+without an Owner round-trip and `/dcs-run` continues straight through to
+step 5 in the same turn. Otherwise — including an unlisted model, or
+`approved_models` empty or absent (no model approved) — the Owner's
+`AskUserQuestion` approval gate pauses this turn exactly as it would for
+a standalone `/dcs-plan`, full v0.1 behavior — `/dcs-run` resumes the
+chain on the Owner's next message the same way a fresh session would
 resume via `/dcs-status`.
 
 ## 5. Run execution — follow `execute.md`
@@ -151,16 +154,19 @@ pause here for the Owner's done / defer-with-explicit-consent answer via
 ## 7a. After the close: the deploy train, if delegated (v0.4)
 
 If `<esg_root>/.dcs/esg/DELEGATION.md`'s latest bounds have
-`deploy.auto_after_close: true`: read
+`deploy.auto_after_close: true` AND the session's current operating
+model appears in that block's `approved_models` (model floor —
+`approved_models` empty or absent means no model is approved): read
 `$HOME/.claude/dcs/workflows/deploy.md` and run the deploy train now,
 in-line — its own step 5 delegation check governs whether the ship
 proceeds without a prompt or stops to ask (an out-of-bounds row still
 asks; a migration-bearing row always asks). If `auto_after_close` is
-absent or `false`, or there is no ESG: just report the close's
-`deploy pending` state as before. This applies to **attended** `/dcs-run`
-only — `/dcs-loop` never reaches this step's deploy branch (doctrine
-automation-layers hard rule 2, unchanged: the unattended loop never
-deploys, no matter what the Delegation says).
+absent or `false`, OR the model floor fails (unlisted model, or
+`approved_models` empty or absent), or there is no ESG: just report the
+close's `deploy pending` state as before, full v0.1 behavior. This
+applies to **attended** `/dcs-run` only — `/dcs-loop` never reaches this
+step's deploy branch (doctrine automation-layers hard rule 2, unchanged:
+the unattended loop never deploys, no matter what the Delegation says).
 
 ## 8. Command points throughout
 

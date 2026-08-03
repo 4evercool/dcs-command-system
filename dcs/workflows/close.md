@@ -22,9 +22,12 @@ cat "<incident_dir>/SAFETY.md" 2>/dev/null
 ```
 
 If no `ACTIVE`: nothing to close. If `SAFETY.md`'s latest verdict for the
-current period isn't `pass`: **stop** — tell the Owner `/dcs-execute` must
-finish with a pass first (doctrine principle 7/10: no close over an
-unresolved refutation); no override from within `/dcs-close`.
+current period isn't `pass` (including an execute.md step 8 spawn that
+never established a verdict): this is an **unattended-close refusal** —
+**PARK** the incident (register row `PARKED`, reason naming the spawn
+failure) or route to the Owner via `AskUserQuestion`, before any merge;
+never proceed as if verification happened (doctrine principle 7/10: no
+close over an unresolved refutation). No override from `/dcs-close`.
 
 **Integration-commit check (mechanical, not Safety's job):** the
 `execute.md` step 9b integration commit must exist — find its sha via
@@ -45,13 +48,11 @@ phase-transition entries in `214-LOG.md`.
 **(v0.3)** In a worktree incident (standard for Type 3/1), this write and
 step 4's writes happen **in the worktree** on the incident's branch — committed
 there (step 5a) and carried into main by the merge; no separate "copy into main" step.
-
 Using `$HOME/.claude/dcs/templates/AAR.md`: outcome (final goal state vs.
 the last period's acceptance criteria), what worked (tactics that survived
 Safety Officer review without refutation), lessons (concrete, reusable —
 not vague), deviation history (or "none"), and the Safety Officer's final
 verdict copied verbatim from `SAFETY.md`.
-
 **Facts-only rule (field lesson 2026-07-22, predates self-hosting — an
 early AAR claimed an undone deploy and unwritten lessons):**
 
@@ -82,7 +83,6 @@ specifies (e.g. a `validate()` call after any write). Write the lesson(s)
 from this incident in the format and location that protocol calls for.
 Record exactly what was written (file + one-line description) in AAR.md's
 "Memory routing" section.
-
 **If none is documented:** skip this step gracefully. Say so plainly in
 AAR.md — "no project memory system documented in CLAUDE.md — skipped" is
 a complete, honest answer, not a gap to apologize for or a place to invent
@@ -102,12 +102,10 @@ Manually closing what a routine owns creates a race and duplicates its
 write (field lesson 2026-07-22, predates self-hosting). Delegate only on
 EXPLICIT documentation — a vague mention is not an owner; when in doubt,
 flag the Owner instead (a duplicate flag is annoying, a silent leak isn't).
-
 **Only if no owner is documented:** flag it for the Owner — print the
 exact identifier and suggested action (e.g. "mark `audit_results` row
 id=482 resolved via the admin UI") and ask them to confirm. Record the
 flag (not a completed action) in AAR.md.
-
 If the intake source is "ad hoc" / has no external reference, note that
 and move on.
 
@@ -140,7 +138,6 @@ to step 6.
    close record. A red guard is **escalation trigger (a)**: stop, file a
    209, and put it to the Owner. Never merge past a red guard or resolve
    what it found silently.
-
    If the project documents no such guard, skip and say so — DCS does
    not invent guards a project has never described. **Prefer git-native
    allocation:** an append-only registry where each claim is its own line
@@ -160,6 +157,13 @@ to step 6.
    under-covers. Exit 0 continues to step 2; exit 1 (findings) or 2
    (environment error) is **fail-closed** — stop, do not merge, escalation
    trigger (a) (doctrine principle 13): file a 209, never resolved silently.
+
+1c. **Run the verdict re-run check, unconditionally.** Run
+   `python "$HOME/.claude/dcs/tools/verdict_rerun.py" <incident_dir>`
+   against `SAFETY.md`'s `checked[]` entries. Exit 0 continues to step 2;
+   exit 1 (non-reproducing) or exit 2 (environment error): **fail-closed**,
+   step 1's SAME refusal; escalation trigger (a): file a 209, never
+   resolved silently.
 
 2. **Merge into the integration branch.** The merge target is **whatever
    branch the primary checkout (`esg_root`) currently has checked out** —
@@ -209,7 +213,6 @@ to step 6.
 ## 6. Release the gate
 
 Append a final entry to `214-LOG.md`: `incident closed, archived`.
-
 **(v0.3)** In the normal worktree case, this is already accomplished by
 5a step 4 — `.dcs/ACTIVE` lived inside the removed worktree, so there is
 nothing further to delete. Only explicitly delete
@@ -229,7 +232,6 @@ pre-v0.3 / never-worktreed incident (step 5a skipped): find this
 incident's row (by slug) and move it `ACTIVE` → `RESOLVED` directly,
 filling in the closed date and outcome — correct for an incident that has
 no merge step to wait on.
-
 If `<esg_root>/.dcs/esg/STRATEGY.md` exists, read its ranked priorities
 and note the next queued priority in the final sitrep (step 7).
 

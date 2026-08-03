@@ -114,22 +114,9 @@ never merged) and the warning exists so the Owner isn't surprised.
 
 ## 5. Owner confirms — Delegation-aware (v0.4, Owner-requested)
 
-**Deploy-delegation check first:** read the latest `delegation-bounds`
-block from `<esg_root>/.dcs/esg/DELEGATION.md`. If it has a `deploy`
-object with `auto: true`, evaluate EVERY row about to ship against its
-bounds (schemas.md #7, delegation bounds): territory vs `frontend_only` and the deploy
-`forbidden_globs` (migration-bearing rows are never routine), row count
-vs `max_rows_per_train`. **All rows in-bounds:** the go/no-go prompt is
-covered by the Owner's standing authorization — announce in one visible
-line ("shipping N rows under Delegation v<X> deploy authority: <ids>"),
-log it against each register row, and continue to step 6. Never silent
-(principle 12); the Owner sees every delegated ship.
+**Deploy-delegation check first:** read the latest `delegation-bounds` block from `<esg_root>/.dcs/esg/DELEGATION.md`. If it has a `deploy` object with `auto: true` AND the session's current operating model appears in that block's `approved_models` (model floor — `approved_models` empty or absent means no model is approved), evaluate EVERY row about to ship against its bounds (schemas.md #7, delegation bounds): territory vs `frontend_only` and the deploy `forbidden_globs` (migration-bearing rows are never routine), row count vs `max_rows_per_train`. **All rows in-bounds:** the go/no-go prompt is covered by the Owner's standing authorization — announce in one visible line ("shipping N rows under Delegation v<X> deploy authority: <ids>"), log it against each register row, and continue to step 6. Never silent (principle 12); the Owner sees every delegated ship.
 
-**Any row out of bounds, no `deploy` block, or `auto: false`:** use
-`AskUserQuestion` — present the `MERGED` rows about to ship (id,
-title, merge commit sha), name the failed bound if any, and ask for
-a go/no-go. On "no": release the lock (step 9) and stop. On "go":
-continue.
+**Any row out of bounds, no `deploy` block, `auto: false`, or the model floor fails (unlisted model, or `approved_models` empty or absent — no model approved):** use `AskUserQuestion` — full v0.1 behavior — present the `MERGED` rows about to ship (id, title, merge commit sha), name the failed bound if any (the model floor counts as one), and ask for a go/no-go. On "no": release the lock (step 9) and stop. On "go": continue.
 
 ## 6. Run the project's documented deploy command
 

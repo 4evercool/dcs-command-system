@@ -1263,6 +1263,64 @@ the *paperwork describing that decision* wrong — two independent axes,
 same as Meta §15's schema-format-vs-guard split, this time inside one
 specialist's own return.
 
+## 31. A rejected plan's two defects shared one shape: an unverified population, stated as if it were checked
+
+**When:** `independence-fail-closed-and-model-floor` (2026-08-03) — Type 3,
+one period, adding a fail-closed Safety-independence gate and a
+Delegation model floor. The first `iap_review` pass rejected the
+Planning Chief's draft on two grounds; the second, revised draft was
+accepted.
+
+**What happened:** both rejection grounds were the same *shape* of
+defect wearing different clothes — a claim about a population (which
+bytes fund a budget; which files a coverage check must gate) stated with
+the confidence of a measurement, when neither had actually been checked
+against the mechanism that would enforce it. (1) The draft's funding
+plan said trimming `doctrine-appendix.md` would free hot-path bytes. It
+would not — `tests/test_doctrine_integrity.py`'s own regen command
+(cited at `:211`, one line) sums `doctrine.md` + `schemas.md` only, and
+a trim applied to the appendix itself is invisible to that sum. Worse,
+it would have *deleted* the provenance the appendix exists to hold,
+mistaking the destination for the source. (2) The draft's coverage-check
+design derived its site population from three literal bound-key
+substrings. One real site (`deploy.md`'s Delegation check) phrases the
+same bound as "a `deploy` object with `auto: true`" — zero hits under
+every literal-key pattern. A population built from an assumed common
+vocabulary silently excluded the one member that didn't share it.
+`dcs-commander` caught both by running the cited command and reading the
+named file directly, not by re-deriving trust in the chief's prose. The
+fix for both was structural, not cosmetic: relocate funding to a
+place the budget's own regen command actually reads, and derive the
+coverage population from two independently-named, independently-provable
+matcher classes instead of one assumed-uniform pattern — each with its
+own non-emptiness case, so a class matching zero sites fails loudly
+instead of looping over nothing.
+
+**Why it matters:** "verify the premise" (this file's throughline)
+applies as much to a plan's own supporting claims about *populations* —
+what a budget counts, what a check's regex actually matches — as to the
+acceptance criteria those claims are meant to serve. A population
+described from the vocabulary the author expects it to use, rather than
+enumerated against the actual mechanism, will under-count exactly the
+member that doesn't fit the assumption — which is usually the member
+that matters most, since it's the one nobody thought to phrase
+consistently in the first place. The command point that caught this cost
+one re-plan cycle, before any specialist touched a file; the same defect
+surviving to execution would have cost a Safety halt at best, or a
+silently-uncovered guard at worst.
+
+**Also this incident:** the accepted revision's own Planning Chief pass
+independently found a *third* instance of the same shape the commander
+hadn't flagged — one acceptance criterion's own `Verified:` clause
+(`grep -c "step 8\|Safety Officer" dcs/workflows/execute.md`) returned
+10 matches on the **unmodified** tree, meaning it would pass identically
+whether or not the fix landed. The chief measured this before proposing
+a fix, the same discipline the commander had just applied to the funding
+and coverage claims — checking a criterion's own verification command
+against the pre-change state is cheap and catches a defect no amount of
+scrutiny of the *fix itself* would surface, because the flaw is entirely
+in what the check would have proven, not in what was built.
+
 ## Links
 
 - [[Post-mortems/energy-cost-model-rework]] — the incident behind v0.5.12

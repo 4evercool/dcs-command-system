@@ -148,13 +148,24 @@ Contract producer: `dcs-safety-officer`.
 | `verdict` | string | `"pass"` \| `"halt"` |
 | `refutations` | object[] | Empty on `pass`; each has `claim` and `evidence` |
 | `advisories` | object[], optional | Artifact-hygiene findings (see `agents/dcs-safety-officer.md` step 6); never blocks a merge |
-| `checked` | string[] | Everything you personally did to verify |
+| `checked` | string[] | Everything you personally did to verify, each entry a **regenerable** command a later reader can re-run and compare — never a description or a one-off manual observation |
 
 Return exactly the JSON shape in `references/schemas.md` #5
 (safety-officer verdict): `verdict` (`"pass"` | `"halt"`),
 `refutations[]` (each with `claim` and `evidence`; empty array on `pass`),
 `advisories[]` (each with `finding` and `fix`; optional, never blocks a
-merge — `agents/dcs-safety-officer.md` step 6), `checked[]` (everything you personally did to verify).
+merge — `agents/dcs-safety-officer.md` step 6), `checked[]` (everything you personally did to verify, each entry a regenerable command, never a description or a one-off manual observation).
 Cite the decisive excerpt or `file:line` in both — never paste a full
 unabridged transcript.
+
+**`checked[]` stability note, for whichever entry `close.md` step 1c
+re-runs (`dcs/tools/verdict_rerun.py`):** the tool skips a bare `git
+diff` entry as non-reproducible-by-construction, but that is its only
+excluded shape today — a working-tree-state observation phrased another
+way (`git status`, `git stash list`, an untracked-file listing) tokenizes
+as an ordinary allowlisted command and can still be *selected*, then
+fail to reproduce once the integration commit lands, producing a false
+halt at close. Phrase at least one `checked[]` entry as a command whose
+output is stable post-commit (a test run, a byte count, a grep over
+tracked source) so the tool has a genuinely re-runnable choice.
 </output_contract>

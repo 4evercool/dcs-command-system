@@ -57,8 +57,7 @@ path is chosen, adapt — the deviation/Safety Officer gates below still apply.
 ## Escalation-trigger check — period boundary (doctrine principle 13)
 
 Before spawning any specialist, check trigger (c): read `esg.max_periods_before_review` from `<project>/.dcs/config.json` (default `3`).
-Count ATTEMPTS: the number of `IAP-APPROVED:` sentinel entries in `214-LOG.md` (recognized per `dcs_gate.py`'s grammar: "An entry begins at column zero with a mandatory bracketed timestamp; any other line is a continuation, never a sentinel, and quoting a whole prior entry inside a body requires indenting it off column zero.").
-If the attempt about to run exceeds the threshold, skip to "On any escalation trigger" below instead of step 4.
+Count ATTEMPTS: the number of `IAP-APPROVED:` sentinel entries in `214-LOG.md` (recognized per `dcs_gate.py`'s grammar: "An entry begins at column zero with a mandatory bracketed timestamp; any other line is a continuation, never a sentinel, and quoting a whole prior entry inside a body requires indenting it off column zero."). If the attempt about to run exceeds the threshold, skip to "On any escalation trigger" below instead of step 4.
 
 Also check trigger (d): if `<esg_root>/.dcs/esg/DELEGATION.md` is in force
 and the IAP's territory touches a `forbidden_globs` entry not caught at
@@ -135,7 +134,10 @@ touched files, and the specialists' claims (framed as claims to verify, not
 facts). **On a re-spawn** (step 9's `halt` branch routing fix-taskings
 back here), also hand it the **prior verdict (verbatim)** and a
 **changed-since manifest** (`git diff --name-only` of what fix-taskings
-touched since that verdict).
+touched since that verdict). **Spawn-liveness fallback:** an empty,
+errored, or no-decision return never returns a verdict — a FAILED spawn,
+not a slow one: re-spawn on the next tier, log BOTH attempts, and never
+treat either as "Safety verification happened."
 
 The Safety Officer returns JSON per schemas.md #5 (safety-officer verdict):
 `verdict` (`"pass"`|`"halt"`), `refutations` (object[]), `advisories`

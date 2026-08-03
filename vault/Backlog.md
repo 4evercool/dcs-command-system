@@ -1388,3 +1388,54 @@ worked example. Should ship as a `dcs/workflows/execute.md` text change
 (and, if generalized, a `dcs/references/doctrine.md` principle) — not
 built here; this incident's own close is not the place to edit a hot-path
 workflow file as a side effect.
+
+## 30. `dcs/tools/verdict_rerun.py`'s `is_working_tree_diff` stability rule excludes only bare `git diff`, not other working-tree-state shapes
+
+**Evidence.** During `independence-fail-closed-and-model-floor` period 1
+(2026-08-03), the Safety Officer's advisory 4 found that
+`is_working_tree_diff()` (`dcs/tools/verdict_rerun.py`, `select_entry`'s
+stability gate) recognizes only a literal `git diff` command as
+non-reproducible-by-construction. A `checked[]` entry phrased as another
+working-tree-only observation — `git status --short`, `git stash list`,
+an untracked-file listing — tokenizes as an ordinary allowlisted command
+(it starts with `git`, the allowlisted verb) and is not excluded, so
+`select_entry` can choose it. Once `close.md` step 1c re-runs it after
+the integration commit (execute.md step 9b) or the archive commit (close
+step 5a.1), the working tree it describes no longer exists in that
+state, and the entry fails to reproduce — a false halt on a Safety
+verdict that was actually correct at the time it was written.
+`dcs-commander`, ruling at command point 4 on the same period's verdict
+disposition, deliberately did **not** fold this into the close-time
+integration commit — widening `is_working_tree_diff`'s matching logic is
+a behavior change to an already-verified tool made *after* the verdict
+that verified it, the same class of concern item 29 above names for a
+different mechanism. Advisory 4's other half (documenting the constraint
+in `agents/dcs-safety-officer.md` so a Safety Officer reads it before
+writing `checked[]`) *was* folded — see that file's `<output_contract>`
+section, "`checked[]` stability note" — so the immediate false-halt risk
+is mitigated by convention while the code gap stands.
+
+**Why it matters.** The failure mode is a **false halt**, not a false
+pass — `dcs/tools/verdict_rerun.py`'s own design already treats "entry
+doesn't reproduce" as fail-closed, so nothing ships unsafely. But a false
+halt at close time, after a genuinely correct Safety pass, costs a full
+re-verification cycle and could itself trigger doctrine principle 13's
+escalation machinery (repeated halts on one objective) for a reason that
+has nothing to do with the incident's actual correctness — the exact
+kind of self-inflicted friction DCS's own doctrine tries to keep out of
+the P-loop.
+
+**Candidate fix.** Widen `is_working_tree_diff()` to recognize the
+broader class of working-tree-state commands (`git status`, `git stash
+list`, `git ls-files --others`, and similar), or invert the design to an
+allowlist of known-stable command shapes (a `pytest`/test-runner
+invocation, a `grep`/byte-count over tracked source) rather than a
+denylist of known-unstable ones — the allowlist framing degrades safely
+(an unrecognized command shape is treated as unstable and skipped,
+matching the tool's existing fail-closed default for "no stable entry
+found") where the denylist framing degrades unsafely (an unrecognized
+unstable shape is wrongly treated as stable). Should ship as a
+`dcs/tools/verdict_rerun.py` code change with new fixture coverage under
+`tests/fixtures/verdict-rerun/` — not built here, per the same
+already-verified-tool-after-its-verdict concern this item was queued
+to avoid.

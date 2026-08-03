@@ -9,7 +9,12 @@ never edit a past version block in place, it is the audit trail.
 
 Template default: auto_approve_type3=false -- the delegation exists but
 grants NOTHING until the Owner explicitly amends it at a real /dcs-esg
-session. This is the safe starting state.
+session. This is the safe starting state. approved_models defaults to an
+EMPTY list for the same reason: empty or absent means NO model is
+approved, so every unattended/auto-approval bound below falls back to
+full v0.1 every-gate-is-an-Owner-gate behavior at every site that reads
+it, regardless of what the other bounds say, until the Owner explicitly
+populates the list.
 -->
 
 # Delegation of Authority — {{project name}}
@@ -21,10 +26,18 @@ hold. Outside bounds, or for Type 1, Owner approval is required exactly as
 in v0.1 (`AskUserQuestion`). Revocable, or amendable, at any `/dcs-esg`
 session.
 
+Every unattended/auto-approval bound below (`auto_approve_type3`,
+`deploy.auto`, `deploy.auto_after_close`) additionally applies only when
+the session's current operating model appears in `approved_models`. Empty
+or absent means **no model is approved** — every site falls back to full
+v0.1 every-gate-is-an-Owner-gate behavior, regardless of what the other
+bounds say.
+
 ```delegation-bounds
 {
   "version": 1,
   "auto_approve_type3": false,
+  "approved_models": [],
   "max_files": {{N, e.g. 4}},
   "forbidden_globs": ["**/migrations.py", "**/auth/**", "**/payment*/**"],
   "forbidden_topics": ["schema migration", "payments", "auth/JWT", "deploy scripts"],

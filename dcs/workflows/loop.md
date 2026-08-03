@@ -34,7 +34,12 @@ Check, in order, and stop with plain instructions if any fails:
   false` (the template default), every Type 3 incident will still pause
   at IAP approval — hands-off operation effectively requires an active
   delegation (`auto_approve_type3: true`, with real bounds the Owner has
-  actually reviewed at an `/dcs-esg` session). This is expectation-setting
+  actually reviewed at an `/dcs-esg` session) AND the session's current
+  operating model listed in that same block's `approved_models` (model
+  floor) — an unlisted model, or `approved_models` empty or absent (no
+  model approved), pauses at IAP approval exactly like
+  `auto_approve_type3: false` does, full v0.1 behavior, even when every
+  other bound is set for hands-off operation. This is expectation-setting
   before the sweep starts, not a failure condition.
 
 ## 2. Take the top QUEUED item
@@ -68,8 +73,12 @@ This is the one place `/dcs-loop` overrides `run.md`'s normal flow,
 because `run.md` alone has no queue to fall back to.
 
 **Hard rule 2 — never deploy from the loop.** This holds even under a
-v0.4 deploy Delegation: `run.md` step 7a's `auto_after_close` branch is
-for ATTENDED runs only and is skipped entirely in the loop context — a
+v0.4 deploy Delegation — including one where the session's current
+operating model appears in `approved_models` (the model floor,
+independently gated at `run.md`:154-158 and `deploy.md`'s own step 5,
+neither of which loop.md ever reaches): `run.md` step 7a's
+`auto_after_close` branch is for ATTENDED runs only and is skipped
+entirely in the loop context, model floor pass or fail — a
 Delegation reduces prompts for a watching Owner; it never turns an
 unattended sweep into an unattended shipper. `run.md`'s close-out (step
 7, following `close.md`) never invokes a deploy script, regardless of

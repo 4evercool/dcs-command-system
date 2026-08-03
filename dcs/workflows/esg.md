@@ -30,9 +30,13 @@ Check `<esg_root>/.dcs/esg/` for `STRATEGY.md`, `DELEGATION.md`,
 create all of them (plus an empty `SITREPS/` directory) from
 `$HOME/.claude/dcs/templates/{STRATEGY,DELEGATION,REGISTER,209-SITREP}.md`.
 Tell the Owner plainly this is the founding `/dcs-esg` session, and note
-that `DELEGATION.md` ships with `auto_approve_type3: false` — the
-delegation exists but grants nothing until the Owner amends it later in
-this same session or a future one.
+that `DELEGATION.md` ships with `auto_approve_type3: false` and an empty
+`approved_models` (model floor) — the delegation exists but grants
+nothing until the Owner amends it later in this same session or a future
+one; empty or absent `approved_models` means no model is approved, so
+even a later amendment setting `auto_approve_type3: true` stays full
+v0.1 (every gate is an Owner gate) until the Owner also explicitly
+populates `approved_models`.
 
 **Sweep intake sources:**
 
