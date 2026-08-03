@@ -28,7 +28,7 @@ Four command points (contracts: `references/schemas.md` #6, commander decisions)
 
 Everything else (spawning, transcription, hash-stamping, sitreps, memory routing) is Dispatcher work needing no particular model; it never substitutes its own judgment at a command point "to save a spawn."
 
-**Model availability:** "Fable" = the strongest tier available. If `dcs-commander` with `model: fable` fails, re-spawn with the strongest tier that works and log the actual seat. **Availability is per-spawn and MUST be re-tested at every command point (v0.6.1).** **Never cache the fallback — try the preferred tier first every single time.** NEVER acceptable: the fallback drifting to "the Dispatcher decides itself" — the separate spawn preserves a fresh context, defined inputs, and a logged decision, even same-tier.
+**Capability tier:** per spawn, on availability and complexity alike, use the strongest tier the work warrants, from what's available for that seat's provider — via the Agent tool's per-call `model` override, never `effort:`; a charter's `model:` is the DEFAULT the override starts from, not a ceiling or a floor. On failure, re-spawn with the strongest tier that works and log the actual seat. Availability is re-tested at every command point. **Never cache the fallback — try the preferred tier first every single time.** NEVER acceptable: the fallback drifting to "the Dispatcher decides itself." Command points: availability only, never downgraded by complexity; elsewhere (chiefs, Ops Specialists, Safety Officer, situation analysts) complexity may raise or lower the tier, in either direction. Worked examples: doctrine-appendix.md, "Transfer of command".
 
 ### A command point is never a silent wait
 
@@ -155,8 +155,8 @@ Three ICS analogies (full spec: `docs/spec-v0.3-parallel.md`):
 
 ### Project-supplied provision hook (v0.7.1)
 
-A project may supply a provision script at `<project>/.dcs/provision`. DCS provides the hook point only — the project owns the script, and the script is never part of the DCS payload.
+A project may supply a provision script at `<project>/.dcs/provision` — DCS owns only the hook point.
 
-Before the first operational period of an incident in a worktree, DCS calls `.dcs/provision <worktree-path> <main-checkout-root>`. Exit 0 signals a successful provision. A non-zero exit produces a warning in `214-LOG.md` but does not block the incident — the incident proceeds with a note that provision returned non-zero. If `.dcs/provision` is absent, the hook call is silently skipped.
+Before an incident's first operational period in a worktree, DCS calls `.dcs/provision <worktree-path> <main-checkout-root>`. Exit 0 = success; non-zero warns in `214-LOG.md` without blocking; absent = silently skipped.
 
-The script must be idempotent: running it twice on the same worktree is safe. It must not assume the worktree is in any particular state beyond what `git worktree add` produces. The project's own maintainers are responsible for the script's content and correctness.
+The script must be idempotent, must not assume worktree state beyond what `git worktree add` produces, and the project owns its correctness.

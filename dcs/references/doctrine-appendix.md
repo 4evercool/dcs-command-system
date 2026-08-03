@@ -89,6 +89,32 @@ Acting on that second misdiagnosis would have written a fabricated
 failed-attempt entry into the append-only 214 — exactly the derived-fact
 error principle 15 forbids, this time inside a log nothing can retract.
 
+**Field lesson 2026-08-03 (platform capability check, incident `spawn-effort-control`).** Before grounding the capability-tier rule in
+the Agent tool's `model` override, the design was checked against the
+two other candidate mechanisms rather than assumed: the interactive
+Agent/Task tool exposes no per-invocation `effort` parameter, only
+`model`; a `Workflow` tool's `opts.effort` surfaced during exploration
+but is unconfirmed as a shipping capability. Verified against the Agent
+tool's own parameter schema — `model` is a documented per-call field; no
+`effort` field exists there. The design therefore reuses tier
+substitution (a different `model` value per spawn) rather than waiting
+on, or silently assuming, a parameter that does not exist.
+
+**Worked example — default tier.** A tasking asks an Ops Specialist to
+correct a single mistyped word in one line of prose; the fix carries no
+ambiguity and touches nothing adjacent. The Dispatcher spawns it at its
+charter's default `model:` tier — the work does not warrant more, so
+complexity-driven selection leaves the seat exactly where the charter
+already sets it.
+
+**Worked example — deliberately stronger tier.** A tasking asks a
+Planning Chief to design tactics for a multi-file architectural change
+spanning a schema, its migration, and every caller. The IC spawns that
+chief a tier above its charter default, via the Agent tool's per-call
+`model` override, because the work's complexity — not an availability
+failure — warrants it. Both examples still run the same availability
+rule described above; only the complexity read differs.
+
 ## The working principles
 
 **Principle 15 — no derived facts (field lesson 2026-07-24, v0.5.2).** The
@@ -657,6 +683,26 @@ Original platform-specific diagnostic commands moved from `doctrine.md` step 5 o
 
 > Original platform diagnostic text:
 > POSIX: `lsof +D <path>` or `fuser -v <path>`; Windows: `powershell "Get-Process | Where-Object { $_.Path -like '*<path>*' }"` (or Sysinternals `handle <path>` if installed)
+
+### D5: Capability-tier unification funding — two relocations (incident `spawn-effort-control`, 2026-08-03)
+
+Unifying the availability-only "Model availability" paragraph into one rule governing both availability and a spawn's own complexity needed more hot-path bytes than that paragraph's own trim could fund inside the fixed budget (`tests/test_doctrine_integrity.py`'s `HOT_PATH_BUDGET_KB`). Two passages were compressed to fund it; both originals are preserved verbatim below, per this incident's own tasking (never delete hot-path prose without routing it here).
+
+**(1) The original "Model availability" paragraph**, replaced in `doctrine.md`'s "Transfer of command" section by the unified "Capability tier" rule:
+
+> **Model availability:** "Fable" = the strongest tier available. If `dcs-commander` with `model: fable` fails, re-spawn with the strongest tier that works and log the actual seat. **Availability is per-spawn and MUST be re-tested at every command point (v0.6.1).** **Never cache the fallback — try the preferred tier first every single time.** NEVER acceptable: the fallback drifting to "the Dispatcher decides itself" — the separate spawn preserves a fresh context, defined inputs, and a logged decision, even same-tier.
+
+Removed: the explicit "Fable" definition and the `dcs-commander`/`model: fable` failure framing (both already established two paragraphs earlier in the same section), the `(v0.6.1)` version tag, and the explanatory tail ("the separate spawn preserves a fresh context, defined inputs, and a logged decision, even same-tier"). Preserved verbatim: all five operative guarantees — re-spawn on failure and log the actual seat; re-tested at every command point; never cache the fallback; try the preferred tier first every single time; never let it drift to "the Dispatcher decides itself" — now shared by both axes rather than availability alone.
+
+**(2) The original "Project-supplied provision hook" body**, compressed in place under its own unchanged heading:
+
+> A project may supply a provision script at `<project>/.dcs/provision`. DCS provides the hook point only — the project owns the script, and the script is never part of the DCS payload.
+>
+> Before the first operational period of an incident in a worktree, DCS calls `.dcs/provision <worktree-path> <main-checkout-root>`. Exit 0 signals a successful provision. A non-zero exit produces a warning in `214-LOG.md` but does not block the incident — the incident proceeds with a note that provision returned non-zero. If `.dcs/provision` is absent, the hook call is silently skipped.
+>
+> The script must be idempotent: running it twice on the same worktree is safe. It must not assume the worktree is in any particular state beyond what `git worktree add` produces. The project's own maintainers are responsible for the script's content and correctness.
+
+Removed: the explicit "never part of the DCS payload" packaging note, the definitional gloss on "idempotent," and the restated "successful"/"is safe" phrasing. Preserved: the script path and hook-point framing, all three exit-code dispositions (success; warn in `214-LOG.md` without blocking; silently skipped if absent), the idempotency and worktree-state requirements, and project ownership of correctness. This passage is unrelated to capability-tier selection; it was compressed only because it was the largest self-contained hot-path passage available to fund this incident's addition without touching a protected heading or principle 13.
 
 ## Workflow field lessons (restored, incident `trim-content-loss-restoration`)
 
