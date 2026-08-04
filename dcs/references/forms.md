@@ -41,12 +41,12 @@ its purpose: a future session (or a human auditing what went wrong) needs
 the honest sequence, not a tidied one. Log entry format:
 
 ```
-[2026-07-22T14:03:00+11:00] IAP-APPROVED: 3f2a1b9c7d4e -- phase: planning -> execution (period 2)
-[2026-07-22T15:41:00+11:00] deviation reported by S1 -- returning to planning
-[2026-07-22T16:10:00+11:00] IAP-APPROVED: 9b7c4a2f1e08 -- phase: planning -> execution (period 2)
-[2026-07-22T16:45:00+11:00] SAFETY-HALT: two refutations on the same check -- see SAFETY.md
-[2026-07-22T17:22:00+11:00] SAFETY-PASS: period 2 complete
-[2026-07-22T17:25:00+11:00] incident closed, archived
+[2026-07-22T14:03:00+11:00] IAP-APPROVED: 3f2a1b9c7d4e -- phase: planning -> execution (period 2) -- op: IC=dcs-commander, fable
+[2026-07-22T15:41:00+11:00] deviation reported by S1 -- returning to planning -- op: IC=dcs-commander, fable
+[2026-07-22T16:10:00+11:00] IAP-APPROVED: 9b7c4a2f1e08 -- phase: planning -> execution (period 2) -- op: IC=dcs-commander, fable
+[2026-07-22T16:45:00+11:00] SAFETY-HALT: two refutations on the same check -- see SAFETY.md -- op: IC=dcs-commander, fable
+[2026-07-22T17:22:00+11:00] SAFETY-PASS: period 2 complete -- op: IC=dcs-commander, fable
+[2026-07-22T17:25:00+11:00] incident closed, archived -- op: IC=dcs-commander, fable
 ```
 
 Sentinels (`IAP-APPROVED:`, `SAFETY-HALT:`, `SAFETY-PASS:`) are recognized
@@ -58,6 +58,37 @@ halt-ceiling counter parses them from exactly that position (doctrine
 principle 13), so a wording pass that drops the bracketed timestamp, moves
 the token out of position, or paraphrases it, silently disarms the
 counter.
+
+## The canonical append tool (`dcs_log.py`)
+
+Every entry above is written by `dcs_log.py`, never by a hand-written
+Edit/Write — its own published `INVOCATION`, quoted verbatim: `python
+"$HOME/.claude/dcs/tools/dcs_log.py" append <slug> --by <operator>
+"<text>"`. `--sentinel {halt,pass,stamp}` prepends the matching token
+(`SAFETY-HALT:`, `SAFETY-PASS:`, or `IAP-APPROVED:`) to the body; omit it
+for an ordinary entry — never hand-type the token into `<text>` instead,
+since an unrequested sentinel-shaped body is refused, not silently
+written. `<operator>` is mandatory (a non-empty `--by` value, the
+session's own identity in the shape the corpus already uses, e.g.
+`IC=dcs-commander, fable`) and always lands last, per the format below,
+never between the bracket and a sentinel token.
+
+Canonical format (`dcs_log.py`'s own published `FORMAT_LINE`, quoted
+verbatim): "One line: a bracketed real-clock timestamp, then the body --
+an optional sentinel token (SAFETY-HALT:, SAFETY-PASS:, or
+IAP-APPROVED:) immediately after the bracket, followed by free text --
+then the operator identity, appended last via the fixed separator '
+-- op: ', which never sits between the bracket and the sentinel."
+
+**Two hand-written exceptions**, deliberate, not oversights: (a)
+`new.md`:216 — initializing `214-LOG.md` from the template CREATES the
+file; `dcs_log.py` appends to one that already exists, never creates it.
+(b) `plan.md`:216 — the 6c preservation map is a multi-line fenced JSON
+attachment indented off column zero, not a one-line entry, so it is
+attached by hand rather than passed through `<text>`. Every other append
+site across the six files that write `214-LOG.md` (`new.md`, `plan.md`,
+`execute.md`, `close.md`, `run.md`, `loop.md`) invokes `dcs_log.py`
+instead of free-text Edit/Write.
 
 ## Why 204 is chief-authored but IC-transcribed
 

@@ -174,7 +174,7 @@ Every command point `new.md`, `plan.md`, and `execute.md` define (typing,
 IAP acceptance, deviation arbitration, verdict disposition) fires exactly
 as those workflows specify while running under `/dcs-run` — spawn
 `dcs-commander` when the session isn't Fable, decide directly when it is,
-log every decision in `214-LOG.md` the same way. `/dcs-run` changes only
+append every decision via `python "$HOME/.claude/dcs/tools/dcs_log.py" append <slug> --by <operator> "<text>"` the same way. `/dcs-run` changes only
 who has to type the next phase command, never who holds command judgment.
 
 ## 9. Report

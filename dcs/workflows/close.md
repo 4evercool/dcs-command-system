@@ -202,8 +202,8 @@ to step 6.
    `powershell "Get-Process | Where-Object { $_.Path -like '*<path>*'
    }"` (or Sysinternals `handle <path>` if installed) — then write
    `.dcs/CLOSED` into the worktree (mere presence is the signal), tell
-   the Owner manual removal is needed, and include the diagnostic output
-   in 214-LOG.md. `dcs_gate.py`'s zombie rule denies every guarded edit
+   the Owner manual removal is needed, and include the diagnostic output via
+   `python "$HOME/.claude/dcs/tools/dcs_log.py" append <slug> --by <operator> "<text>"`. `dcs_gate.py`'s zombie rule denies every guarded edit
    on that worktree in the meantime, so it can't quietly become a second
    life for already-merged work.
 5. Only now does the incident's story name the worktree's fate — carry
@@ -212,7 +212,7 @@ to step 6.
 
 ## 6. Release the gate
 
-Append a final entry to `214-LOG.md`: `incident closed, archived`.
+Append via `dcs_log.py append <slug> --by <operator> "incident closed, archived"`.
 **(v0.3)** In the normal worktree case, this is already accomplished by
 5a step 4 — `.dcs/ACTIVE` lived inside the removed worktree, so there is
 nothing further to delete. Only explicitly delete

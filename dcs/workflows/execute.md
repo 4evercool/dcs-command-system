@@ -51,7 +51,7 @@ execution mode (parallel / sequential / worktree-isolated).
 
 If the incident is Type 1, ask the Owner (`AskUserQuestion`) whether to
 execute via the standard Agent-tool fan-out or emit a deterministic
-Workflow script instead. Record the choice in `214-LOG.md`. If the script
+Workflow script instead. Record the choice via `python "$HOME/.claude/dcs/tools/dcs_log.py" append <slug> --by <operator> "<text>"`. If the script
 path is chosen, adapt — the deviation/Safety Officer gates below still apply.
 
 ## Escalation-trigger check — period boundary (doctrine principle 13)
@@ -109,11 +109,10 @@ summary from memory. Its decision (schemas.md #6, commander decisions)
 governs: `replan` / `amend_tasking` / `escalate_owner`. **If this session is
 Fable**, make the call yourself. Use `AskUserQuestion` when the disposition is
 `escalate_owner` — the right call is genuinely the Owner's judgment, not just
-a mechanical correction. Record in `214-LOG.md`. Update `202-OBJECTIVES.md`
+a mechanical correction. Record via `dcs_log.py append <slug> --by <operator> "<text>"`. Update `202-OBJECTIVES.md`
 and/or the relevant `204-TASKING/*.md` to reflect what was learned — editing
 the plan voids the approval mechanically (the deviation doctrine working as
-intended). Append to `214-LOG.md`: `deviation reported by <ID>: <summary> --
-returning to planning`. Tell the Owner to run `/dcs-plan` again.
+intended). Append via `dcs_log.py append <slug> --by <operator> "deviation reported by <ID>: <summary> -- returning to planning"`. Tell the Owner to run `/dcs-plan` again.
 
 **Any `status: "blocked"`:** report the blocker to the Owner — this is an
 external obstacle, not necessarily a planning defect.
@@ -153,7 +152,7 @@ field or structural non-JSON = deviation — re-spawn (`agents/dcs-safety-office
 
 **Preflight — Channel A:** run `grep -c halt_cycles
 "<project>/.claude/hooks/dcs_gate.py"`; `0` means **phantom ceiling** —
-note in `214-LOG.md` and treat halt count as **advisory**
+note via `dcs_log.py append <slug> --by <operator> "<text>"` and treat halt count as **advisory**
 (`agents/dcs-safety-officer.md` step 6).
 
 This is a command point. **If not running Fable**: spawn `dcs-commander`
@@ -166,10 +165,7 @@ this incident's row from `REGISTER.md`, or "no ESG founded / no register
 row"). Its `verdict_disposition` decision (schemas.md #6, commander decisions) selects the path
 below. **If this session is Fable**, make the call yourself.
 
-**`halt` (binding):** append to `214-LOG.md`:
-```
-[<timestamp>] SAFETY-HALT: <summary of refutations>
-```
+**`halt` (binding):** append to `214-LOG.md` via `dcs_log.py append <slug> --by <operator> --sentinel halt "<summary of refutations>"`.
 Read the count: `python "<project>/.claude/hooks/dcs_gate.py" --halt-count
 "<incident_dir>"`. Two paths:
 - **Fix-taskings:** narrow refutation with room left: write focused
@@ -189,11 +185,7 @@ the previous halt's:
 - **Different class** — genuinely new ground; complex but converging.
 State the read in one sentence the Owner can act on.
 
-**`pass`:** write/append `SAFETY.md` with the verdict **verbatim**. Append
-to `214-LOG.md`:
-```
-[<timestamp>] SAFETY-PASS: period <N> complete
-```
+**`pass`:** write/append `SAFETY.md` with the verdict **verbatim**. Append to `214-LOG.md` via `dcs_log.py append <slug> --by <operator> --sentinel pass "period <N> complete"`.
 
 **Advisories on a pass:** a `pass` carrying `advisories[]` is normal. The IC
 fixes them now, folding into the integration commit at 9b — they are
@@ -219,9 +211,7 @@ doctrine's "Parallel operation"). Fill in status, objectives, safety,
 resource spend, and the three options. Pause — ask the Owner via
 `AskUserQuestion`: continue / pivot / demobilize. For trigger (e),
 **convene ESG** as first option: mark the `REGISTER.md` row `ESCALATED`,
-route to `/dcs-esg`. Record the decision in the sitrep and append to
-`214-LOG.md`: `ESCALATION: trigger <a|b|c|d|e|f> -- <reason> -- Owner:
-<decision>`. Proceed per the decision: **continue** resumes; **pivot**
+route to `/dcs-esg`. Record the decision in the sitrep and append via `dcs_log.py append <slug> --by <operator> "ESCALATION: trigger <a|b|c|d|e|f> -- <reason> -- Owner: <decision>"`. Proceed per the decision: **continue** resumes; **pivot**
 routes to `/dcs-plan`; **demobilize** routes to `/dcs-close` (or treat as
 abandoned per `/dcs-plan` step 6b).
 
@@ -229,8 +219,7 @@ abandoned per `/dcs-plan` step 6b).
 
 Stage territory files **explicitly by path** (`git add <file> ...`). Never
 `git add -A` / `git add .`. Message references intake source ids and
-summarizes the period's change. Append to `214-LOG.md`: `integration commit
-<short sha> (<n> files)`.
+summarizes the period's change. Append via `dcs_log.py append <slug> --by <operator> "integration commit <short sha> (<n> files)"`.
 
 Assess against `202-OBJECTIVES.md`:
 - **Goal fully met:** tell the Owner to run `/dcs-close`.
@@ -239,7 +228,7 @@ Assess against `202-OBJECTIVES.md`:
   Keeping the incident open keeps it in a branch — unmerged, unshipped, and
   fixing nothing. Only keep open when the remaining work is genuinely
   inseparable (schema change whose readers are not yet updated, contract
-  half-migrated). State which in `214-LOG.md`. (field lesson 2026-07-24 —
+  half-migrated). State which via `dcs_log.py append <slug> --by <operator> "<text>"`. (field lesson 2026-07-24 —
   `dcs/references/doctrine-appendix.md`, "Workflow field lessons", W3)
 
 ## 10. Report

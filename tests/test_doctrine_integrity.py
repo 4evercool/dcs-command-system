@@ -3289,5 +3289,1107 @@ else:
           "exists",
           False, f"not found at {_c9_delegation_tpl_path}")
 
+# --- 28. criterion 6: 214-LOG.md duplicate/out-of-order timestamp check ----
+# (log-append-helper) -- RENUMBERED from 24 (post-second-halt fix-tasking,
+# S4): this incident's four sections landed already numbered 24-27, which
+# collided with four PRE-EXISTING sections also numbered 24-27
+# (independence-fail-closed-and-model-floor, lines ~2756-3291 above) --
+# this file's own numbers are advisory prose, so nothing broke
+# mechanically, but the incident's own paper trail had been citing
+# "check 24"/"check 25"/etc for this incident's checks throughout, hence
+# this note. Old-to-new: 24->28, 25->29, 26->30, 27->31. -----------------
+# `dcs/tools/record_integrity.py`'s new criterion 6 (S2's territory this
+# incident) catches a 214-LOG.md, dated on or after LOG_ORDER_EFFECTIVE_DATE,
+# with N-or-more entries sharing one identical bracketed timestamp, or two
+# chronologically-comparable entries out of order -- date-scoped so history
+# predating the tool is never retroactively broken (202 criterion 6).
+# Imported via the SAME guarded `ri` already established by check 23 above
+# (never a second, redundant import of the same file) -- guarded because
+# this incident runs four specialists in parallel and S2's own additions to
+# `ri` are a read dependency this file does not control the landing order
+# of; every case below degrades to a NAMED RED finding instead of a crash
+# when `ri` is None or lacks the expected attribute, exactly like check
+# 23's own cases.
+#
+# Two constants are READ from the imported module, never retyped
+# (204-TASKING/S4.md's own instruction: "never retype 3 or the date"):
+# ri.DUPLICATE_TIMESTAMP_THRESHOLD (record_integrity.py:1129) and
+# ri.LOG_ORDER_EFFECTIVE_DATE (record_integrity.py:1062).
+import contextlib
+
+_LO_FIXTURES_ROOT = REPO / "tests" / "fixtures" / "log-order"
+_LO_SCENARIOS = (
+    "2026-08-05-clean", "2026-08-05-duplicate-stamps",
+    "2026-08-05-out-of-order", "2026-08-05-legacy-unparseable",
+    "2026-08-01-before-effective-date", "no-date-prefix",
+)
+
+# Degeneracy guard (204-TASKING/S4.md deliverable 3; exactly check 23(i)'s
+# own shape): without a non-empty fixture population covering every named
+# scenario, every case below passes vacuously.
+_lo_scenario_dirs = (
+    {p.name for p in _LO_FIXTURES_ROOT.iterdir() if p.is_dir()}
+    if _LO_FIXTURES_ROOT.is_dir() else set()
+)
+check("log order: fixture population is non-empty and covers all named "
+      "scenarios (degeneracy guard -- without it every case below passes "
+      "vacuously)",
+      _LO_FIXTURES_ROOT.is_dir() and set(_LO_SCENARIOS) <= _lo_scenario_dirs,
+      f"found scenario dirs under {_LO_FIXTURES_ROOT}: {sorted(_lo_scenario_dirs)}")
+
+
+def _lo_capture(func, *args):
+    """Run `func(*args)`, returning (result, printed_text, exception).
+    collect_log_order_findings()/log_order_findings() print their ALWAYS-
+    PRINTED dispositions and notes directly (record_integrity.py's own
+    documented convention -- see log_order_findings()'s own docstring on
+    why notes are printed rather than returned as a second channel);
+    captured here rather than asserted against by guessing S2's exact
+    wording from outside the module. A crash here IS the defect
+    criterion 6 exists to rule out ("never a crash") -- caught and
+    reported as a named FAIL below, never left to abort this script."""
+    _buf = io.StringIO()
+    try:
+        with contextlib.redirect_stdout(_buf):
+            result = func(*args)
+        return result, _buf.getvalue(), None
+    except Exception as exc:  # noqa: broad on purpose -- see above
+        return None, _buf.getvalue(), exc
+
+
+def _lo_max_consecutive_bracket_run(text):
+    """Longest run of CONSECUTIVE, identical raw '[...]' brackets among a
+    214-LOG.md's own entry-starting lines -- the same "raw string, no
+    parsing, consecutive" rule log_order_findings() itself documents
+    (record_integrity.py:1157-1165). Used only to size this test's own
+    expectation against whatever a fixture ACTUALLY contains, so nothing
+    here ever retypes DUPLICATE_TIMESTAMP_THRESHOLD's value."""
+    brackets = [m.group(1) for m in re.finditer(r"^(\[[^\]]*\])", text, re.M)]
+    best = cur = 0
+    prev = None
+    for b in brackets:
+        cur = cur + 1 if b == prev else 1
+        best = max(best, cur)
+        prev = b
+    return best
+
+
+if (ri is None or not hasattr(ri, "log_order_findings")
+        or not hasattr(ri, "DUPLICATE_TIMESTAMP_THRESHOLD")):
+    _lo_reason = (f"record_integrity.py not importable yet (S1/S2 have not "
+                   f"landed): {_ri_import_error!r}") if ri is None else (
+                   "module has no log_order_findings/"
+                   "DUPLICATE_TIMESTAMP_THRESHOLD attribute (S2 has not "
+                   "landed yet)")
+    for _lo_name in (
+        "log order (pure): clean stamps -> no findings",
+        "log order (pure) BOUNDARY: THRESHOLD identical brackets -> a finding",
+        "log order (pure) BOUNDARY: THRESHOLD-1 identical brackets -> no finding",
+        "log order (pure): two adjacent entries reversed -> a finding",
+        "log order (pure): legacy-unparseable bracket paired with a valid "
+        "one -> no crash, no finding",
+        "log order (pure): naive/aware mixed pair -> no crash, no finding, "
+        "never a TypeError",
+    ):
+        check(f"{_lo_name} ({_lo_reason})", False)
+else:
+    # (a) clean: strictly increasing, all-distinct brackets -> no findings.
+    _lo_clean_stamps = [
+        (1, "[2026-08-05T09:00:00+00:00]"),
+        (2, "[2026-08-05T09:05:00+00:00]"),
+        (3, "[2026-08-05T09:10:00+00:00]"),
+    ]
+    _lo_res, _lo_out, _lo_exc = _lo_capture(ri.log_order_findings, _lo_clean_stamps)
+    check("log order (pure): clean, strictly-increasing, all-distinct "
+          f"stamps -> no findings (got: {_lo_res!r}; raised: {_lo_exc!r})",
+          _lo_exc is None and _lo_res == [])
+
+    # (b) THE BOUNDARY PAIR -- read DUPLICATE_TIMESTAMP_THRESHOLD from the
+    # imported module, never retyped (record_integrity.py:1129).
+    _lo_T = ri.DUPLICATE_TIMESTAMP_THRESHOLD
+    _lo_stamps_at = [(i + 1, "[2026-08-05T09:10:00+00:00]") for i in range(_lo_T)]
+    _lo_stamps_below = _lo_stamps_at[:-1]
+    _lo_res_at, _lo_out_at, _lo_exc_at = _lo_capture(ri.log_order_findings, _lo_stamps_at)
+    _lo_res_below, _lo_out_below, _lo_exc_below = _lo_capture(
+        ri.log_order_findings, _lo_stamps_below)
+    check(f"log order (pure) BOUNDARY: exactly DUPLICATE_TIMESTAMP_THRESHOLD "
+          f"({_lo_T}) identical, consecutive brackets -> a finding "
+          f"(record_integrity.py:1129; got: {_lo_res_at!r}; "
+          f"raised: {_lo_exc_at!r})",
+          _lo_exc_at is None and bool(_lo_res_at))
+    check(f"log order (pure) BOUNDARY: DUPLICATE_TIMESTAMP_THRESHOLD-1 "
+          f"({_lo_T - 1}) identical, consecutive brackets -> no finding -- "
+          f"the boundary is the whole point (got: {_lo_res_below!r}; "
+          f"raised: {_lo_exc_below!r})",
+          _lo_exc_below is None and _lo_res_below == [])
+
+    # (c) two adjacent entries reversed -> a finding.
+    _lo_reversed_stamps = [
+        (10, "[2026-08-05T09:20:00+00:00]"),
+        (11, "[2026-08-05T09:10:00+00:00]"),
+    ]
+    _lo_res_rev, _lo_out_rev, _lo_exc_rev = _lo_capture(
+        ri.log_order_findings, _lo_reversed_stamps)
+    check("log order (pure): two adjacent entries reversed -> a finding "
+          f"(got: {_lo_res_rev!r}; raised: {_lo_exc_rev!r})",
+          _lo_exc_rev is None and bool(_lo_res_rev))
+
+    # (d) legacy-unparseable bracket (colon-less offset -- dcs_gate.py's own
+    # SPECIMENS use this exact shape) paired with a valid one -> printed as
+    # a note, never a finding, never a crash.
+    _lo_legacy_stamps = [
+        (1, "[2026-08-05]"),
+        (2, "[2026-08-05T09:15:00+1100]"),
+    ]
+    _lo_res_leg, _lo_out_leg, _lo_exc_leg = _lo_capture(
+        ri.log_order_findings, _lo_legacy_stamps)
+    check("log order (pure): a legacy, colon-less-offset bracket that does "
+          "not parse (dcs_gate.py's own SPECIMENS shape) is a NOTE, never a "
+          f"finding, never a crash (got: {_lo_res_leg!r}; printed: "
+          f"{_lo_out_leg.strip()!r}; raised: {_lo_exc_leg!r})",
+          _lo_exc_leg is None and _lo_res_leg == [] and bool(_lo_out_leg.strip()))
+
+    # (e) mixed naive/aware pair -> a NOTE, never a finding, never a
+    # TypeError (measured on this worktree's Python: a naive/aware
+    # comparison raises TypeError if not classified explicitly first).
+    _lo_mixed_stamps = [
+        (1, "[2026-08-05T08:00:00+00:00]"),
+        (2, "[2026-08-05]"),
+    ]
+    _lo_res_mix, _lo_out_mix, _lo_exc_mix = _lo_capture(
+        ri.log_order_findings, _lo_mixed_stamps)
+    check("log order (pure): a naive/offset-aware mixed pair is a NOTE, "
+          f"never a finding, never a TypeError (got: {_lo_res_mix!r}; "
+          f"printed: {_lo_out_mix.strip()!r}; raised: {_lo_exc_mix!r})",
+          _lo_exc_mix is None and _lo_res_mix == [] and bool(_lo_out_mix.strip()))
+
+# --- IO half: collect_log_order_findings() against the six on-disk fixtures
+if (ri is None or not hasattr(ri, "collect_log_order_findings")
+        or not hasattr(ri, "LOG_ORDER_EFFECTIVE_DATE")):
+    _lo_reason2 = (f"record_integrity.py not importable yet (S1/S2 have not "
+                    f"landed): {_ri_import_error!r}") if ri is None else (
+                    "module has no collect_log_order_findings/"
+                    "LOG_ORDER_EFFECTIVE_DATE attribute (S2 has not landed "
+                    "yet)")
+    for _lo_name2 in _LO_SCENARIOS:
+        check(f"log order (IO): {_lo_name2}/214-LOG.md ({_lo_reason2})", False)
+else:
+    # Structural sanity: the fixture directory dates genuinely straddle the
+    # LIVE LOG_ORDER_EFFECTIVE_DATE, read from the module -- never a
+    # hardcoded "2026-08-04" here.
+    check("log order fixture sanity: '2026-08-01' <= "
+          f"ri.LOG_ORDER_EFFECTIVE_DATE ({ri.LOG_ORDER_EFFECTIVE_DATE!r}), "
+          "so 2026-08-01-before-effective-date/ is genuinely out of scope",
+          "2026-08-01" <= ri.LOG_ORDER_EFFECTIVE_DATE)
+    check("log order fixture sanity: '2026-08-05' > "
+          f"ri.LOG_ORDER_EFFECTIVE_DATE ({ri.LOG_ORDER_EFFECTIVE_DATE!r}), "
+          "so the 2026-08-05-*/ fixtures are genuinely in scope",
+          "2026-08-05" > ri.LOG_ORDER_EFFECTIVE_DATE)
+
+    for _lo_scenario, _lo_expect_scope, _lo_expect_findings in (
+        ("2026-08-05-clean", "in scope", False),
+        ("2026-08-05-duplicate-stamps", "in scope", True),
+        ("2026-08-05-out-of-order", "in scope", True),
+        ("2026-08-05-legacy-unparseable", "in scope", False),
+        ("2026-08-01-before-effective-date", "out of scope", False),
+        ("no-date-prefix", "out of scope", False),
+    ):
+        _lo_dir = _LO_FIXTURES_ROOT / _lo_scenario
+        _lo_res3, _lo_out3, _lo_exc3 = _lo_capture(
+            ri.collect_log_order_findings, _lo_dir, _gate)
+        check(f"log order (IO): {_lo_scenario}/214-LOG.md -- disposition "
+              f"mentions {_lo_expect_scope!r} (printed: {_lo_out3.strip()!r}; "
+              f"raised: {_lo_exc3!r})",
+              _lo_exc3 is None and _lo_expect_scope in _lo_out3.lower())
+        # NOTE: compared against `_lo_expect_findings` explicitly (not just
+        # truthiness) -- this file's own check(name, ok, detail) takes a
+        # ready-made boolean, unlike test_dcs_gate.py's check(name, got,
+        # want), so the comparison must be spelled out here.
+        _lo_has_finding = _lo_exc3 is None and bool(_lo_res3)
+        check(f"log order (IO): {_lo_scenario}/214-LOG.md -- "
+              f"{'a finding' if _lo_expect_findings else 'no finding'} "
+              f"(expected finding: {_lo_expect_findings}; got findings: "
+              f"{_lo_res3!r}; raised: {_lo_exc3!r})",
+              _lo_has_finding == _lo_expect_findings)
+
+    # duplicate-stamps: the finding's own count matches whatever the
+    # fixture ACTUALLY contains (never a hardcoded "3") compared against
+    # the LIVE DUPLICATE_TIMESTAMP_THRESHOLD.
+    _lo_dup_path = _LO_FIXTURES_ROOT / "2026-08-05-duplicate-stamps" / "214-LOG.md"
+    _lo_dup_run = _lo_max_consecutive_bracket_run(_lo_dup_path.read_text(encoding="utf-8"))
+    check("log order fixture sanity: 2026-08-05-duplicate-stamps/214-LOG.md's "
+          f"own longest consecutive identical-bracket run ({_lo_dup_run}) is "
+          f">= the LIVE DUPLICATE_TIMESTAMP_THRESHOLD "
+          f"({ri.DUPLICATE_TIMESTAMP_THRESHOLD}), so a finding is genuinely "
+          "expected from this fixture's actual content",
+          _lo_dup_run >= ri.DUPLICATE_TIMESTAMP_THRESHOLD)
+
+    # before-effective-date: same duplicate SHAPE as the in-scope fixture
+    # above, placed under a pre-effective-date directory -- proves
+    # suppression is genuinely date-scope-driven, not merely "this fixture
+    # happens to have no duplicates."
+    _lo_before_path = _LO_FIXTURES_ROOT / "2026-08-01-before-effective-date" / "214-LOG.md"
+    _lo_before_run = _lo_max_consecutive_bracket_run(_lo_before_path.read_text(encoding="utf-8"))
+    check("log order fixture sanity: 2026-08-01-before-effective-date/"
+          f"214-LOG.md carries the SAME duplicate shape ({_lo_before_run} "
+          "consecutive) as the in-scope duplicate-stamps fixture, so its "
+          "empty findings above are proof of date-scope suppression, not "
+          "an accident of content",
+          _lo_before_run >= ri.DUPLICATE_TIMESTAMP_THRESHOLD)
+
+# --- 29. workflow append-site mechanical check (log-append-helper, --------
+# criterion 4) -- SECOND REBUILD (post-SECOND-halt fix-tasking) --------
+# RENUMBERED from 25 -- see check 28's header comment above for the full
+# old-to-new mapping and why.
+#
+# Criterion 4 requires every genuine 214-LOG.md append instruction across
+# dcs/workflows/*.md to invoke dcs_log.py, with exactly two published,
+# permanent exclusions (new.md's template initialization; plan.md's
+# preservation-map attachment, which uses preservation_map.py instead). A
+# one-time human grep proves nothing about the NEXT workflow edit -- this
+# check runs at every merge, matching 202 criterion 4's own verifiable
+# clause ("a command returning no offending line").
+#
+# FIRST REBUILD (post-first-halt) added a two-signal detector -- (A) the
+# line itself invokes dcs_log.py, (B) the original hand-written-shape
+# fallback -- but the Safety Officer's SECOND adversarial pass found it
+# only narrowed the same defect class rather than closing it (verified
+# independently by dcs-commander, in source, not just claimed): signal
+# (A) made a line's population membership AND its automatic compliance
+# the SAME step, so an (A) hit could never be flagged as a violation;
+# only (B) hits ever could, and 17 of 22 real converted sites carry no
+# (B) token at all. Worse, the per-file hit COUNT was taken BEFORE
+# exclusions were applied, so new.md's and plan.md's degeneracy guards
+# were held up SOLELY by their one published-exclusion line -- a line
+# the compliance loop then unconditionally skipped -- making those two
+# guards structurally incapable of ever catching a real violation. Four
+# mutations proved it, all missed: stripping every dcs_log.py mention
+# from new.md (still green), from plan.md (still green), reverting one
+# plan.md site to hand-written-shaped text (still green), reverting one
+# execute.md site (still green, despite execute.md being one of the
+# actively-enforced files).
+#
+# SECOND REBUILD -- three structural changes, not a fourth pattern
+# variant (this incident's own tasking, second fix-tasking round):
+#
+#   (1) COUNT-MANIFEST, pinned OUTSIDE the guarded text (module-level
+#       constant below, _WAC_EXPECTED_SITE_COUNTS). The check compares
+#       the ACTUAL discovered dcs_log.py-invocation-line count per file
+#       against this manifest and goes red on ANY mismatch, not just
+#       zero -- a mutation cannot hide by leaving some real sites
+#       intact, and a legitimate future edit that changes a count must
+#       update the manifest in the same commit (a feature: it forces
+#       conscious attention exactly where automatic detection failed
+#       twice).
+#
+#   (2) NEGATIVE SCAN, independent of (1) and of population membership
+#       entirely (_wac_negative_scan() below): every line shaped like a
+#       hand-written 214-LOG.md append instruction (the original
+#       signal-B pattern -- an append/record/log/note/initialize keyword
+#       preceding a "214-LOG" mention, on the same line or the single
+#       preceding line, directional: the keyword must PRECEDE "214-LOG",
+#       never follow it) is a violation UNLESS that EXACT line also
+#       invokes dcs_log.py itself -- checked on the SAME LINE ONLY,
+#       never a multi-line window. A window is exactly what let an
+#       unrelated neighbouring hit rescue a reverted line in the first
+#       rebuild; restricting to the same line closes that hole while
+#       still correctly passing the corpus's three real lines that
+#       legitimately name BOTH "214-LOG.md" and "dcs_log.py" together
+#       (execute.md:168, execute.md:188, loop.md:53 -- verified against
+#       the live tree, see this tasking's return for the grep
+#       transcript). The two published exclusions are matched HERE, AT
+#       SCAN TIME, inside the scan itself: an excluded line is filtered
+#       out before it is ever returned, so it can never again be
+#       miscounted toward satisfying anything downstream -- this is
+#       exactly what let the old guard hide behind new.md's and
+#       plan.md's exclusion lines.
+#
+#   (3) FOUR PERMANENT, IN-MEMORY SENSITIVITY SELF-TESTS (below, after
+#       the real-tree loop): the Safety Officer's four mutations,
+#       reproduced against _wac_check_file() -- the SAME function the
+#       real-tree loop calls -- never touching a file on disk. A future
+#       rebuild of this check cannot ship green unless it still defeats
+#       these four specific, permanently-recorded attacks.
+#
+# (1) and (2) are two INDEPENDENT checks that must BOTH pass -- a line
+# miscounted by one can still be caught by the other.
+#
+# THIRD REBUILD (log-append-helper, third pass advisory fold-in --
+# SAFETY.md's own five advisories, third pass, folding into the
+# integration commit per execute.md step 9's "advisories on a pass" path)
+# -- four structural fixes to (1) and (2) above, not a fifth signal:
+#
+#   ITEM 1 (advisory 1): the NEGATIVE SCAN (2) walked only the six
+#       _WAC_WRITER_FILES, so a future append-shaped line added to
+#       deploy.md, esg.md, init.md or status.md (measured zero '214-LOG'
+#       mentions each, so no present-state defect) was invisible. The
+#       negative scan is now ALSO run over every dcs/workflows/*.md file
+#       (discovered via workflows(), never a named list) in a second,
+#       independent real-tree loop below the per-writer one; the
+#       count-manifest (1) stays bound to _WAC_WRITER_FILES exactly as
+#       before -- only the negative scan widens.
+#
+#   ITEM 2 (advisory 2): the negative scan's keyword look-back was
+#       exactly one physical line, so a hand-written instruction wrapped
+#       across three or more lines evaded it (a two-line wrap was
+#       already caught). The look-back now scans backward to the
+#       enclosing markdown paragraph's last blank line
+#       (_wac_paragraph_lookback), not a fixed one-line window -- for the
+#       KEYWORD side only. The dcs_log.py COMPLIANCE test stays same-line
+#       only (_wac_sentence_end), exactly as the second rebuild
+#       deliberately narrowed it: every real compliant site in the
+#       corpus carries both tokens on one physical line.
+#
+#   ITEM 3/5 (advisories 3 and 5 -- ONE fix): `if "dcs_log.py" in line:
+#       continue` marked the ENTIRE line compliant off the FIRST
+#       '214-LOG' occurrence only (`line.index()`), so (a) a hand-written
+#       clause appended onto an already-compliant line was invisible
+#       (advisory 3), and (b) a reverted site whose line also carries an
+#       earlier, benign '214-LOG.md' mention could never be reached by
+#       the scan at all, regardless of what the count-manifest said
+#       (advisory 5). Every '214-LOG' occurrence on a line is now
+#       examined independently, and compliance requires dcs_log.py to
+#       fall within the SAME SENTENCE as the matched keyword
+#       (_wac_sentence_start / _wac_sentence_end), not merely anywhere on
+#       the line. Fixing this one thing closes both advisories: once
+#       every occurrence is scanned, a reverted line is caught on its
+#       own, independently of the manifest -- restoring the
+#       two-independent-signals property advisory 5 asks for explicitly.
+#
+#   ITEM 4 (advisory 4): the two published exclusions matched as
+#       unanchored, case-folded substrings ("template", "preservation")
+#       over the WHOLE line, so any future line merely containing that
+#       word anywhere -- new.md is dense with template prose -- was
+#       silently exempt regardless of context. Each exclusion is now
+#       anchored to its actual published site's own invariant phrase,
+#       verbatim: new.md:217's "Initialize `214-LOG.md` from the
+#       template", plan.md:214's "fenced JSON block indented off column
+#       zero".
+#
+# Eight permanent, in-memory sensitivity self-tests below (labelled B2,
+# E2, E3, C, G, X1, X3, A, matching SAFETY.md's own "checked" list
+# verbatim) reproduce the Safety Officer's own third-pass mutations
+# against _wac_check_file / _wac_negative_scan -- the SAME functions the
+# real-tree loops call.
+_WAC_KEYWORD_RE = re.compile(
+    r'append|record|(?<!-)\blog\b(?!\.md)|\bnote\b|\binitialize\b',
+    re.IGNORECASE)
+
+_WAC_EXCLUSIONS = (
+    # (a) new.md creates 214-LOG.md FROM THE TEMPLATE -- an
+    # initialization, never an append (published exclusion (a),
+    # 204-TASKING/S3.md, dcs/references/forms.md's own "Two hand-written
+    # exceptions" paragraph). THIRD REBUILD item 4: anchored to the
+    # site's own invariant phrase, verbatim (dcs/workflows/new.md:217),
+    # rather than the bare word "template" -- new.md is dense with
+    # template prose, so a future line merely containing that word
+    # elsewhere must not be silently exempted.
+    ("new.md", "Initialize `214-LOG.md` from the template"),
+    # (b) plan.md's preservation map is a multi-line fenced JSON
+    # attachment written by preservation_map.py, indented off column
+    # zero -- published exclusion (b), same two sources. THIRD REBUILD
+    # item 4: anchored to the site's own invariant phrase, verbatim
+    # (dcs/workflows/plan.md:214), rather than the bare word
+    # "preservation".
+    ("plan.md", "fenced JSON block indented off column zero"),
+)
+
+# The six files 202 criterion 4 actually binds -- every genuine
+# hand-written append site lives in one of these (status.md is
+# read-only and untouched; deploy.md/esg.md/init.md carry no 214-LOG
+# append site at all).
+_WAC_WRITER_FILES = ("new.md", "plan.md", "execute.md", "close.md", "run.md", "loop.md")
+
+# ITEM (1): the count-manifest. Verified against the real, current tree
+# for THIS fix (S4, second fix-tasking) with, for each file:
+#   grep -c "dcs_log.py" dcs/workflows/<file>.md
+# which gave new.md=1, plan.md=8, execute.md=9, close.md=2, run.md=1,
+# loop.md=1 -- total 22, matching the Safety Officer's own "22 real
+# converted sites" figure exactly (see this tasking's return for the
+# full grep transcript). A legitimate future edit that adds or removes a
+# dcs_log.py call must update this table in the same commit.
+_WAC_EXPECTED_SITE_COUNTS = {
+    "new.md": 1,
+    "plan.md": 8,
+    "execute.md": 9,
+    "close.md": 2,
+    "run.md": 1,
+    "loop.md": 1,
+}
+
+check("workflow append-site count-manifest: _WAC_EXPECTED_SITE_COUNTS "
+      "covers exactly the six writer files, no more, no fewer "
+      "(manifest-integrity degeneracy guard)",
+      set(_WAC_EXPECTED_SITE_COUNTS) == set(_WAC_WRITER_FILES),
+      f"manifest keys: {sorted(_WAC_EXPECTED_SITE_COUNTS)}; writer files: "
+      f"{sorted(_WAC_WRITER_FILES)}")
+
+
+def _wac_dcs_log_lines(text):
+    """1-indexed line numbers where 'dcs_log.py' appears as a substring --
+    the ONE signal item (1)'s count-manifest check compares against
+    _WAC_EXPECTED_SITE_COUNTS, and the same signal item (2)'s negative
+    scan uses to recognise an already-compliant line (same line only).
+    Never re-derived a second way anywhere below."""
+    return [i + 1 for i, line in enumerate(text.splitlines()) if "dcs_log.py" in line]
+
+
+# THIRD REBUILD helpers (log-append-helper, third pass advisory items 2
+# and 3/5). A "real" sentence-ending period is one followed by whitespace
+# or end-of-string, optionally through trailing closing punctuation
+# (a closing quote, backtick, paren, bracket or bold-marker asterisk --
+# e.g. run.md:118's grammar quote, which ends 'off column zero." (see',
+# period THEN closing quote THEN space). A period immediately followed by
+# a letter (the extension dot in dcs_log.py, 214-LOG.md, SAFETY.md, ...)
+# is a file-extension period, never a sentence boundary, and is excluded
+# because no amount of trailing punctuation reaches whitespace before a
+# letter gets in the way.
+_WAC_SENTENCE_END_RE = re.compile(r'''\.['"`)\]*]*(?=\s|$)''')
+
+
+def _wac_sentence_start(text_before):
+    """Everything in `text_before` after its LAST real sentence-ending
+    period, or the whole of `text_before` if it has none -- the text of
+    the sentence still "open" at the end of `text_before`. `text_before`
+    may itself be a multi-line, single-space-joined buffer (item 2's
+    widened paragraph look-back): a period that really ended one of those
+    joined lines is still recognised, because the join uses a literal
+    space, exactly what a rendered markdown paragraph would show."""
+    _matches = list(_WAC_SENTENCE_END_RE.finditer(text_before))
+    return text_before[_matches[-1].end():] if _matches else text_before
+
+
+def _wac_sentence_end(text_after):
+    """The forward mirror of _wac_sentence_start: `text_after` up to and
+    including its FIRST real sentence-ending period, or the whole of
+    `text_after` if it has none. Deliberately SAME-LINE only (`text_after`
+    is always a slice of one physical line below) -- item 3 narrows the
+    dcs_log.py compliance test to "same sentence", not "same line", but
+    does not widen it across a line break: every real compliant site in
+    the current corpus carries both tokens on one physical line."""
+    _m = _WAC_SENTENCE_END_RE.search(text_after)
+    return text_after[:_m.end()] if _m else text_after
+
+
+def _wac_paragraph_lookback(lines, i):
+    """Lines of the enclosing markdown paragraph strictly before line
+    index `i` (0-indexed) -- scanning backward from i-1 and stopping at
+    (excluding) the nearest blank line above, or the start of the file.
+    ITEM 2 fix (log-append-helper third pass): replaces the old fixed
+    one-line look-back (`lines[i-1]` only), which let a hand-written
+    instruction wrapped across three or more physical lines evade
+    detection -- a two-line wrap was already caught; three or more was
+    not. Returned in reading order (oldest first)."""
+    _out = []
+    _j = i - 1
+    while _j >= 0 and lines[_j].strip() != "":
+        _out.append(lines[_j])
+        _j -= 1
+    _out.reverse()
+    return _out
+
+
+def _wac_negative_scan(filename, text, exclusions=_WAC_EXCLUSIONS):
+    """ITEM (2): an INDEPENDENT, corpus-wide negative scan, decoupled
+    from population membership -- and, since the THIRD REBUILD, called
+    over every dcs/workflows/*.md file, not only the six the
+    count-manifest binds (see the widened real-tree loop below). EVERY
+    occurrence of '214-LOG' on a line is examined (THIRD REBUILD item 3/5
+    fix -- no longer only the first, via line.index()): an occurrence is
+    a violation UNLESS
+      (a) an append/record/log/note/initialize keyword is found in the
+          SAME SENTENCE, directional (keyword must PRECEDE '214-LOG',
+          never follow it) -- "sentence" may now span back across
+          physical lines to the enclosing paragraph's start (item 2 fix,
+          _wac_paragraph_lookback / _wac_sentence_start); an occurrence
+          with no such keyword is not a violation candidate and is
+          skipped without consuming the exclusions below, OR
+      (b) dcs_log.py is mentioned within that SAME SENTENCE (item 3 fix:
+          no longer "anywhere on the line") -- checked on the SAME LINE
+          ONLY going forward (_wac_sentence_end), matching every real
+          compliant site in the corpus, which all carry both tokens on
+          one physical line, OR
+      (c) the line matches one of the two published exclusions, anchored
+          here, AT SCAN TIME, to the exclusion's own invariant phrase
+          (item 4 fix) rather than a bare keyword anywhere on the line:
+          an excluded line is filtered out before it is ever returned, so
+          it can never be miscounted toward satisfying anything
+          downstream.
+    Scanning every occurrence (not just the first) is also what restores
+    the two-independent-signals property item 5 asks for: a reverted
+    site whose line also carries an earlier, benign '214-LOG.md' mention
+    is no longer hidden behind that first, irrelevant occurrence,
+    regardless of what the count-manifest says.
+    Returns [(line_no, line_text)], 1-indexed, at most one entry per
+    line; non-empty means violation(s)."""
+    lines = text.splitlines()
+    hits = []
+    for i, line in enumerate(lines):
+        if "214-LOG" not in line:
+            continue
+        lookback_text = " ".join(_wac_paragraph_lookback(lines, i))
+        if lookback_text:
+            lookback_text += " "
+        search_from = 0
+        while True:
+            idx = line.find("214-LOG", search_from)
+            if idx == -1:
+                break
+            search_from = idx + 1
+            same_line_prefix = line[:idx]
+            sentence_prefix = _wac_sentence_start(lookback_text + same_line_prefix)
+            if not _WAC_KEYWORD_RE.search(sentence_prefix):
+                continue  # this occurrence's own sentence names no keyword
+            sentence_suffix = _wac_sentence_end(line[idx:])
+            if "dcs_log.py" in sentence_prefix or "dcs_log.py" in sentence_suffix:
+                continue  # dcs_log.py mentioned in the SAME sentence -- compliant
+            if any(filename == _fn and _phrase in line for _fn, _phrase in exclusions):
+                continue  # published exclusion, anchored to its invariant phrase
+            hits.append((i + 1, line))
+            break  # one flagged occurrence is enough to fail the line
+    return hits
+
+
+def _wac_check_file(filename, text, expected_count):
+    """Both item (1) and item (2) checks, run against one (filename,
+    text) pair, returned as a single list of violation strings. THE one
+    function both the real-tree loop below AND the four permanent
+    sensitivity self-tests (item 3) call -- a self-test therefore
+    exercises EXACTLY the logic that runs at merge time, never a
+    parallel re-implementation that could itself drift from it.
+    `expected_count` of None means the manifest has no entry for
+    `filename` at all -- its own named violation, distinct from a
+    numeric mismatch."""
+    violations = []
+    actual_count = len(_wac_dcs_log_lines(text))
+    if expected_count is None:
+        violations.append(
+            f"{filename}: no _WAC_EXPECTED_SITE_COUNTS manifest entry for "
+            "this file")
+    elif actual_count != expected_count:
+        violations.append(
+            f"{filename}: dcs_log.py invocation-site count mismatch -- "
+            f"manifest expects {expected_count}, found {actual_count}")
+    for _line_no, _line_text in _wac_negative_scan(filename, text):
+        violations.append(
+            f"{filename}:{_line_no}: hand-written-shaped 214-LOG.md append "
+            f"instruction, names no dcs_log.py on this line, and is not a "
+            f"published exclusion: {_line_text.strip()!r}")
+    return violations
+
+
+# --- real-tree checks: item (1) + item (2) combined, one named case per
+# writer file -----------------------------------------------------------
+for _wac_fn in _WAC_WRITER_FILES:
+    _wac_text = (REPO / "dcs" / "workflows" / _wac_fn).read_text(encoding="utf-8")
+    _wac_violations = _wac_check_file(
+        _wac_fn, _wac_text, _WAC_EXPECTED_SITE_COUNTS.get(_wac_fn))
+    check(f"workflow append-site check: {_wac_fn} matches its count-"
+          "manifest entry (item 1) AND has no hand-written-shaped "
+          "214-LOG.md append instruction outside the two published "
+          "exclusions (item 2)",
+          not _wac_violations, "; ".join(_wac_violations))
+
+# --- THIRD REBUILD item 1 (log-append-helper, third pass advisory 1):
+# the negative scan itself must cover every dcs/workflows/*.md file, not
+# only the six _WAC_WRITER_FILES the count-manifest binds -- a future
+# append-shaped line added to a currently-silent file (deploy.md, esg.md,
+# init.md, status.md) was invisible to a scan that only walked the six
+# writers. The population is DISCOVERED via workflows() (defined at the
+# top of this module, already used by check 17's line-count budget),
+# never a named list, so a NEW workflow file enters scope automatically.
+# The count-manifest check above stays bound to _WAC_WRITER_FILES exactly
+# as before; this loop is negative-scan-only, and re-running it over the
+# six writer files too (already covered above) is intentional, cheap
+# overlap, not a gap.
+_WAC_NON_WRITER_FILES = tuple(
+    sorted(p.name for p in workflows() if p.name not in _WAC_WRITER_FILES))
+check("workflow append-site: the population outside _WAC_WRITER_FILES is "
+      "exactly the four files measured to carry no 214-LOG append site "
+      "(population-drift guard -- a NEW workflow file, writer or not, "
+      "must be a conscious addition to one set or the other, never a "
+      "silent third bucket)",
+      _WAC_NON_WRITER_FILES == ("deploy.md", "esg.md", "init.md", "status.md"),
+      f"non-writer files found: {_WAC_NON_WRITER_FILES}")
+
+for _wac_all_path in workflows():
+    _wac_all_fn = _wac_all_path.name
+    _wac_all_text = _wac_all_path.read_text(encoding="utf-8")
+    _wac_all_hits = _wac_negative_scan(_wac_all_fn, _wac_all_text)
+    check(f"workflow append-site negative scan, WIDENED to all "
+          f"dcs/workflows/*.md (item 1): {_wac_all_fn} has no "
+          "hand-written-shaped 214-LOG.md append instruction outside the "
+          "two published exclusions",
+          not _wac_all_hits,
+          "; ".join(f"{_wac_all_fn}:{n}: {t.strip()!r}" for n, t in _wac_all_hits))
+
+# --- ITEM (3): four permanent, in-memory sensitivity self-tests, one per
+# Safety Officer mutation from the SECOND halt. Reproduced here exactly
+# so a future rebuild of this check cannot ship green unless it still
+# defeats all four. Every mutation is built in memory from the REAL text
+# (read() above) and never touches a file on disk.
+
+# (a) all dcs_log.py mentions stripped from new.md.
+_wac_st_new_real = read("dcs/workflows/new.md")
+check("sensitivity self-test (a) setup: new.md's real text actually "
+      "contains 'dcs_log.py' before the strip (degeneracy guard -- "
+      "otherwise the mutation below would be a no-op)",
+      "dcs_log.py" in _wac_st_new_real,
+      "no 'dcs_log.py' substring found in the real dcs/workflows/new.md")
+_wac_st_a_text = _wac_st_new_real.replace("dcs_log.py", "")
+_wac_st_a_violations = _wac_check_file(
+    "new.md", _wac_st_a_text, _WAC_EXPECTED_SITE_COUNTS.get("new.md"))
+check("sensitivity self-test (a): stripping every dcs_log.py mention from "
+      "new.md (in memory) is caught as a violation by _wac_check_file -- "
+      "the SAME function the real-tree loop above calls (Safety Officer "
+      "mutation 1, second halt)",
+      bool(_wac_st_a_violations), f"violations found: {_wac_st_a_violations}")
+
+# (b) all dcs_log.py mentions stripped from plan.md.
+_wac_st_plan_real = read("dcs/workflows/plan.md")
+check("sensitivity self-test (b) setup: plan.md's real text actually "
+      "contains 'dcs_log.py' before the strip (degeneracy guard)",
+      "dcs_log.py" in _wac_st_plan_real,
+      "no 'dcs_log.py' substring found in the real dcs/workflows/plan.md")
+_wac_st_b_text = _wac_st_plan_real.replace("dcs_log.py", "")
+_wac_st_b_violations = _wac_check_file(
+    "plan.md", _wac_st_b_text, _WAC_EXPECTED_SITE_COUNTS.get("plan.md"))
+check("sensitivity self-test (b): stripping every dcs_log.py mention from "
+      "plan.md (in memory) is caught as a violation by _wac_check_file "
+      "(Safety Officer mutation 2, second halt)",
+      bool(_wac_st_b_violations), f"violations found: {_wac_st_b_violations}")
+
+
+def _wac_st_revert_one_site(text, unique_substring, replacement_line):
+    """Return (mutated_text, ok, detail) for sensitivity self-tests (c)/
+    (d): replace the ONE line of `text` containing `unique_substring`
+    with `replacement_line`. ok is False (mutated_text is None) unless
+    `unique_substring` identifies EXACTLY one line -- surfaced as its
+    own named check below, never a crash, so a future rewording of the
+    target site fails by name instead of silently turning a permanent
+    sensitivity self-test into a no-op."""
+    lines = text.splitlines()
+    matches = [i for i, line in enumerate(lines) if unique_substring in line]
+    if len(matches) != 1:
+        return None, False, (
+            f"expected exactly one line containing {unique_substring!r}, "
+            f"found {len(matches)}")
+    lines[matches[0]] = replacement_line
+    return "\n".join(lines), True, ""
+
+
+# (c) one site in plan.md reverted to hand-written shape -- the real
+# target line (plan.md:71, verified against the live tree) is 'Log the
+# lint result via `dcs_log.py append <slug> --by <operator> "tasking
+# lint: pass"` ...', identified here by a substring unique to it.
+_wac_st_c_text, _wac_st_c_ok, _wac_st_c_detail = _wac_st_revert_one_site(
+    _wac_st_plan_real, "tasking lint: pass",
+    "Append the lint result to `214-LOG.md` directly.")
+check("sensitivity self-test (c) setup: exactly one real plan.md line "
+      "identifies the target site to revert",
+      _wac_st_c_ok, _wac_st_c_detail)
+if _wac_st_c_ok:
+    _wac_st_c_violations = _wac_check_file(
+        "plan.md", _wac_st_c_text, _WAC_EXPECTED_SITE_COUNTS.get("plan.md"))
+    check("sensitivity self-test (c): one plan.md site reverted to "
+          "hand-written shape (in memory) is caught as a violation by "
+          "_wac_check_file (Safety Officer mutation 3, second halt)",
+          bool(_wac_st_c_violations), f"violations found: {_wac_st_c_violations}")
+else:
+    check("sensitivity self-test (c): one plan.md site reverted to "
+          "hand-written shape is caught as a violation (SKIPPED -- setup "
+          "above failed)", False, _wac_st_c_detail)
+
+# (d) one site in execute.md reverted to hand-written shape -- the real
+# target line (execute.md:112, verified against the live tree) is 'a
+# mechanical correction. Record via `dcs_log.py append <slug> --by
+# <operator> "<text>"`. Update `202-OBJECTIVES.md`', identified here by
+# a substring unique to it.
+_wac_st_execute_real = read("dcs/workflows/execute.md")
+_wac_st_d_text, _wac_st_d_ok, _wac_st_d_detail = _wac_st_revert_one_site(
+    _wac_st_execute_real, "a mechanical correction. Record via",
+    "a mechanical correction. Record it in `214-LOG.md` directly. "
+    "Update `202-OBJECTIVES.md`")
+check("sensitivity self-test (d) setup: exactly one real execute.md line "
+      "identifies the target site to revert",
+      _wac_st_d_ok, _wac_st_d_detail)
+if _wac_st_d_ok:
+    _wac_st_d_violations = _wac_check_file(
+        "execute.md", _wac_st_d_text, _WAC_EXPECTED_SITE_COUNTS.get("execute.md"))
+    check("sensitivity self-test (d): one execute.md site reverted to "
+          "hand-written shape (in memory) is caught as a violation by "
+          "_wac_check_file (Safety Officer mutation 4, second halt) -- "
+          "execute.md is one of the files this check actively enforces",
+          bool(_wac_st_d_violations), f"violations found: {_wac_st_d_violations}")
+else:
+    check("sensitivity self-test (d): one execute.md site reverted to "
+          "hand-written shape is caught as a violation (SKIPPED -- setup "
+          "above failed)", False, _wac_st_d_detail)
+
+# =============================================================================
+# THIRD REBUILD self-tests (log-append-helper, third pass advisory
+# fold-in): eight permanent, in-memory sensitivity self-tests reproducing
+# the Safety Officer's own third-pass mutations, labelled exactly as
+# SAFETY.md's "checked" list names them (B2, E2, E3, C, G, X1, X3, A).
+# Three (B2, E2, X3) were ALREADY caught before this rebuild and are
+# reproduced here as regression controls -- they must STAY caught. Five
+# (E3, C, G, X1, A) were GREEN (defect-revealing) before this rebuild and
+# must now be RED. Every mutation is built in memory from the REAL text
+# and never touches a file on disk.
+# =============================================================================
+_wac_st3_execute_real = read("dcs/workflows/execute.md")
+_wac_st3_new_real = read("dcs/workflows/new.md")
+_wac_st3_deploy_real = read("dcs/workflows/deploy.md")
+_wac_st3_plan_real = read("dcs/workflows/plan.md")
+
+# (B2) a brand new, single, un-wrapped hand-written line appended to
+# execute.md -- already caught before this rebuild (baseline control: the
+# simplest possible violation shape must never regress).
+_wac_st_b2_text = _wac_st3_execute_real + (
+    "\n\nAppend the summary of this decision to `214-LOG.md` directly, "
+    "never through the tool.\n")
+_wac_st_b2_violations = _wac_check_file(
+    "execute.md", _wac_st_b2_text, _WAC_EXPECTED_SITE_COUNTS.get("execute.md"))
+check("sensitivity self-test (B2): a brand new, single-line hand-written "
+      "214-LOG.md append instruction appended to execute.md (in memory) "
+      "is caught (Safety Officer mutation B2, third pass -- already "
+      "caught pre-rebuild, must stay caught)",
+      bool(_wac_st_b2_violations), f"violations found: {_wac_st_b2_violations}")
+
+# (E2) the same instruction, wrapped across TWO physical lines -- already
+# caught before this rebuild (the one-line look-back already reached it).
+_wac_st_e2_text = _wac_st3_execute_real + (
+    "\n\nAppend the outcome of this decision to\n"
+    "`214-LOG.md` directly.\n")
+_wac_st_e2_violations = _wac_check_file(
+    "execute.md", _wac_st_e2_text, _WAC_EXPECTED_SITE_COUNTS.get("execute.md"))
+check("sensitivity self-test (E2): the same hand-written instruction "
+      "wrapped across TWO physical lines (in memory) is caught (Safety "
+      "Officer mutation E2, third pass -- already caught pre-rebuild, "
+      "must stay caught)",
+      bool(_wac_st_e2_violations), f"violations found: {_wac_st_e2_violations}")
+
+# (E3) the same instruction, wrapped across THREE physical lines -- GREEN
+# before this rebuild (the one-line look-back stopped one line short);
+# must now be RED (item 2 fix).
+_wac_st_e3_text = _wac_st3_execute_real + (
+    "\n\nAppend the outcome of\n"
+    "this decision to\n"
+    "`214-LOG.md` directly.\n")
+_wac_st_e3_violations = _wac_check_file(
+    "execute.md", _wac_st_e3_text, _WAC_EXPECTED_SITE_COUNTS.get("execute.md"))
+check("sensitivity self-test (E3): the same hand-written instruction "
+      "wrapped across THREE physical lines (in memory) is now caught "
+      "(Safety Officer mutation E3, third pass -- GREEN pre-rebuild, "
+      "advisory 2, item 2 fix)",
+      bool(_wac_st_e3_violations), f"violations found: {_wac_st_e3_violations}")
+
+# (C) a brand new hand-written line in deploy.md -- a NON-writer file, so
+# GREEN before this rebuild (the negative scan never walked it at all);
+# must now be RED (item 1 fix). Officer's own text, quoted verbatim from
+# SAFETY.md's advisory 1 finding.
+_wac_st_c3_text = _wac_st3_deploy_real + (
+    "\n\nAppend the deploy outcome to `214-LOG.md` with the operator "
+    "name.\n")
+_wac_st_c3_hits = _wac_negative_scan("deploy.md", _wac_st_c3_text)
+check("sensitivity self-test (C): a brand new hand-written 214-LOG.md "
+      "append instruction in deploy.md, a NON-writer file (in memory), "
+      "is now caught by the widened negative scan (Safety Officer "
+      "mutation C, third pass -- GREEN pre-rebuild, advisory 1, item 1 "
+      "fix; officer's own text, verbatim from SAFETY.md)",
+      bool(_wac_st_c3_hits), f"hits found: {_wac_st_c3_hits}")
+
+# (G) a hand-written clause appended onto an ALREADY-COMPLIANT line (one
+# that genuinely invokes dcs_log.py) -- GREEN before this rebuild (the
+# `if "dcs_log.py" in line` shortcut marked the whole line compliant);
+# must now be RED (item 3 fix). Base line: the real execute.md:168 text
+# (verified against the live tree); mutation appends a second,
+# hand-written clause with its own 214-LOG mention and no dcs_log.py of
+# its own, on the SAME physical line.
+_wac_st_g_text, _wac_st_g_ok, _wac_st_g_detail = _wac_st_revert_one_site(
+    _wac_st3_execute_real,
+    'append to `214-LOG.md` via `dcs_log.py append <slug> --by <operator> --sentinel halt',
+    '**`halt` (binding):** append to `214-LOG.md` via `dcs_log.py append '
+    '<slug> --by <operator> --sentinel halt "<summary of refutations>"`. '
+    'Also append a short note directly to `214-LOG.md` afterward.')
+check("sensitivity self-test (G) setup: exactly one real execute.md line "
+      "identifies the already-compliant site to extend",
+      _wac_st_g_ok, _wac_st_g_detail)
+if _wac_st_g_ok:
+    _wac_st_g_violations = _wac_check_file(
+        "execute.md", _wac_st_g_text, _WAC_EXPECTED_SITE_COUNTS.get("execute.md"))
+    check("sensitivity self-test (G): a hand-written clause appended onto "
+          "an already-compliant line (in memory) is now caught (Safety "
+          "Officer mutation G, third pass -- GREEN pre-rebuild, advisory "
+          "3, item 3 fix)",
+          bool(_wac_st_g_violations), f"violations found: {_wac_st_g_violations}")
+else:
+    check("sensitivity self-test (G): a hand-written clause appended onto "
+          "an already-compliant line is now caught (SKIPPED -- setup "
+          "above failed)", False, _wac_st_g_detail)
+
+# (X1) a fabricated new.md line using the word "template" INCIDENTALLY,
+# never the site's actual invariant phrase -- GREEN before this rebuild
+# (the bare-keyword exclusion matched "template" anywhere on the line);
+# must now be RED (item 4 fix).
+_wac_st_x1_text = _wac_st3_new_real + (
+    "\n\nAppend the reviewer's template feedback directly to "
+    "`214-LOG.md` before closing.\n")
+_wac_st_x1_hits = _wac_negative_scan("new.md", _wac_st_x1_text)
+check("sensitivity self-test (X1): a fabricated new.md line using the "
+      "word 'template' incidentally, never the site's own invariant "
+      "phrase (in memory), is now caught (Safety Officer mutation X1, "
+      "third pass -- GREEN pre-rebuild, advisory 4, item 4 fix)",
+      bool(_wac_st_x1_hits), f"hits found: {_wac_st_x1_hits}")
+
+# (X3) the identical X1 line with "template" replaced by "standard" --
+# already RED before this rebuild (the control proving the pre-rebuild
+# exclusion's over-match was specific to the word "template", not a
+# blanket new.md exemption); must stay RED.
+_wac_st_x3_text = _wac_st3_new_real + (
+    "\n\nAppend the reviewer's standard feedback directly to "
+    "`214-LOG.md` before closing.\n")
+_wac_st_x3_hits = _wac_negative_scan("new.md", _wac_st_x3_text)
+check("sensitivity self-test (X3): the identical X1 line with 'template' "
+      "replaced by 'standard' (in memory) is caught (Safety Officer "
+      "mutation X3, third pass -- already caught pre-rebuild, control "
+      "for X1, must stay caught)",
+      bool(_wac_st_x3_hits), f"hits found: {_wac_st_x3_hits}")
+
+# (A) plan.md's command-chain-repair site (plan.md:224 on the live tree)
+# reverted to hand-written shape AND _WAC_EXPECTED_SITE_COUNTS['plan.md']
+# edited down from 8 to 7 in the SAME change -- GREEN before this rebuild
+# (the line carries an earlier, benign '214-LOG.md' read-reference before
+# the real hand-written clause, and the first-occurrence-only scan never
+# reached the real one); must now be RED, and specifically on the
+# negative scan ALONE, with the manifest signal deliberately silenced by
+# the edited-down count (item 5, folding into item 3's fix).
+_wac_st_a3_text, _wac_st_a3_ok, _wac_st_a3_detail = _wac_st_revert_one_site(
+    _wac_st3_plan_real,
+    "iap_review` entries exist in `214-LOG.md`. If absent: stop, run the "
+    "missed command point, log it via `dcs_log.py",
+    "**Pre-stamp checklist (hard stop):** confirm `command: typed` and "
+    "`command: iap_review` entries exist in `214-LOG.md`. If absent: "
+    "stop, run the missed command point, append the note to "
+    "`214-LOG.md` directly, then proceed.")
+check("sensitivity self-test (A) setup: exactly one real plan.md line "
+      "identifies the target site to revert",
+      _wac_st_a3_ok, _wac_st_a3_detail)
+if _wac_st_a3_ok:
+    _wac_st_a3_violations = _wac_check_file("plan.md", _wac_st_a3_text, 7)
+    _wac_st_a3_neg_only = _wac_negative_scan("plan.md", _wac_st_a3_text)
+    check("sensitivity self-test (A): plan.md's command-chain-repair site "
+          "reverted to hand-written shape AND the manifest count edited "
+          "down from 8 to 7 in the same change (in memory) is now caught "
+          "(Safety Officer mutation A, third pass -- GREEN pre-rebuild, "
+          "advisory 5, item 3/5 fix)",
+          bool(_wac_st_a3_violations), f"violations found: {_wac_st_a3_violations}")
+    check("sensitivity self-test (A), item 5's specific confirmation: the "
+          "reverted line is caught by the NEGATIVE SCAN ALONE (independent "
+          "of the manifest, which is deliberately wrong here) -- restores "
+          "the two-independent-signals property",
+          bool(_wac_st_a3_neg_only), f"negative-scan hits: {_wac_st_a3_neg_only}")
+else:
+    check("sensitivity self-test (A): plan.md's site reverted with the "
+          "manifest edited down is caught (SKIPPED -- setup above "
+          "failed)", False, _wac_st_a3_detail)
+
+# --- 30. dcs_log.py carrier case: INVOCATION/FORMAT_LINE bound to ----------
+# forms.md AND dcs/templates/214-LOG.md (log-append-helper, criterion 5)
+# RENUMBERED from 26 -- see check 28's header comment above for the full
+# old-to-new mapping and why.
+# Same guarded-import shape as check 23's `ri` above, and the same carrier-
+# case shape as check 23(viii) (test_doctrine_integrity.py:2658-2672,
+# record_integrity's own INVOCATION-in-close.md binding) -- copied, not
+# reinvented. dcs_log.py is S1's territory this incident, landing in
+# parallel; guarded so a missing or broken module degrades to a NAMED RED
+# finding here too, rather than aborting this script.
+#
+# EXTENDED (post-halt fix-tasking, advisory 1): this originally bound only
+# forms.md, but S3 also correctly quotes both constants verbatim in
+# dcs/templates/214-LOG.md (its own HTML-comment preamble) -- binding only
+# one of the two left the template free to drift from the tool's real
+# constants later with nothing to catch it. Looped over both carrier
+# files below so a future drift in EITHER is caught by name.
+_dcs_log_path = REPO / "dcs" / "tools" / "dcs_log.py"
+_dcs_log_import_error = None
+try:
+    _dcs_log_spec = importlib.util.spec_from_file_location("dcs_log", _dcs_log_path)
+    dcs_log_mod = importlib.util.module_from_spec(_dcs_log_spec)
+    _dcs_log_spec.loader.exec_module(dcs_log_mod)
+except Exception as _dcs_log_exc:  # noqa: broad on purpose -- see check 23's own comment
+    dcs_log_mod = None
+    _dcs_log_import_error = _dcs_log_exc
+
+_DCS_LOG_CARRIER_FILES = (
+    "dcs/references/forms.md",
+    "dcs/templates/214-LOG.md",
+)
+
+for _dl_carrier_rel in _DCS_LOG_CARRIER_FILES:
+    _dl_carrier_text = read(_dl_carrier_rel)
+
+    if dcs_log_mod is None or not hasattr(dcs_log_mod, "INVOCATION"):
+        _dl_reason = (f"dcs_log.py not importable yet (S1 has not landed): "
+                       f"{_dcs_log_import_error!r}") if dcs_log_mod is None else (
+                       "module has no INVOCATION attribute")
+        check(f"dcs_log carrier: INVOCATION (from the imported module) appears "
+              f"in {_dl_carrier_rel}, whitespace-collapsed",
+              False, _dl_reason)
+    else:
+        check(f"dcs_log carrier: INVOCATION (from the imported module) appears "
+              f"in {_dl_carrier_rel}, whitespace-collapsed",
+              _ws_norm(dcs_log_mod.INVOCATION) in _ws_norm(_dl_carrier_text),
+              f"INVOCATION: {dcs_log_mod.INVOCATION!r}")
+
+    if dcs_log_mod is None or not hasattr(dcs_log_mod, "FORMAT_LINE"):
+        _dl_reason2 = (f"dcs_log.py not importable yet (S1 has not landed): "
+                        f"{_dcs_log_import_error!r}") if dcs_log_mod is None else (
+                        "module has no FORMAT_LINE attribute")
+        check(f"dcs_log carrier: FORMAT_LINE (from the imported module) appears "
+              f"in {_dl_carrier_rel}, whitespace-collapsed",
+              False, _dl_reason2)
+    else:
+        check(f"dcs_log carrier: FORMAT_LINE (from the imported module) appears "
+              f"in {_dl_carrier_rel}, whitespace-collapsed",
+              _ws_norm(dcs_log_mod.FORMAT_LINE) in _ws_norm(_dl_carrier_text),
+              f"FORMAT_LINE: {dcs_log_mod.FORMAT_LINE!r}")
+
+# --- 31. cross-component regression: criterion 6 against a log the REAL --
+# dcs_log.py wrote (log-append-helper, post-halt fix-tasking) -----------
+# RENUMBERED from 27 -- see check 28's header comment above for the full
+# old-to-new mapping and why.
+# Refutation 2 (S1/S2's clock-precision interaction) got through
+# undetected because no criterion-6 test, ever, fed the check a log the
+# real tool wrote -- every case above (both the pure comparator above and
+# the IO half against tests/fixtures/log-order/) uses synthetic stamp
+# lists or hand-authored fixtures. This closes that gap: run
+# _LO_CC_APPEND_COUNT (>= 5) REAL, sequential, back-to-back CLI appends
+# through dcs/tools/dcs_log.py (S1's already-landed fix) into a SCRATCH
+# incident directory dated strictly after LOG_ORDER_EFFECTIVE_DATE (never
+# a hardcoded "2026-08-05" here -- derived from the live constant, one
+# day later, so this never drifts from S2's own pin), then run criterion
+# 6's real IO collector against exactly that log. Zero findings is the
+# proof: sub-second precision genuinely removes the collision surface,
+# not merely "no test happened to look."
+#
+# Paired with a CONTROL, checked in as a fixture (never generated,
+# because its entire point is to be independent of what the tool does
+# today): tests/fixtures/log-order/2026-08-05-subsecond-duplicate-
+# control/214-LOG.md, hand-backfilled with three consecutive, genuinely
+# IDENTICAL brackets at the NEW sub-second precision, constructed
+# directly (never through dcs_log.py). This must still yield a finding --
+# proof the precision fix narrowed the collision surface without
+# silently disabling DUPLICATE_TIMESTAMP_THRESHOLD altogether.
+if (ri is None or not hasattr(ri, "collect_log_order_findings")
+        or not hasattr(ri, "LOG_ORDER_EFFECTIVE_DATE")
+        or dcs_log_mod is None or not _dcs_log_path.is_file()):
+    _lo_cc_reason = (
+        f"record_integrity.py not importable yet (S1/S2 have not landed): "
+        f"{_ri_import_error!r}") if ri is None else (
+        f"dcs_log.py not importable yet (S1 has not landed): "
+        f"{_dcs_log_import_error!r}") if dcs_log_mod is None else (
+        "module missing collect_log_order_findings/LOG_ORDER_EFFECTIVE_DATE "
+        "(S2 has not landed yet)")
+    check(f"cross-component: N sequential dcs_log.py appends exit 0 "
+          f"({_lo_cc_reason})", False)
+    check(f"cross-component (criterion 8's missing case): criterion 6 "
+          f"against a tool-written log -- zero findings ({_lo_cc_reason})",
+          False)
+    check("cross-component CONTROL: hand-backfilled sub-second-precision "
+          f"duplicate still yields a finding ({_lo_cc_reason})", False)
+else:
+    import shutil as _lo_cc_shutil
+    import tempfile as _lo_cc_tempfile
+    from datetime import (date as _lo_cc_date, timedelta as _lo_cc_timedelta,
+                           datetime as _lo_cc_datetime, timezone as _lo_cc_timezone)
+
+    _LO_CC_APPEND_COUNT = 5  # "5 or more sequential appends" (fix-tasking)
+
+    _lo_cc_root = Path(_lo_cc_tempfile.mkdtemp(prefix="log_order_cross_component_"))
+    try:
+        # The DIRECTORY NAME's date only needs to be strictly after
+        # LOG_ORDER_EFFECTIVE_DATE for date-SCOPE purposes (never a
+        # hardcoded "2026-08-05" -- derived from the live constant, one
+        # day later). This is entirely independent of the SEED entry's
+        # own bracket below: criterion 6 scopes on the directory name
+        # alone, never on any individual entry's timestamp (IAP risk R4;
+        # record_integrity.py's own LOG_ORDER_EFFECTIVE_DATE comment) --
+        # a directory legitimately named for a future date while its
+        # entries carry today's real timestamps is the documented shape.
+        _lo_cc_after_date = (
+            _lo_cc_date.fromisoformat(ri.LOG_ORDER_EFFECTIVE_DATE)
+            + _lo_cc_timedelta(days=1)
+        ).isoformat()
+        _lo_cc_slug = f"{_lo_cc_after_date}-cross-component-probe"
+        _lo_cc_inc = _lo_cc_root / ".dcs" / "incidents" / _lo_cc_slug
+        _lo_cc_inc.mkdir(parents=True)
+        _lo_cc_log = _lo_cc_inc / "214-LOG.md"
+        # The SEED entry's own bracket must be chronologically BEFORE the
+        # REAL appends that follow it (which will carry the ACTUAL
+        # current wall-clock time, whatever day this test happens to run
+        # on) -- so it is pinned to "now minus a safety margin", never to
+        # _lo_cc_after_date itself (that date is a scope threshold, not a
+        # real moment in time; using it here as a literal seed timestamp
+        # would -- and, caught by this very check on a first pass, did --
+        # place a future-dated seed chronologically AFTER the real
+        # entries that follow when the effective date happens to be
+        # today or later, producing a self-inflicted out-of-order finding
+        # that has nothing to do with dcs_log.py).
+        _lo_cc_seed_ts = (
+            _lo_cc_datetime.now(_lo_cc_timezone.utc) - _lo_cc_timedelta(hours=1)
+        ).isoformat()
+        _lo_cc_log.write_bytes((
+            "# 214 -- Operational Log\n\n"
+            "**Incident:** cross-component-probe\n\n"
+            f"[{_lo_cc_seed_ts}] incident opened, type 3, "
+            "phase=planning -- op: S4 tester\n"
+        ).encode("utf-8"))
+
+        _lo_cc_env = dict(os.environ)
+        _lo_cc_env.pop("DCS_TIMESTAMP", None)
+        _lo_cc_env.pop("SOURCE_DATE_EPOCH", None)
+        _lo_cc_env["CLAUDE_PROJECT_DIR"] = str(_lo_cc_root)
+        _lo_cc_rcs = []
+        for _lo_cc_i in range(_LO_CC_APPEND_COUNT):
+            _lo_cc_proc = subprocess.run(
+                [sys.executable, str(_dcs_log_path), "append", _lo_cc_slug,
+                 "--by", "S4 cross-component probe",
+                 f"sequential append #{_lo_cc_i + 1} of {_LO_CC_APPEND_COUNT}"],
+                cwd=str(_lo_cc_root), capture_output=True, text=True,
+                encoding="utf-8", errors="replace", env=_lo_cc_env, timeout=30,
+            )
+            _lo_cc_rcs.append(_lo_cc_proc.returncode)
+        check(f"cross-component: all {_LO_CC_APPEND_COUNT} REAL, sequential, "
+              f"back-to-back dcs_log.py appends exit 0 "
+              f"(exit codes: {_lo_cc_rcs})",
+              all(_rc == 0 for _rc in _lo_cc_rcs), f"exit codes: {_lo_cc_rcs}")
+
+        _lo_cc_res, _lo_cc_out, _lo_cc_exc = _lo_capture(
+            ri.collect_log_order_findings, _lo_cc_inc, _gate)
+        check("cross-component (criterion 8's missing case): criterion 6 "
+              f"against a 214-LOG.md the REAL dcs_log.py just wrote "
+              f"({_LO_CC_APPEND_COUNT} sequential appends, {_lo_cc_log}) -- "
+              f"ZERO findings (got: {_lo_cc_res!r}; raised: {_lo_cc_exc!r})",
+              _lo_cc_exc is None and _lo_cc_res == [])
+    finally:
+        _lo_cc_shutil.rmtree(_lo_cc_root, ignore_errors=True)
+
+    _lo_cc_control_dir = (
+        _LO_FIXTURES_ROOT / "2026-08-05-subsecond-duplicate-control"
+    )
+    check("cross-component CONTROL fixture exists: "
+          f"{_lo_cc_control_dir / '214-LOG.md'}",
+          (_lo_cc_control_dir / "214-LOG.md").is_file())
+    _lo_cc_ctrl_res, _lo_cc_ctrl_out, _lo_cc_ctrl_exc = _lo_capture(
+        ri.collect_log_order_findings, _lo_cc_control_dir, _gate)
+    check("cross-component CONTROL: a hand-backfilled 214-LOG.md carrying "
+          "genuinely identical timestamps at the NEW sub-second precision "
+          "(constructed directly, never through the tool) still yields a "
+          "finding -- proves the precision fix narrowed the collision "
+          "surface without silently disabling DUPLICATE_TIMESTAMP_THRESHOLD "
+          f"(got: {_lo_cc_ctrl_res!r}; raised: {_lo_cc_ctrl_exc!r})",
+          _lo_cc_ctrl_exc is None and bool(_lo_cc_ctrl_res))
+
 print(f"\n{checks - len(failures)}/{checks} passed")
 sys.exit(1 if failures else 0)

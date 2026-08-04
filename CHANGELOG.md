@@ -70,11 +70,41 @@ release commit's own message instead:
   provider"), so it never asserts a Claude-specific effort vocabulary as
   universal. Two worked examples and the platform-capability field lesson
   behind this design are in `dcs/references/doctrine-appendix.md`.
+- **`214-LOG.md` phase-transition entries are written by a canonical
+  append tool, `dcs/tools/dcs_log.py`, instead of by hand.** Stdlib-only;
+  imports `dcs_gate.py`'s grammar dynamically rather than re-deriving it,
+  stamps a real, offset-aware, sub-second-precision timestamp with no
+  override channel (flag, env var, or config), records the operator
+  identity that called it, and self-validates every rendered line through
+  the real `sentinel_of()` before writing. Fails closed: the full
+  read-then-write critical section is serialized under a portable
+  `O_CREAT|O_EXCL` sidecar lock (bounded 5s retry, refuses rather than
+  races a concurrent writer), and containment is by slug only — it never
+  accepts a path argument and refuses when the target directory or
+  `214-LOG.md` does not already exist. All 22 real hand-written append
+  sites across the six workflow files that write it (`new.md`, `plan.md`,
+  `execute.md`, `close.md`, `run.md`, `loop.md`) now invoke it via its
+  installed-copy path.
+- **A new close-time criterion in `dcs/tools/record_integrity.py`** flags
+  a `214-LOG.md` with 3-or-more entries sharing one identical timestamp,
+  or two chronologically-comparable entries out of order — date-scoped so
+  history already on disk is never retroactively broken. Unparseable or
+  offset-incomparable brackets (the portfolio's own legacy shapes: bare
+  dates, colon-less `+HHMM` offsets) are reported as notes, never findings
+  or crashes.
+- **A permanent merge-guard check** (`tests/test_doctrine_integrity.py`)
+  makes the workflow migration above self-enforcing: an explicit
+  per-file manifest of expected `dcs_log.py` invocation-site counts,
+  independent of a corpus-wide negative scan for any remaining
+  hand-written-shaped append instruction across all ten workflow files —
+  two signals that must both hold, so a silently reverted or newly
+  hand-written site turns the guard red rather than passing vacuously.
 
 ### Config
 
 No new keys — the check is unconditional, not project-configurable, and
-the capability-tier rule adds no config surface either.
+the capability-tier rule adds no config surface either. `dcs_log.py`
+introduces no configuration surface of its own.
 
 ---
 

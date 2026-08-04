@@ -22,13 +22,13 @@ Parse `<slug>|<type>|<phase>`. If no `ACTIVE`: stop — run `/dcs-new` first. If
 
 Determine period `N` — 1 on first pass, else increment from the last period in `214-LOG.md`.
 
-**Command-chain check (entry gate):** confirm `command: typed` exists via `grep -n "command: typed" <incident_dir>/214-LOG.md`. If absent, the Dispatcher typed the incident itself — repair NOW: run command point 1 properly (spawn `dcs-commander` if not Fable; decide yourself if Fable), log it, correct 201 if type differs, re-confirm with Owner.
+**Command-chain check (entry gate):** confirm `command: typed` exists via `grep -n "command: typed" <incident_dir>/214-LOG.md`. If absent, the Dispatcher typed the incident itself — repair NOW: run command point 1 properly (spawn `dcs-commander` if not Fable; decide yourself if Fable), log it via `python "$HOME/.claude/dcs/tools/dcs_log.py" append <slug> --by <operator> "<text>"`, correct 201 if type differs, re-confirm with Owner.
 
 ## 2. Draft 202-OBJECTIVES.md
 
 Read `201-BRIEF.md`. Draft goal (outcome-shaped) and numbered, verifiable acceptance criteria using `$HOME/.claude/dcs/templates/202-OBJECTIVES.md`. On a re-plan after deviation, fold the deviation's `proposal` into the criteria.
 
-**Delegation-aware confirm (v0.5):** if Type 3 AND `DELEGATION.md`'s latest `delegation-bounds` has `auto_approve_type3: true` AND the session's current operating model appears in that block's `approved_models` (model floor — `approved_models` empty or absent means no model is approved), skip `AskUserQuestion` — write directly to `202-OBJECTIVES.md`, append `202 confirm deferred to IAP approval (Delegation v<N>)` to `214-LOG.md`. Otherwise — including an unlisted model or the model-floor miss just described — present to Owner via `AskUserQuestion`, full v0.1 behavior. Write confirmed version to `202-OBJECTIVES.md`.
+**Delegation-aware confirm (v0.5):** if Type 3 AND `DELEGATION.md`'s latest `delegation-bounds` has `auto_approve_type3: true` AND the session's current operating model appears in that block's `approved_models` (model floor — `approved_models` empty or absent means no model is approved), skip `AskUserQuestion` — write directly to `202-OBJECTIVES.md`, append via `dcs_log.py append <slug> --by <operator> "202 confirm deferred to IAP approval (Delegation v<N>)"`. Otherwise — including an unlisted model or the model-floor miss just described — present to Owner via `AskUserQuestion`, full v0.1 behavior. Write confirmed version to `202-OBJECTIVES.md`.
 
 ## 3. Spawn the Planning Chief (and Logistics Chief for Type 1)
 
@@ -60,16 +60,15 @@ is yours to fix, never a reason to spend a command point (field lesson
 1. **Self-contradiction** — for every tasking, `territory ∩ forbidden` must be empty.
 2. **Orphaned deliverables** — every deliverable named in `tactics[]`, `verification_plan`, or Logistics-chief plan must map to an existing tasking `id`.
 3. **Unassigned occurrences** — when the plan says "replace/remove X", `grep` for X: every occurrence must fall inside exactly one tasking's `territory`.
-3a. **Sweeps must be enumeration-shaped (v0.5.9).** A criterion whose scope is a *population* ("all", "every", "no remaining", a pattern) must satisfy: **(i)** the 202 names the command that enumerates the population; **(ii)** the criterion is phrased as that command returning empty; **(iii)** you run the command now and record its output in `214-LOG.md`. A hand-listed population is a census — stale the moment the tree moves. Field lesson 2026-07-24 — `dcs/references/doctrine-appendix.md`, "Workflow field lessons", W2.
-3b. **Claims about state outside the tree must be measured.** A criterion asserting anything outside the working tree (registry version, published status, remote ref, live service) is a measured claim. Mirror 3a: **(i)** the 202 names the command that establishes the fact; **(ii)** the criterion is phrased as that command's result; **(iii)** you run it now and record the output in `214-LOG.md`.
+3a. **Sweeps must be enumeration-shaped (v0.5.9).** A criterion whose scope is a *population* ("all", "every", "no remaining", a pattern) must satisfy: **(i)** the 202 names the command that enumerates the population; **(ii)** the criterion is phrased as that command returning empty; **(iii)** you run the command now and record its output via `dcs_log.py append <slug> --by <operator> "<text>"`. A hand-listed population is a census — stale the moment the tree moves. Field lesson 2026-07-24 — `dcs/references/doctrine-appendix.md`, "Workflow field lessons", W2.
+3b. **Claims about state outside the tree must be measured.** A criterion asserting anything outside the working tree (registry version, published status, remote ref, live service) is a measured claim. Mirror 3a: **(i)** the 202 names the command that establishes the fact; **(ii)** the criterion is phrased as that command's result; **(iii)** you run it now and record the output via `dcs_log.py append <slug> --by <operator> "<text>"`.
 4. **Territory disjointness** — verify the globs don't intersect; don't trust `partition_ok: true`.
 5. **Evidence executability** — each `evidence_required` command must be runnable in the specialist's harness (no browser/UI).
 6. **Criterion coverage, both directions (v0.5.4)** — every 202 criterion must map to a tasking, or be tagged `[IC]`, `[Owner]`, or `[deploy period]`.
 7. **Criterion satisfiability against the repo's own tests (v0.5.4)** — if a criterion changes behaviour an existing test asserts, name that test in the tasking.
 8. **Territory stays inside this project (v0.6.2)** — resolve every `territory`/`forbidden` glob against the incident's project root. Any path escaping it is a lint defect. **One session, one project.**
 
-Log the lint result in `214-LOG.md` in one line (`tasking lint: pass` or
-`tasking lint: N defects fixed pre-review — <one-line each>`). Only a
+Log the lint result via `dcs_log.py append <slug> --by <operator> "tasking lint: pass"` (or `"tasking lint: N defects fixed pre-review — <one-line each>"`). Only a
 clean lint proceeds to the command point below.
 
 ### 4b. Repeated-reject trigger (v0.5.1)
@@ -93,8 +92,7 @@ returns; its `iap_review` decision (schemas.md #6, Commander decisions) governs 
 instruction to the Planning Chief and repeat this step; on `"accept"`,
 proceed. **If the spawn returns no decision block** (quota exhausted, API
 error, early termination): that is a failed spawn — re-spawn on the next
-tier at once, log both attempts, and never sit waiting on it. Record the decision in `214-LOG.md`
-(`command: iap_review <verdict> (IC=dcs-commander)`). **If this session is
+tier at once, log both attempts, and never sit waiting on it. Record via `dcs_log.py append <slug> --by <operator> "command: iap_review <verdict> (IC=dcs-commander)"`. **If this session is
 Fable**, apply the checks below yourself.
 
 **Partition check (hard gate):** if `partition_ok` is `false`, read
@@ -223,7 +221,7 @@ Then: proceed to **step 7** and **step 8** exactly as written below — 6c does 
 
 ## 7. On approval: stamp the marker
 
-**Pre-stamp checklist (hard stop):** confirm `command: typed` and `command: iap_review` entries exist in `214-LOG.md`. If absent: stop, run the missed command point, log it, then proceed.
+**Pre-stamp checklist (hard stop):** confirm `command: typed` and `command: iap_review` entries exist in `214-LOG.md`. If absent: stop, run the missed command point, log it via `dcs_log.py append <slug> --by <operator> "<text>"`, then proceed.
 
 **Bounded exception (6c only):** on an amendment, the `command: iap_review` check is satisfied by the command-point-3/4 decision 6c's Entry cited by timestamp — not the period's first-pass `command: iap_review`.
 
@@ -236,11 +234,7 @@ Write `IAP-APPROVED` — hash on first line, then `approved_by`, `approved_at`, 
 
 ## 8. Open the gate
 
-Update `.dcs/ACTIVE` to `<slug>|<type>|execution`. Append to `214-LOG.md`:
-```
-[<timestamp>] IAP-APPROVED: <first 12 chars of hash> -- phase: planning -> execution (period <N>)
-```
-On a 6c amendment (phase unchanged): `... re-stamp, no phase transition (still execution, period <N>)`.
+Update `.dcs/ACTIVE` to `<slug>|<type>|execution`. Append via `dcs_log.py append <slug> --by <operator> --sentinel stamp "<first 12 chars of hash> -- phase: planning -> execution (period <N>)"` — on a 6c amendment (phase unchanged), the text is instead `"<first 12 chars of hash> -- re-stamp, no phase transition (still execution, period <N>)"`.
 
 The `IAP-APPROVED:` sentinel anchors the halt-ceiling counter — must carry ≥8 hex chars of the stamped hash per `dcs_gate.py`'s published grammar (`GRAMMAR_LINE`): "An entry begins at column zero with a mandatory bracketed timestamp; any other line is a continuation, never a sentinel, and quoting a whole prior entry inside a body requires indenting it off column zero."
 
