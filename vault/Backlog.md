@@ -1439,3 +1439,50 @@ unstable shape is wrongly treated as stable). Should ship as a
 `tests/fixtures/verdict-rerun/` — not built here, per the same
 already-verified-tool-after-its-verdict concern this item was queued
 to avoid.
+
+## 31. `RECORD-CORRECTION:` is a fourth mechanically-parsed sentinel, invisible to check 12's census and undocumented in shipped prose — FOLDED
+
+> **Folded at the eighteenth `/dcs-esg`, 2026-08-04, into register row
+> `field-lesson-guard-bare-date-weakening` (rank 1)** — same
+> `tests/test_doctrine_integrity.py` territory, and it rides the same
+> held train as that row's parent. This also discharges the unassigned
+> follow-up the register's `record-integrity-corrections` row owed.
+
+**Evidence.** `dcs/tools/record_integrity.py:413` — `correction_re =
+re.compile(dcs_gate.ENTRY_PREFIX + r'RECORD-CORRECTION:')` — a fourth
+sentinel-shaped token, added by `close-integrity-guard-bundle` (merge
+`779773b`), built by reusing `dcs_gate.py`'s own `ENTRY_PREFIX` grammar.
+`tests/test_doctrine_integrity.py:728`'s `_SENTINEL_TOKENS` tuple still
+names only the original three (`IAP-APPROVED:`, `SAFETY-HALT:`,
+`SAFETY-PASS:`), so check 12 ("log grammar", lines 704-849) never sweeps
+a file whose only sentinel mention is `RECORD-CORRECTION:` — no
+grammar-conformance verification and no doctrine/prose documentation
+exist for it. `.dcs/esg/REGISTER.md`'s own `record-integrity-corrections`
+row (line 156) names this as an owed, unassigned follow-up:
+"documenting the `RECORD-CORRECTION:` convention in shipped prose ...
+not yet given a row id — add at next `/dcs-esg` or on next touch of this
+register." Found independently by both `dcs-situation-analyst` spawns at
+`log-append-helper`'s stem, 2026-08-03.
+
+**Why it matters.** Not currently exploited — `record_integrity.py`'s own
+`correction_re` still parses correctly against `dcs_gate.py`'s real
+`ENTRY_PREFIX`, so no correction entry is silently mis-parsed today. But
+it is the same "prose and its guard drift independently" shape
+`doctrine.md` principle 13 and this project's own history
+(`schema-citation-guard`, `check-14-hardening`) exist to catch, and it
+sits exactly in `log-append-helper`'s own territory (`214-LOG.md`
+grammar, `tests/test_doctrine_integrity.py`) — cheaper to fold in
+alongside that incident (or `field-lesson-guard-vacuity`, rank 4, which
+already touches check 12's neighborhood) than to open on its own.
+
+**Candidate fix.** Add `RECORD-CORRECTION:` to
+`test_doctrine_integrity.py`'s `_SENTINEL_TOKENS` tuple so check 12
+sweeps it identically to the other three; add one sentence to
+`dcs/references/doctrine.md` (near principle 13) or
+`dcs/references/forms.md` naming it as a fourth mechanically-parsed
+sentinel. Small, likely single-incident-territory change — not built
+here; split out at `log-append-helper`'s stem (`new.md` step 4a) as an
+independent root cause (a census left stale by a sibling incident,
+unrelated to "no programmatic log writer exists") and priority `L`
+(latent, no active harm) — below the register bar per CLAUDE.md's vault
+routing rule (v0.6.13).
