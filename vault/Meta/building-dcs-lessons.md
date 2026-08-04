@@ -1321,6 +1321,34 @@ against the pre-change state is cheap and catches a defect no amount of
 scrutiny of the *fix itself* would surface, because the flaw is entirely
 in what the check would have proven, not in what was built.
 
+## 32. The population that finally held was pinned outside the text it guards — the same trap as §14, with a different ending
+
+**Evidence: `log-append-helper`, 2026-08-03/04.** Three attempts at one merge-guard check (criterion 4's enforcement: every hand-written `214-LOG.md` append site must invoke the new canonical tool), two Safety Officer halts, the same underlying shape both times:
+
+| Attempt | Detector | Defeated by |
+|---|---|---|
+| 1 | required a same-line `"214-LOG"` token | **vocabulary** — 17 of 22 real converted invocation lines never carried that token at all |
+| 2 | added "`dcs_log.py` name present ⇒ compliant" as a second signal | **circularity** — that signal made a line population *and* automatically compliant in the same step, so only the first signal's residual gap could ever be flagged; worse, two files' per-file degeneracy guards were satisfied *solely* by the one line the compliance loop always skipped (the published exclusion itself) |
+| 3 | population pinned in an external manifest (`_WAC_EXPECTED_SITE_COUNTS`), independent of a negative scan for hand-written shapes, exclusions filtered *before* reaching any guard, all four prior falsifying mutations encoded as permanent self-tests | held — reproduced by a third, independent Safety Officer pass replaying the original mutations plus seven of its own |
+
+Attempt 2 is §14's trap exactly: "each narrowing is locally reasonable and looks like progress." It was a deliberate response to attempt 1's measured gap, defended with real evidence (dcs-commander verified the self-compliance defect line-by-line before ruling), and it was still one step further from the actual population and one step closer to a form the guarded text itself controlled.
+
+**What's different from §14, and worth carrying forward as its own point:** §14 resolved by narrowing the guard's *claim* to what a recognizer could honestly enforce — a legitimate outcome, but a concession. This incident's third attempt did not concede. It moved the population's *definition* outside the guarded text entirely (a hand-maintained count manifest, updated deliberately when a real site count changes) and made the compliance predicate a second, independent signal over the same text — so a line can be miscounted by one and still caught by the other. **A detector keyed on surface form cannot enumerate a population defined by role (§14) — but a population need not be enumerated from the text at all if something outside that text can name it instead.** That option only exists when the population is small and stable enough to hand-maintain (six files, twenty-two sites); it would not have worked for §14's role-defined, tree-wide population. Know which shape you're in before reaching for either fix.
+
+**The verification pattern worth repeating on its own:** the Safety Officer's third pass did not just re-run the suite and see green. It rebuilt the exact prior falsifying mutations from scratch in a fresh scratchpad and confirmed each now failed loudly — the same discipline `verdict_rerun.py` applies mechanically to `checked[]` citations, done by hand here because the artifact under test was a test itself. A green suite after a fix proves the fix compiles; replaying the original falsifying case is what proves the fix closes the gap it was written for.
+
+## 33. A component's own precision choice can falsify a sibling's stated justification — and no isolated unit test will ever see it
+
+**Evidence: `log-append-helper`, 2026-08-04.** One specialist built a close-time criterion (`record_integrity.py`) flagging 3-or-more `214-LOG.md` entries sharing one identical timestamp, justified in a code comment: *"a third append landing in the exact same second, from the same tool, is no longer plausible as an honest read of the clock."* A second, parallel specialist built the tool the criterion was written to police, and pinned its timestamp to whole-second resolution (`datetime.now().astimezone().replace(microsecond=0)`) — a decision made independently, for unrelated reasons (matching the format the first draft of the criterion happened to assume). Both landed. Both specialists' own test suites passed. The Safety Officer ran six honest, sequential, non-adversarial calls through the real shipped tool and got a five-entry identical-timestamp run — the criterion's own stated premise, falsified by output the criterion's sibling component produced correctly and as designed.
+
+**Why no unit test caught it:** every existing test for the criterion fed it synthetic timestamp lists or hand-authored fixtures; every existing test for the tool checked its own output in isolation. Two components, each internally consistent, each individually well-tested, produced a contradiction only visible at the seam between them — and the seam was never exercised, because nothing ran one component's *real* output through the other's *real* logic. The eventual fix (S1 moves to sub-second precision; S4 adds a cross-component test that runs several genuine tool appends through the genuine criterion and asserts zero findings) closed the gap, but the fix that mattered more for next time was the test class itself: a cross-component integration case, distinct from either component's own unit suite, whose only job is to run real output through a real neighbor.
+
+**The transferable rule:**
+
+> Two components can each be correct against their own stated contract and still be wrong together, when one component's implementation detail (a precision, a format, a rounding choice) is silently load-bearing for a sibling's stated justification. If a design decision in file A is the *reason* a threshold in file B is safe, something must exercise A's real output against B's real logic — a shared fixture, a hand-wave in a comment, or a design doc citing the other file by name is not that thing.
+
+Planning-time coordination (the taskings for both components were written and reviewed together, in the same period) did not prevent this — the interaction was real and specific enough that only running the actual code caught it. Cross-reference §14/§32: this is a different failure shape (a seam between two correct components, not a population a detector can't enumerate), but the same remedy family applies — trust what you ran, not what two documents agree should be true.
+
 ## Links
 
 - [[Post-mortems/energy-cost-model-rework]] — the incident behind v0.5.12
