@@ -33,3 +33,9 @@ None (0).
 | `_FL_FILES` omitted plan.md, execute.md | Both added | Confirmed in diff + grep |
 | Two sections both `--- 20.` | Renumbered to `20a` | `grep` confirms no duplicate |
 | No self-test | Two permanent fixture-based self-tests | Both PASS |
+
+## Verdict (machine-readable)
+
+```json
+{"verdict": "pass", "refutations": [], "advisories": [{"finding": "doctrine.md:3 meta-mention not in _FL_FILES", "fix": "IC resolved: deliberate exclusion documented in code comment above _FL_FILES"}, {"finding": "CRLF line endings on test_doctrine_integrity.py", "fix": "IC resolved: converted to LF, 266/266 passes"}], "checked": ["python tests/test_doctrine_integrity.py -- 266/266 passed, field-lesson guard PASS, both self-tests PASS", "python tests/test_dcs_gate.py -- 100/100 passed", "python tests/test_dcs_intake.py -- 18/18 passed", "grep -rli '[Ff]ield[ -]lesson' dcs/ -- 9 files, 8 in _FL_FILES, 1 (doctrine.md:3) routing directive excluded by design", "git diff main -- confirmed changes match tasking descriptions", "grep -n '^# --- [0-9]' -- no duplicate section numbers, field-lesson guard at 20a"]}
+```
