@@ -228,7 +228,7 @@ Assess against `202-OBJECTIVES.md`:
   Keeping the incident open keeps it in a branch — unmerged, unshipped, and
   fixing nothing. Only keep open when the remaining work is genuinely
   inseparable (schema change whose readers are not yet updated, contract
-  half-migrated). State which via `dcs_log.py append <slug> --by <operator> "<text>"`. (field lesson 2026-07-24 — `dcs/references/doctrine-appendix.md`, "Workflow field lessons", W3)
+  half-migrated). State which via `dcs_log.py append <slug> --by <operator> "<text>"`. (field lesson 2026-07-24, predates self-hosting — `dcs/references/doctrine-appendix.md`, "Workflow field lessons", W3)
 
 ## 10. Report
 

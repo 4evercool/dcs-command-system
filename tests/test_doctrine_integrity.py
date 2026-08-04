@@ -543,14 +543,19 @@ _TERM_CENSUS = [
     ("unguarded_paths", "load_config()'s counterpart key; a rename "
      "silently stops a project's own unguarded_paths override from ever "
      "being read, gating paths it was supposed to exempt"),
-    ("IAP-APPROVED:", "one of the three sentinels dcs_gate.py's "
-     "halt-ceiling counter (sentinel_of()/STAMP_RE) parses out of "
-     "214-LOG.md; losing this string from prose orphans its own citation "
-     "of the grammar it depends on"),
+    ("IAP-APPROVED:", "one of the three sentinels dcs_gate.py's own "
+     "sentinel_of() classifies (its halt-ceiling counter, sentinel_of()/"
+     "STAMP_RE, parses this one out of 214-LOG.md); losing this string "
+     "from prose orphans its own citation of the grammar it depends on"),
     ("SAFETY-HALT:", "the halt sentinel dcs_gate.py's halt_cycles() "
      "counts -- same consequence as IAP-APPROVED: above"),
     ("SAFETY-PASS:", "the reset sentinel dcs_gate.py's halt_cycles() "
      "anchors on -- same consequence"),
+    ("RECORD-CORRECTION:", "the correction-entry sentinel "
+     "dcs/tools/record_integrity.py's suppression logic recognizes (a "
+     "fourth sentinel _SENTINEL_TOKENS above also names, distinct from "
+     "the three sentinel_of() classifies); losing this string from prose "
+     "orphans its own citation of the mechanism it depends on"),
     ("esg_activation", "escalation trigger (e)'s own field name (doctrine "
      "principle 14); losing it from prose orphans the field from its "
      "documented rationale"),
@@ -713,7 +718,7 @@ check("package.json under 8 kB", pkg_bytes < 8 * 1024,
 # bare-substring grammar it replaces once did.
 #
 # The population is DISCOVERED, not named (halt-loop-unbounded, period 1
-# revision 3): every dcs/**/*.md file mentioning any of the three sentinel
+# revision 3): every dcs/**/*.md file mentioning any of the four sentinel
 # tokens is in scope, so a new prose surface that starts quoting the log
 # format is caught here the moment it exists, instead of waiting for a
 # Safety Officer to spot it by eye -- a seventh such file existed in the
@@ -725,7 +730,15 @@ _gate_spec = importlib.util.spec_from_file_location(
 _gate = importlib.util.module_from_spec(_gate_spec)
 _gate_spec.loader.exec_module(_gate)
 
-_SENTINEL_TOKENS = ("SAFETY-HALT:", "SAFETY-PASS:", "IAP-APPROVED:")
+# Four tokens, not three: dcs_gate.py's own sentinel_of() still classifies
+# only the first three (SAFETY-HALT:/SAFETY-PASS:/IAP-APPROVED:) -- checks
+# (c)-(e)/(g) below that call into _gate are about THAT grammar and are
+# unaffected. RECORD-CORRECTION: is a fourth, separate sentinel that
+# dcs/tools/record_integrity.py's own suppression logic recognizes
+# (field-lesson-guard-bare-date-weakening, criterion 6); it widens only
+# what counts as population membership (check (a) below) and what check
+# (f) requires doctrine.md to name, never sentinel_of()'s own grammar.
+_SENTINEL_TOKENS = ("SAFETY-HALT:", "SAFETY-PASS:", "IAP-APPROVED:", "RECORD-CORRECTION:")
 
 
 def _ws_norm(s):
@@ -812,8 +825,11 @@ for _line, _expected in _gate.SPECIMENS:
     check(f"log grammar: SPECIMENS -- sentinel_of({_line!r}) == {_expected!r}",
           _gate.sentinel_of(_line) == _expected)
 
-# (f) doctrine.md still names all three tokens (unchanged from revision 2).
-check("doctrine.md names all three sentinels (IAP-APPROVED:, SAFETY-HALT:, SAFETY-PASS:)",
+# (f) doctrine.md still names all four tokens (three unchanged from
+# revision 2, plus RECORD-CORRECTION: added by
+# field-lesson-guard-bare-date-weakening, criterion 6).
+check("doctrine.md names all four sentinels (IAP-APPROVED:, SAFETY-HALT:, "
+      "SAFETY-PASS:, RECORD-CORRECTION:)",
       all(tok in doctrine for tok in _SENTINEL_TOKENS))
 
 # (g) lint defect 3: no population file quotes the rollback act's own body
@@ -2035,6 +2051,46 @@ for _iwf_name, _iwf_sections in _INBOUND_WF_SECTIONS.items():
 # "(predates self-hosting)" note. A false field lesson shipped once
 # (v0.5.10); this guard makes a recurrence mechanically detectable.
 #
+# Entry filter (_FL_LINE_RE, deliberately BROAD): any line containing
+# "field lesson" / "field-lesson" / "field lessons", in any layout, enters
+# the guard -- there is no date requirement and no claim-shape requirement
+# here, only the phrase itself, so nothing that mentions a field lesson can
+# quietly sit outside the population.
+#
+# Identifier set (_FL_ID_RE, exactly THREE strict forms and no others):
+#   - an incident slug in backticks, e.g. incident `some-slug`
+#   - a DCS version number, e.g. v0.5.2
+#   - the literal phrase "predates self-hosting"
+# A bare YYYY-MM-DD date is deliberately NOT one of these three forms and
+# is NOT an identifier: until field-lesson-guard-bare-date-weakening,
+# `\d{4}-\d{2}-\d{2}` was a fourth alternative here, so any line naming a
+# plausible-looking calendar date passed as if it cited a real incident --
+# with nothing mechanically tying that date to an actual incident record.
+# That is exactly the unverifiable claim this guard exists to catch, so
+# the alternative is gone; the other three forms are unchanged.
+#
+# One-line lookahead (unchanged): if neither the line itself nor the line
+# immediately following it carries one of the three forms above, the
+# mention is flagged -- this is what lets a multi-line citation such as
+# "field lesson,\n2026-07-22, predates self-hosting." still pass, via the
+# "predates self-hosting" phrase on the second line (never via the bare
+# date beside it).
+#
+# Two named non-claim exemptions (_FL_NON_CLAIM_PREFIXES below, matched by
+# exact line PREFIX, never by shape -- a shape-based exemption would just
+# reopen the bare-date hole under another name). Both live in
+# dcs/references/doctrine-appendix.md, whose own title and section heading
+# say "field lesson(s)" while describing the citation convention itself,
+# not citing any one incident:
+#   - "# DCS Doctrine" -- the file's own title line names "field lessons"
+#     in its parenthetical description of the file's contents.
+#   - "### Field-lesson citation convention" -- the section heading that
+#     introduces this very convention.
+# A named check below asserts each prefix still matches at least one line
+# in its file, so a stale exemption (the heading text changes and the
+# prefix stops matching anything) goes red instead of silently granting an
+# exemption to nothing.
+#
 # dcs/references/doctrine.md is deliberately excluded from _FL_FILES: its
 # only "field lessons" mention (line 3) is a routing directive — "Provenance,
 # field lessons, and extended rationale live in doctrine-appendix.md" — not a
@@ -2050,63 +2106,90 @@ _FL_FILES = [
     "dcs/templates/202-OBJECTIVES.md",
     "dcs/templates/REGISTER.md",
 ]
-# Match any line containing "field lesson" / "field-lesson" / "field
-# lessons" — no date requirement. Every such mention must enter the guard
-# regardless of line layout.
 _FL_LINE_RE = re.compile(r"[Ff]ield[- ]lesson", re.I)
 _FL_ID_RE = re.compile(
-    r"incident `[a-z0-9-]+`|v\d+\.\d+\.\d+|predates self-hosting|\d{4}-\d{2}-\d{2}", re.I)
-_fl_bad = []
-for _fl_fname in _FL_FILES:
-    _fl_path = REPO / _fl_fname
-    if not _fl_path.exists():
-        _fl_bad.append(f"{_fl_fname}: file not found")
-        continue
-    _fl_text = _fl_path.read_text(encoding="utf-8")
-    for _fl_li, _fl_line in enumerate(_fl_text.splitlines(), start=1):
-        if _FL_LINE_RE.search(_fl_line) and not _FL_ID_RE.search(_fl_line):
-            # Check if the next line carries the identifier (multi-line
-            # citations like "field lesson,\n2026-07-22, predates...")
-            _fl_lines = _fl_text.splitlines()
-            _fl_next = (
-                _fl_lines[_fl_li]
-                if _fl_li < len(_fl_lines)
-                else ""
-            )
-            if not _FL_ID_RE.search(_fl_next):
-                _fl_bad.append(f"{_fl_fname}:{_fl_li}: {_fl_line.strip()[:80]}")
-check("field-lesson citations: every field lesson mention in shipped "
-      "package carries an incident identifier (slug, version, or "
-      "'predates self-hosting')",
-      not _fl_bad, "; ".join(_fl_bad))
+    r"incident `[a-z0-9-]+`|v\d+\.\d+\.\d+|predates self-hosting", re.I)
 
-# --- self-test assertions for the field-lesson citation guard ---------------
-# These two permanent fixture-based self-tests exercise the guard logic
-# against files in tests/fixtures/field-lesson-guard/. The helper below
-# mirrors the per-file logic of the live guard above (same regexes, same
-# multiline look-ahead), so a future edit that changes the guard's
-# matching rules is mechanically tested here rather than assumed.
-
-_FL_FIXTURES_ROOT = REPO / "tests" / "fixtures" / "field-lesson-guard"
+# Non-claim exemptions, by exact stripped line-start prefix -- see the
+# banner above. ASCII-only prefixes: doctrine-appendix.md's title line
+# carries an em dash after "# DCS Doctrine", so keying on the title
+# in full (with the em dash) would be a non-ASCII literal in this
+# otherwise-ASCII-source file; the shorter ASCII-only prefix is enough to
+# identify the line uniquely. Do not add anything here that is not one of
+# these two named lines -- any other bare-date site in dcs/ prose is fixed
+# by rewording (a sibling tasking), never exempted.
+_FL_NON_CLAIM_PREFIXES = {
+    "dcs/references/doctrine-appendix.md": (
+        "# DCS Doctrine",
+        "### Field-lesson citation convention",
+    ),
+}
 
 
-def _fl_check_file(filepath):
+def _fl_check_file(filepath, rel_fname=None):
     """Return [(line_no, line_text)] of bad entries for `filepath` using
-    the SAME _FL_LINE_RE / _FL_ID_RE regexes and the SAME multiline
-    look-ahead logic as the live guard above. An empty list means the
-    file passes (every field-lesson mention carries an identifier)."""
-    bad = []
+    _FL_LINE_RE / _FL_ID_RE, the multiline look-ahead, and the
+    _FL_NON_CLAIM_PREFIXES exemption -- this IS the live guard's per-file
+    logic now (tactic T4: one implementation, not a live loop plus a
+    parallel re-derivation). An empty list means the file passes (every
+    field-lesson mention carries an identifier, or is a named non-claim
+    exemption). `rel_fname` is the REPO-relative POSIX key used to look up
+    an exemption in _FL_NON_CLAIM_PREFIXES; the fixtures below pass no key
+    (or one absent from the dict) and so get no exemption -- matching "do
+    not exempt anything not listed" above."""
     if not filepath.exists():
-        return [("-1", f"{filepath}: file not found")]
+        return [(-1, "file not found")]
     text = filepath.read_text(encoding="utf-8")
     lines = text.splitlines()
+    prefixes = _FL_NON_CLAIM_PREFIXES.get(rel_fname, ())
+    bad = []
     for li, line in enumerate(lines, start=1):
+        if any(line.strip().startswith(p) for p in prefixes):
+            continue
         if _FL_LINE_RE.search(line) and not _FL_ID_RE.search(line):
             nxt = lines[li] if li < len(lines) else ""
             if not _FL_ID_RE.search(nxt):
                 bad.append((li, line.strip()[:80]))
     return bad
 
+
+_fl_bad = []
+for _fl_fname in _FL_FILES:
+    _fl_path = REPO / _fl_fname
+    for _fl_li, _fl_line in _fl_check_file(_fl_path, _fl_fname):
+        _fl_bad.append(f"{_fl_fname}:{_fl_li}: {_fl_line}")
+check("field-lesson citations: every field lesson mention in shipped "
+      "package carries an incident identifier (slug, version, or "
+      "'predates self-hosting'), or is a named non-claim exemption",
+      not _fl_bad, "; ".join(_fl_bad))
+
+# (staleness) every _FL_NON_CLAIM_PREFIXES entry still matches at least
+# one line in its own file -- an exemption that stopped matching anything
+# (the heading it targets got reworded) must go red, never silently keep
+# passing as a no-op.
+_fl_prefix_stale = []
+for _fl_pfname, _fl_prefixes in _FL_NON_CLAIM_PREFIXES.items():
+    _fl_ppath = REPO / _fl_pfname
+    _fl_plines = (
+        [l.strip() for l in _fl_ppath.read_text(encoding="utf-8").splitlines()]
+        if _fl_ppath.exists() else []
+    )
+    for _fl_prefix in _fl_prefixes:
+        if not any(l.startswith(_fl_prefix) for l in _fl_plines):
+            _fl_prefix_stale.append(f"{_fl_pfname}: {_fl_prefix!r} matches no line")
+check("field-lesson non-claim exemption: every _FL_NON_CLAIM_PREFIXES "
+      "prefix still matches at least one line in its file (a stale "
+      "exemption must go red, never silently pass)",
+      not _fl_prefix_stale, "; ".join(_fl_prefix_stale))
+
+# --- self-test assertions for the field-lesson citation guard ---------------
+# These three permanent fixture-based self-tests exercise the guard logic
+# against files in tests/fixtures/field-lesson-guard/, calling _fl_check_file
+# directly -- the SAME function the live loop above calls (tactic T4), so a
+# future edit that changes the guard's matching rules is mechanically
+# tested here rather than assumed.
+
+_FL_FIXTURES_ROOT = REPO / "tests" / "fixtures" / "field-lesson-guard"
 
 # (a) undated-claim.md -- a line with "field lesson" and NO identifier on
 # the same line or the next line. Must be flagged.
@@ -2118,17 +2201,34 @@ check("field-lesson guard self-test: undated-claim.md -- a field lesson"
       bool(_fl_undated_bad),
       f"bad entries: {_fl_undated_bad}")
 
-# (b) multiline-claim.md -- "field lesson," on line N with a bare date
-# ("2026-07-22, predates self-hosting") on line N+1. The broadened
-# _FL_ID_RE now recognises bare YYYY-MM-DD dates, so the multiline
-# look-ahead finds the identifier and the claim is accepted.
+# (b) multiline-claim.md -- "field lesson," on line N with the next line
+# reading "2026-07-22, predates self-hosting." (line N+1). The identifier
+# is the "predates self-hosting" phrase on that next line -- NOT the bare
+# 2026-07-22 date beside it, which _FL_ID_RE deliberately does not treat as
+# an identifier (field-lesson-guard-bare-date-weakening). The multiline
+# look-ahead finds "predates self-hosting" and the claim is accepted.
 _fl_multiline_path = _FL_FIXTURES_ROOT / "multiline-claim.md"
 _fl_multiline_bad = _fl_check_file(_fl_multiline_path)
 check("field-lesson guard self-test: multiline-claim.md -- a field lesson"
-      " mention whose identifier (bare date + 'predates self-hosting')"
-      " spans the next line is accepted (empty result)",
+      " mention whose identifier ('predates self-hosting', on the next"
+      " line, not the bare date beside it) spans the next line is"
+      " accepted (empty result)",
       not _fl_multiline_bad,
       f"bad entries: {_fl_multiline_bad}")
+
+# (c) bare-date-claim.md -- a field lesson mention whose ONLY same-line
+# marker is a bare YYYY-MM-DD date, with no identifier on that line or the
+# next. This is the exact shape the dropped `\d{4}-\d{2}-\d{2}` alternative
+# used to accept; must now be flagged (non-empty result) --
+# field-lesson-guard-bare-date-weakening's own regression guard.
+_fl_bare_date_path = _FL_FIXTURES_ROOT / "bare-date-claim.md"
+_fl_bare_date_bad = _fl_check_file(_fl_bare_date_path)
+check("field-lesson guard self-test: bare-date-claim.md -- a field lesson"
+      " mention whose only same-line marker is a bare YYYY-MM-DD date (no"
+      " incident slug, version, or 'predates self-hosting') is flagged"
+      " (non-empty result)",
+      bool(_fl_bare_date_bad),
+      f"bad entries: {_fl_bare_date_bad}")
 
 # --- 21. outbound missing-required-fields guard --------------------------------
 # Walk .dcs/incidents/*/ looking for SAFETY.md, AAR.md, 214-LOG.md -- files
