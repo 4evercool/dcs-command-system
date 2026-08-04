@@ -2029,25 +2029,33 @@ for _iwf_name, _iwf_sections in _INBOUND_WF_SECTIONS.items():
               not _iwf_missing,
               f"declared in schema but missing from backtick context: {_iwf_missing}")
 
-# --- 20. field-lesson citation guard -----------------------------------------
+# --- 20a. field-lesson citation guard ----------------------------------------
 # Every "field lesson" mention in the shipped package must carry an
 # incident identifier: an incident slug, a version number, or an explicit
 # "(predates self-hosting)" note. A false field lesson shipped once
 # (v0.5.10); this guard makes a recurrence mechanically detectable.
+#
+# dcs/references/doctrine.md is deliberately excluded from _FL_FILES: its
+# only "field lessons" mention (line 3) is a routing directive — "Provenance,
+# field lessons, and extended rationale live in doctrine-appendix.md" — not a
+# field-lesson claim. Adding it would require an awkward inline identifier on
+# a sentence that merely points to the appendix.
 _FL_FILES = [
     "dcs/references/doctrine-appendix.md",
     "dcs/workflows/deploy.md",
     "dcs/workflows/new.md",
     "dcs/workflows/close.md",
+    "dcs/workflows/plan.md",
+    "dcs/workflows/execute.md",
     "dcs/templates/202-OBJECTIVES.md",
     "dcs/templates/REGISTER.md",
 ]
-# Match "field lesson" only when near a date pattern (YYYY-MM-DD) —
-# filters out title lines, convention prose, cross-references, and
-# compound adjectives ("field-lesson narratives") that are not claims.
-_FL_LINE_RE = re.compile(r"[Ff]ield lesson.*\d{4}-\d{2}-\d{2}", re.I)
+# Match any line containing "field lesson" / "field-lesson" / "field
+# lessons" — no date requirement. Every such mention must enter the guard
+# regardless of line layout.
+_FL_LINE_RE = re.compile(r"[Ff]ield[- ]lesson", re.I)
 _FL_ID_RE = re.compile(
-    r"incident `[a-z0-9-]+`|v\d+\.\d+\.\d+|predates self-hosting", re.I)
+    r"incident `[a-z0-9-]+`|v\d+\.\d+\.\d+|predates self-hosting|\d{4}-\d{2}-\d{2}", re.I)
 _fl_bad = []
 for _fl_fname in _FL_FILES:
     _fl_path = REPO / _fl_fname
@@ -2071,6 +2079,56 @@ check("field-lesson citations: every field lesson mention in shipped "
       "package carries an incident identifier (slug, version, or "
       "'predates self-hosting')",
       not _fl_bad, "; ".join(_fl_bad))
+
+# --- self-test assertions for the field-lesson citation guard ---------------
+# These two permanent fixture-based self-tests exercise the guard logic
+# against files in tests/fixtures/field-lesson-guard/. The helper below
+# mirrors the per-file logic of the live guard above (same regexes, same
+# multiline look-ahead), so a future edit that changes the guard's
+# matching rules is mechanically tested here rather than assumed.
+
+_FL_FIXTURES_ROOT = REPO / "tests" / "fixtures" / "field-lesson-guard"
+
+
+def _fl_check_file(filepath):
+    """Return [(line_no, line_text)] of bad entries for `filepath` using
+    the SAME _FL_LINE_RE / _FL_ID_RE regexes and the SAME multiline
+    look-ahead logic as the live guard above. An empty list means the
+    file passes (every field-lesson mention carries an identifier)."""
+    bad = []
+    if not filepath.exists():
+        return [("-1", f"{filepath}: file not found")]
+    text = filepath.read_text(encoding="utf-8")
+    lines = text.splitlines()
+    for li, line in enumerate(lines, start=1):
+        if _FL_LINE_RE.search(line) and not _FL_ID_RE.search(line):
+            nxt = lines[li] if li < len(lines) else ""
+            if not _FL_ID_RE.search(nxt):
+                bad.append((li, line.strip()[:80]))
+    return bad
+
+
+# (a) undated-claim.md -- a line with "field lesson" and NO identifier on
+# the same line or the next line. Must be flagged.
+_fl_undated_path = _FL_FIXTURES_ROOT / "undated-claim.md"
+_fl_undated_bad = _fl_check_file(_fl_undated_path)
+check("field-lesson guard self-test: undated-claim.md -- a field lesson"
+      " mention with no identifier on the same line or the next line is"
+      " flagged (non-empty result)",
+      bool(_fl_undated_bad),
+      f"bad entries: {_fl_undated_bad}")
+
+# (b) multiline-claim.md -- "field lesson," on line N with a bare date
+# ("2026-07-22, predates self-hosting") on line N+1. The broadened
+# _FL_ID_RE now recognises bare YYYY-MM-DD dates, so the multiline
+# look-ahead finds the identifier and the claim is accepted.
+_fl_multiline_path = _FL_FIXTURES_ROOT / "multiline-claim.md"
+_fl_multiline_bad = _fl_check_file(_fl_multiline_path)
+check("field-lesson guard self-test: multiline-claim.md -- a field lesson"
+      " mention whose identifier (bare date + 'predates self-hosting')"
+      " spans the next line is accepted (empty result)",
+      not _fl_multiline_bad,
+      f"bad entries: {_fl_multiline_bad}")
 
 # --- 21. outbound missing-required-fields guard --------------------------------
 # Walk .dcs/incidents/*/ looking for SAFETY.md, AAR.md, 214-LOG.md -- files
