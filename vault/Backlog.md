@@ -1447,6 +1447,12 @@ to avoid.
 > `tests/test_doctrine_integrity.py` territory, and it rides the same
 > held train as that row's parent. This also discharges the unassigned
 > follow-up the register's `record-integrity-corrections` row owed.
+> **Discharged 2026-08-04** by that incident's close (integration commit
+> `54d5b41`: `_SENTINEL_TOKENS` widened to four, convention documented
+> in `forms.md` + `doctrine.md` principle 13; see
+> `vault/Post-mortems/field-lesson-guard-bare-date-weakening.md`) —
+> merged, deploy pending on the held train; final strike belongs to the
+> next `/dcs-esg` sweep.
 
 **Evidence.** `dcs/tools/record_integrity.py:413` — `correction_re =
 re.compile(dcs_gate.ENTRY_PREFIX + r'RECORD-CORRECTION:')` — a fourth
