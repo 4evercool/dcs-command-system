@@ -23,6 +23,102 @@ release commit's own message instead:
 
 ---
 
+## 0.9.0 — 2026-08-04
+
+### Added
+
+- **A halt-Safety verdict now fails closed if its own independence or
+  regenerability can't be established.** Doctrine principle 7 extends
+  "verification is never done by the section that produced the work"
+  with a HALT default: a verdict whose independent-agent origin cannot
+  be established, or whose `checked[]` entries do not reproduce, is a
+  HALT rather than a silent pass — closing the gap where an unattended
+  close could previously trust a Safety Officer spawn that may not have
+  run independently, or at all.
+- **The Delegation of Authority gained a model floor.**
+  `DELEGATION.md`'s `delegation-bounds` block adds `approved_models`
+  (`schemas.md` #7, Delegation bounds): unattended operation (`auto_approve_type3`,
+  `deploy.auto`, `deploy.auto_after_close`) applies only to session
+  operating models named there — an empty or absent list means no model
+  is approved, and every site falls back to full v0.1
+  every-gate-is-an-Owner-gate behavior. Honesty-dependent by design: it
+  rests on self-reported model identity, demoting an honest unlisted
+  operator while doing nothing against a dishonest one.
+  (incident `independence-fail-closed-and-model-floor`)
+- **`214-LOG.md` phase-transition entries are written by a canonical
+  append tool, `dcs/tools/dcs_log.py`, instead of by hand.** Stdlib-only;
+  imports `dcs_gate.py`'s grammar dynamically rather than re-deriving it,
+  stamps a real, offset-aware, sub-second-precision timestamp with no
+  override channel (flag, env var, or config), records the operator
+  identity that called it, and self-validates every rendered line through
+  the real `sentinel_of()` before writing. Fails closed: the full
+  read-then-write critical section is serialized under a portable
+  `O_CREAT|O_EXCL` sidecar lock (bounded 5s retry, refuses rather than
+  races a concurrent writer), and containment is by slug only — it never
+  accepts a path argument and refuses when the target directory or
+  `214-LOG.md` does not already exist. All 22 real hand-written append
+  sites across the six workflow files that write it (`new.md`, `plan.md`,
+  `execute.md`, `close.md`, `run.md`, `loop.md`) now invoke it via its
+  installed-copy path.
+- **A new close-time criterion in `dcs/tools/record_integrity.py`** flags
+  a `214-LOG.md` with 3-or-more entries sharing one identical timestamp,
+  or two chronologically-comparable entries out of order — date-scoped so
+  history already on disk is never retroactively broken. Unparseable or
+  offset-incomparable brackets (the portfolio's own legacy shapes: bare
+  dates, colon-less `+HHMM` offsets) are reported as notes, never findings
+  or crashes.
+- **A permanent merge-guard check** (`tests/test_doctrine_integrity.py`)
+  makes the workflow migration above self-enforcing: an explicit
+  per-file manifest of expected `dcs_log.py` invocation-site counts,
+  independent of a corpus-wide negative scan for any remaining
+  hand-written-shaped append instruction across all ten workflow files —
+  two signals that must both hold, so a silently reverted or newly
+  hand-written site turns the guard red rather than passing vacuously.
+  (incident `log-append-helper`)
+- **`RECORD-CORRECTION:`, a fourth mechanically-parsed sentinel
+  (`dcs/tools/record_integrity.py`), is now visible to check 12's census
+  and documented in shipped prose.** `_SENTINEL_TOKENS` names all four
+  tokens; `dcs/references/forms.md` states the asymmetry truthfully —
+  parsed via `dcs_gate.ENTRY_PREFIX`, so it obeys the same column-zero
+  bracketed-timestamp boundary as the other three, but NOT classified by
+  `sentinel_of()` and not writable via `dcs_log.py --sentinel` — and
+  `dcs/references/doctrine.md` names the token in principle 13's running
+  prose. (incident `field-lesson-guard-bare-date-weakening`,
+  `vault/Backlog.md` item 31)
+
+### Fixed
+
+- **Check 20, the field-lesson citation guard, was vacuous, then its own
+  repair reopened the defect it had just closed — both resolved before
+  either state ever shipped** (incidents `field-lesson-guard-vacuity`,
+  `field-lesson-guard-bare-date-weakening`). The guard's entry filter
+  (`_FL_LINE_RE`) required a same-line date to even consider a line a
+  field-lesson claim, filtering out exactly the undated-claim shape it
+  existed to catch; broadened to `[Ff]ield[- ]lesson` so every claim now
+  enters the check, `_FL_FILES` extended to cover `plan.md`/`execute.md`,
+  two permanent self-test fixtures (`undated-claim.md`,
+  `multiline-claim.md`) pin the fix, and the check renumbered `20a`
+  after a duplicate section-number collision. That first repair widened
+  the identifier grammar (`_FL_ID_RE`) to also accept a bare same-line
+  date as sufficient on its own — reopening the unverifiable-claim shape
+  (v0.5.10) the guard exists to prevent, undisclosed in that incident's
+  own commit, AAR, and Safety verdict alike. `_FL_ID_RE` is strict again
+  (an incident slug, a version, or `predates self-hosting` — never a
+  bare date); a 2-entry named non-claim exemption with its own
+  staleness self-test covers the two section headings that can't carry
+  an in-sentence identifier; a new fixture (`bare-date-claim.md`) pins
+  the regression permanently. Three real citation sites were reworded to
+  strict forms in the process, and one relocated-rather-than-removed
+  identifier — a false `Since v0.5.0` claim about when the citation
+  convention began — was caught by the Safety Officer via `git log -S`
+  and corrected to the true `v0.7.1`.
+
+### Config
+
+No new `.dcs/config.json` keys. `approved_models` is a new field in
+`DELEGATION.md`'s own `delegation-bounds` block (amended at a project's
+`/dcs-esg` sessions), not a `/dcs-init` template key.
+
 ---
 
 ## 0.8.0 — 2026-08-03
@@ -70,41 +166,10 @@ release commit's own message instead:
   provider"), so it never asserts a Claude-specific effort vocabulary as
   universal. Two worked examples and the platform-capability field lesson
   behind this design are in `dcs/references/doctrine-appendix.md`.
-- **`214-LOG.md` phase-transition entries are written by a canonical
-  append tool, `dcs/tools/dcs_log.py`, instead of by hand.** Stdlib-only;
-  imports `dcs_gate.py`'s grammar dynamically rather than re-deriving it,
-  stamps a real, offset-aware, sub-second-precision timestamp with no
-  override channel (flag, env var, or config), records the operator
-  identity that called it, and self-validates every rendered line through
-  the real `sentinel_of()` before writing. Fails closed: the full
-  read-then-write critical section is serialized under a portable
-  `O_CREAT|O_EXCL` sidecar lock (bounded 5s retry, refuses rather than
-  races a concurrent writer), and containment is by slug only — it never
-  accepts a path argument and refuses when the target directory or
-  `214-LOG.md` does not already exist. All 22 real hand-written append
-  sites across the six workflow files that write it (`new.md`, `plan.md`,
-  `execute.md`, `close.md`, `run.md`, `loop.md`) now invoke it via its
-  installed-copy path.
-- **A new close-time criterion in `dcs/tools/record_integrity.py`** flags
-  a `214-LOG.md` with 3-or-more entries sharing one identical timestamp,
-  or two chronologically-comparable entries out of order — date-scoped so
-  history already on disk is never retroactively broken. Unparseable or
-  offset-incomparable brackets (the portfolio's own legacy shapes: bare
-  dates, colon-less `+HHMM` offsets) are reported as notes, never findings
-  or crashes.
-- **A permanent merge-guard check** (`tests/test_doctrine_integrity.py`)
-  makes the workflow migration above self-enforcing: an explicit
-  per-file manifest of expected `dcs_log.py` invocation-site counts,
-  independent of a corpus-wide negative scan for any remaining
-  hand-written-shaped append instruction across all ten workflow files —
-  two signals that must both hold, so a silently reverted or newly
-  hand-written site turns the guard red rather than passing vacuously.
-
 ### Config
 
 No new keys — the check is unconditional, not project-configurable, and
-the capability-tier rule adds no config surface either. `dcs_log.py`
-introduces no configuration surface of its own.
+the capability-tier rule adds no config surface either.
 
 ---
 
