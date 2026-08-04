@@ -1,4 +1,4 @@
-# DCS Doctrine — Appendix (provenance, field lessons, background; v0.5.0)
+# DCS Doctrine — Appendix (provenance, field lessons, background)
 
 This file is commentary, not constitution. `doctrine.md` is the normative
 core — every MUST/NEVER/definition/threshold lives there and stands on its
@@ -8,10 +8,11 @@ longer version of a rationale that doctrine only gives one clause of.
 Nothing here is `@`-included by any workflow or agent — if a rule matters
 to how an agent behaves, it is already in the core.
 
-### Field-lesson citation convention (v0.5.0)
+### Field-lesson citation convention
 
-Every field lesson in this appendix (and throughout the package) follows (v0.5.0)
-one of three citation forms, depending on when the originating incident
+Since v0.7.1, every field lesson in this appendix (and throughout the
+package) follows one of three citation forms, depending on when the
+originating incident
 occurred relative to the self-hosting boundary (2026-07-25, when DCS began
 running its own incidents under its own process):
 
@@ -411,7 +412,7 @@ bars (`agents/dcs-safety-officer.md` step 6). The charter justified that
 default with a qualitative census — "the large majority of Safety halts
 across all incidents to date were process/artifact findings" — which
 was itself a derived fact (the specific numbers were
-unverifiable, per the field lesson 2026-07-24 below)
+unverifiable, per field lesson W2 below, which predates self-hosting)
 with no regenerating command beside it, principle 15 applied to the
 sentence that introduced the advisory/refutation split. When this
 incident tried to regenerate it, **no query over the surviving
@@ -666,7 +667,7 @@ Original v0.6.9 per-attempt ceiling text moved from `doctrine.md` principle 13, 
 > Original v0.6.9 text:
 > (v0.6.9) A per-attempt ceiling on trigger (b) closes a hole `execute.md`'s fix-tasking branch has **by construction**: that branch runs its own halt → fix-tasking → re-verify loop *inside* a single attempt, and nothing before this ceiling ever counted it. The unit of count is one such iteration, logged in `214-LOG.md` as a `SAFETY-HALT:` sentinel per `dcs_gate.py`'s published grammar (`GRAMMAR_LINE`): "An entry begins at column zero with a mandatory bracketed timestamp; any other line is a continuation, never a sentinel, and quoting a whole prior entry inside a body requires indenting it off column zero." `dcs_gate.py` is the counter; `esg.max_halts_per_attempt` (default 3) is the ceiling, and reaching it is a mechanical denial, not a warning — it promotes the inner loop into the outer attempt count trigger (c) already tracks. Exactly two sentinels reset the tally: `IAP-APPROVED: <hash>` (written by `plan.md`), an anchor only while `<hash>` prefixes the stamped `IAP-APPROVED` the gate already verified — the marker is the authority, the log line only fixes its position in time; and `SAFETY-PASS:` (written by `execute.md`), so a passed period can still close. A sentinel quoted inside a sentence is never an anchor; the Owner answering "continue" is a decision, not a reset
 
-The doctrine-appendix.md already carries the extended field-lesson narratives (v0.6.9) for this ceiling (see "Principle 13 — the halt-ceiling field lesson" and "Principle 13 — the sentinel threat model" above); this entry records the exact prose divested from the hot path.
+The doctrine-appendix.md already carries the extended field-lesson narratives for this ceiling (see "Principle 13 — the halt-ceiling field lesson" and "Principle 13 — the sentinel threat model" above); this entry records the exact v0.6.9 prose that principle 13 divested from the hot path.
 
 ### D3: v0.1 constraints historical narrative provenance (incident `hot-path-budget-emergency-trim`, 2026-07-30)
 

@@ -55,7 +55,7 @@ From the Planning Chief: the fields above match schemas.md #2 (chief plan).
 
 These checks are arithmetic, not judgment. Run them yourself; a failure
 is yours to fix, never a reason to spend a command point (field lesson
-2026-07-23 — `dcs/references/doctrine-appendix.md`, "Workflow field lessons", W1).
+2026-07-23, predates self-hosting — `dcs/references/doctrine-appendix.md`, "Workflow field lessons", W1).
 
 1. **Self-contradiction** — for every tasking, `territory ∩ forbidden` must be empty.
 2. **Orphaned deliverables** — every deliverable named in `tactics[]`, `verification_plan`, or Logistics-chief plan must map to an existing tasking `id`.

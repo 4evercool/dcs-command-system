@@ -59,6 +59,22 @@ principle 13), so a wording pass that drops the bracketed timestamp, moves
 the token out of position, or paraphrases it, silently disarms the
 counter.
 
+A fourth token, `RECORD-CORRECTION:`, is sentinel-shaped but not one of
+the three above. `dcs/tools/record_integrity.py` (regenerate the site with
+`grep -n 'RECORD-CORRECTION:' dcs/tools/record_integrity.py`)
+compiles its own pattern, `dcs_gate.ENTRY_PREFIX + r"RECORD-CORRECTION:"`,
+so a genuine correction entry obeys the same column-zero
+bracketed-timestamp boundary the other three do. But `dcs_gate.py`'s
+`sentinel_of()` does not classify it, and `dcs_log.py --sentinel` offers
+only `halt`/`pass`/`stamp` — there is no fourth choice — so a correction
+entry is written as ordinary entry text, never through `--sentinel`. The
+entry names its target token — the citation it corrects — in its own
+body, immediately after one of `record_integrity.py`'s citation keywords
+(`integration commit`, `commit`, `merge`, `sha`). Its effect is
+file-scoped: it suppresses that token's citation-integrity finding
+anywhere in the whole `214-LOG.md`, including occurrences that precede
+the correction entry itself, not only within the entry that names it.
+
 ## The canonical append tool (`dcs_log.py`)
 
 Every entry above is written by `dcs_log.py`, never by a hand-written
