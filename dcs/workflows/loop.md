@@ -50,8 +50,7 @@ error.
 
 **Hard rule 1 — never execute a Type 1 incident unattended.** If the top
 `QUEUED` row's recorded type is `1`: do not run it. Mark its register row
-`PARKED` with reason `"awaits Owner"`, append the same note to that
-incident's `214-LOG.md` if an incident directory already exists for it,
+`PARKED` with reason `"awaits Owner"`, append the same note via `python "$HOME/.claude/dcs/tools/dcs_log.py" append <slug> --by <operator> "<text>"` to that incident's `214-LOG.md` if an incident directory already exists for it,
 and continue to the next `QUEUED` row instead. If every remaining `QUEUED`
 row is Type 1 (or turns out to be after typing — see step 3), stop the
 sweep entirely and report the parked list to the Owner.

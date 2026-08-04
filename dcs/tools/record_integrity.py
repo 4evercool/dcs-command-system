@@ -15,7 +15,7 @@ found later, by a human-directed review, not by the process that
 produced the record in the first place.
 
 This module is that mechanical check, run once per incident directory.
-It is deliberately NARROW: it re-derives five specific, universal
+It is deliberately NARROW: it re-derives six specific, universal
 properties of ONE incident's own artifacts -- never a portfolio-wide
 historical sweep (see SCOPE below) -- from the artifacts and the git
 history currently on disk, every time, the same discipline
@@ -46,6 +46,11 @@ What it RE-DERIVES, and from where:
      directory (or the `--commit-range` a caller names instead) carries
      a bare `@`-only line in its message body -- the shape a botched
      mail-merge or templated commit leaves behind.
+  6. LOG ORDER -- for incidents dated after LOG_ORDER_EFFECTIVE_DATE, no
+     DUPLICATE_TIMESTAMP_THRESHOLD-or-more `214-LOG.md` entries share one
+     identical bracketed timestamp, and no two chronologically-comparable
+     adjacent entries run backward; historical logs are never
+     retroactively broken (see LOG_ORDER_EFFECTIVE_DATE below).
 
 SCOPE (criterion 7): every check above is scoped to the ONE incident
 directory named on the command line. This module never walks
@@ -141,6 +146,7 @@ import shlex
 import shutil
 import subprocess
 import sys
+from datetime import datetime
 from pathlib import Path
 
 # The exact invocation string, quoted verbatim by dcs/workflows/close.md's
@@ -1029,6 +1035,346 @@ def commit_message_findings(repo_root, incident_dir, commit_range):
 
 
 # ---------------------------------------------------------------------
+# Criterion 6 -- 214-LOG.md duplicate/out-of-order timestamp check
+# ---------------------------------------------------------------------
+
+# Dirs dated on or before this pin are OUT OF SCOPE for criterion 6 -- the
+# same "new convention, strictly-after scoping" rationale
+# SAFETY_FENCE_EFFECTIVE_DATE documents above (record_integrity.py:633-657):
+# a canonical, timestamp-honest append tool is a NEW convention no
+# incident before it ships was ever asked to follow, so history is never
+# retroactively broken. Pinned to the day the tool lands, 2026-08-04 --
+# NOT this incident's own opening day, which is one day earlier (see
+# below, same comment, for that one-day gap and why it is load-bearing).
+# The comparison below (dir_date <=
+# LOG_ORDER_EFFECTIVE_DATE -> out of scope) is the same plain ISO-8601
+# STRING comparison criterion 3 already established, correct because
+# every incident directory name's leading date is zero-padded YYYY-MM-DD.
+#
+# The scope test reads the INCIDENT DIRECTORY's own leading date, NEVER an
+# individual 214-LOG.md entry's own bracketed timestamp --
+# collect_log_order_findings() below scopes on `incident_dir.name` alone,
+# exactly like safety_fence_findings() does for criterion 3. This
+# distinction is load-bearing for THIS incident's own directory
+# (2026-08-03-log-append-helper, opened 2026-08-03, one day before the
+# pin): real wall-clock time crosses 2026-08-04 while this incident is
+# still open, so several of this very file's own entries carry an 08-04
+# bracket -- that must never, by itself, pull this log into scope. Only
+# the directory's OWN opening date decides.
+LOG_ORDER_EFFECTIVE_DATE = "2026-08-04"
+
+# The smallest identical-bracket run length treated as a finding rather
+# than a plausible honest collision. Once dcs_log.py is the one true
+# writer of every entry in scope (LOG_ORDER_EFFECTIVE_DATE above), 3
+# rests on dcs_log.py's own SUB-SECOND precision -- NOT on a same-SECOND
+# collision argument. An earlier version of this comment argued the
+# latter ("2 is reachable that way, 3 is not"), and the Safety Officer
+# falsified it (incident log-append-helper's own fix-tasking cycle): 6
+# real sequential appends through the tool, at its THEN-current
+# whole-second-only precision (a `.replace(microsecond=0)` truncation,
+# since removed), produced a 5-entry identical-bracket run, honestly,
+# with no backfilling -- proof that a same-second collision reaches well
+# past 2 once a TOOL, not a human, is appending rapidly, so a
+# same-second argument was never sound here, at any run length.
+#
+# dcs_log.py now stamps every entry with
+# `datetime.now().astimezone().isoformat()` at call time
+# (dcs_log.py:384), full sub-second precision, never truncated or
+# rounded. That removes the collision surface the old argument depended
+# on, rather than merely narrowing it: two honest, independent appends
+# sharing an identical timestamp down to the microsecond is not a
+# plausible clock reading, and a THIRD sharing it too, from the same
+# tool, is a legitimate backfill/tampering signal, not a corpus-tuned
+# guess.
+#
+# Verified, not merely asserted (principle 15), against dcs_log.py as it
+# ships today -- run against a disposable scratch incident directory,
+# never against a real one in this repository (outside this module's own
+# file territory): 12 honest, sequential CLI appends (`python
+# dcs/tools/dcs_log.py append <slug> --by <operator> "<text>"`, run back
+# to back with no delay beyond Python's own process-startup cost)
+# produced 12 distinct timestamps, none sharing even their microsecond
+# field -- `2026-08-04T09:23:41.300219+11:00` through
+# `2026-08-04T09:23:42.951810+11:00`, ~150ms apart (process-spawn-bound,
+# not clock-bound). Zero collisions of any length, let alone 3.
+#
+# The historical corpus measurement below (using this same module's own
+# split_log_entries() + dcs_gate.ENTRY_PREFIX, counting MAXIMAL
+# CONSECUTIVE runs of an identical raw bracket string -- never runs
+# split across non-adjacent entries, exactly what log_order_findings()
+# below itself checks) predates this rationale and is kept only as
+# background on PRE-TOOL, hand-typed/copy-pasted logs -- every directory
+# it covers is out of scope by construction (dated on or before
+# LOG_ORDER_EFFECTIVE_DATE), so it is neither evidence for nor against 3
+# as a threshold for entries THIS tool writes; the sub-second
+# measurement above carries that weight now. Re-run the command below
+# against THIS repository's own .dcs/incidents/*/214-LOG.md (never a
+# fixture) to regenerate the figures -- the low end (run-length 1, i.e.
+# no duplicate at all) is expected to keep climbing as this incident's
+# own still-open log keeps growing while it is worked (315 at first
+# measurement, 322 as of this rewrite, both already superseded by the
+# time this incident closes), while every OTHER bucket (2 and up) has
+# stayed identical across both measurements, because entries in an
+# actively-worked, precision-timestamped log are (near) always
+# singletons:
+#
+#   python -c "
+#   import importlib.util, re
+#   from pathlib import Path
+#   from collections import Counter
+#   def load(n, p):
+#       s = importlib.util.spec_from_file_location(n, p)
+#       m = importlib.util.module_from_spec(s); s.loader.exec_module(m)
+#       return m
+#   gate = load('g', 'dcs/hooks/dcs_gate.py')
+#   ri = load('r', 'dcs/tools/record_integrity.py')
+#   pre = re.compile(gate.ENTRY_PREFIX)
+#   runs = Counter()
+#   for p in sorted(Path('.dcs/incidents').glob('*/214-LOG.md')):
+#       stamps = []
+#       for start, end, body in ri.split_log_entries(p.read_text(encoding='utf-8'), pre):
+#           fl = body.splitlines()[0] if body.splitlines() else ''
+#           if fl.startswith('[') and ']' in fl:
+#               stamps.append(fl[:fl.index(']')+1])
+#       i = 0
+#       while i < len(stamps):
+#           j = i
+#           while j+1 < len(stamps) and stamps[j+1] == stamps[i]:
+#               j += 1
+#           runs[j-i+1] += 1
+#           i = j+1
+#   print(sorted(runs.items()))
+#   "
+#
+# Over the 34 214-LOG.md files found on disk as of this rewrite (37
+# incident directories exist; the same 3 -- check-14-hardening,
+# worktree-removal-self-conflict, workflow-file-trim-grandfathered --
+# carry no 214-LOG.md at all and contribute nothing to a per-file
+# run-length count): run-length distribution (length: number of runs) is
+# 1:322, 2:116, 3:42, 4:25, 5:11, 6:10, 7:3, 8:1, 9:1, 10:1, 11:2, 12:2,
+# 75:2 -- every bucket unchanged from the first measurement except the
+# low end (315 -> 322, see above), confirming this incident's own two
+# headline "observed corpus defects", 11 and 75, each appearing exactly
+# twice (both length-75 runs are the bare-date `[2026-07-25]` convention
+# repeated across a whole file, in hot-path-budget-eol-sensitivity and
+# doctrine-hot-path-trim; both length-11 runs are full timestamps, in
+# status-md-enum-drift and schemas-md-trim). Every run in this corpus,
+# like those two headline ones, comes from hand-typed or copy-pasted
+# entries in incidents that predate this tool and this criterion's own
+# effective date, so every measured directory is out of scope by
+# construction and none of this measured history ever becomes a finding
+# -- it says nothing, either way, about how a TOOL-written log behaves,
+# which is what the sub-second measurement above establishes instead.
+DUPLICATE_TIMESTAMP_THRESHOLD = 3
+
+
+def log_order_findings(stamps):
+    """Criterion 6's pure comparator half (mirrors the criterion-3 split
+    at safety_verdict_fence_findings() / safety_fence_findings() above,
+    record_integrity.py:826-839): `stamps` is an ordered list of
+    (start_line, bracket_text) pairs the IO-collector below
+    (collect_log_order_findings()) has already derived, in file order --
+    `bracket_text` is the RAW "[...]" substring exactly as it appears on
+    an entry's first line, delimiters included, never parsed for the
+    duplicate half of this check. Returns a list of finding strings.
+
+    PURE in the sense this incident's tasking requires: no filesystem, no
+    git, no dcs_gate import -- so this is the function a test exercises
+    directly against a synthetic stamps list, with no real 214-LOG.md on
+    disk. Unlike safety_verdict_fence_findings() above, this function's
+    own return type is constrained to a flat findings list (no second
+    tuple element for a caller to print from), so the informational,
+    never-a-finding notes below (an unparseable bracket, a naive/aware
+    pair) are printed here directly -- print() touches none of the three
+    things this function's purity bar names, and threading that same
+    information back out through a second return channel just for the
+    caller to print verbatim would be the drifting-copy risk this whole
+    incident exists to avoid, not a way to prevent one.
+
+    Two independent sub-checks, both scoped to `stamps` alone:
+
+      (a) DUPLICATE run -- a maximal run of CONSECUTIVE stamps sharing
+          the identical raw bracket_text, length >=
+          DUPLICATE_TIMESTAMP_THRESHOLD, is one finding naming the
+          bracket, the run's length, and its first and last line numbers.
+          Consecutive on purpose, not "anywhere in the file":
+          DUPLICATE_TIMESTAMP_THRESHOLD's own justification above is
+          about a tool that fails to advance the clock across successive
+          appends, which is a contiguous shape, and is the exact run
+          definition this incident's own corpus measurement used.
+
+      (b) OUT-OF-ORDER adjacent pair -- each bracket_text is parsed once
+          (`datetime.fromisoformat` on the text between the brackets); a
+          bracket that fails to parse is printed as a note (never a
+          finding, never a crash) and drops out of every pairwise
+          comparison it would have touched. Remaining ADJACENT pairs (in
+          `stamps`' own order) are compared only when both parsed AND are
+          mutually comparable -- classified EXPLICITLY by each side's own
+          `tzinfo` presence before any comparison is attempted, never by
+          a bare try/except swallowing the whole loop: a naive/aware pair
+          is printed as a note (never a finding) and skipped, exactly
+          like an unparseable bracket. A comparable pair whose SECOND
+          entry's timestamp is strictly earlier than its predecessor's is
+          one finding naming both line numbers; equal timestamps are
+          never a finding here -- that is sub-check (a)'s job, at
+          DUPLICATE_TIMESTAMP_THRESHOLD or more -- and a later-or-equal
+          timestamp is the expected case, silently fine.
+    """
+    findings = []
+
+    # -- (a) duplicate consecutive-run check: raw string, no parsing ----
+    i = 0
+    n = len(stamps)
+    while i < n:
+        j = i
+        while j + 1 < n and stamps[j + 1][1] == stamps[i][1]:
+            j += 1
+        run_len = j - i + 1
+        if run_len >= DUPLICATE_TIMESTAMP_THRESHOLD:
+            first_line, bracket_text = stamps[i]
+            last_line = stamps[j][0]
+            findings.append(
+                "criterion 6: FINDING: 214-LOG.md has "
+                f"{run_len} consecutive entries sharing the identical "
+                f"bracketed timestamp {bracket_text} (>= "
+                f"DUPLICATE_TIMESTAMP_THRESHOLD={DUPLICATE_TIMESTAMP_THRESHOLD}), "
+                f"lines {first_line}-{last_line}"
+            )
+        i = j + 1
+
+    # -- (b) out-of-order adjacent-pair check: parsed, classified --------
+    parsed = []
+    for start_line, bracket_text in stamps:
+        inner = bracket_text
+        if inner.startswith("[") and inner.endswith("]"):
+            inner = inner[1:-1]
+        try:
+            dt = datetime.fromisoformat(inner)
+        except ValueError:
+            dt = None
+            print(
+                f"criterion 6: 214-LOG.md:{start_line}: bracket "
+                f"{bracket_text} does not parse as an ISO-8601 timestamp "
+                "-- order check skipped for this entry"
+            )
+        parsed.append((start_line, bracket_text, dt))
+
+    for idx in range(len(parsed) - 1):
+        start_a, bracket_a, dt_a = parsed[idx]
+        start_b, bracket_b, dt_b = parsed[idx + 1]
+        if dt_a is None or dt_b is None:
+            continue  # already printed as a note above; never a finding
+        aware_a = dt_a.tzinfo is not None
+        aware_b = dt_b.tzinfo is not None
+        if aware_a != aware_b:
+            print(
+                "criterion 6: 214-LOG.md lines "
+                f"{start_a} and {start_b}: bracket {bracket_a} and "
+                f"{bracket_b} are not mutually comparable (one naive, one "
+                "offset-aware) -- order check skipped for this pair"
+            )
+            continue
+        try:
+            out_of_order = dt_b < dt_a
+        except TypeError:
+            # Defensive backstop only: the explicit tzinfo check just
+            # above already classifies the one comparability failure this
+            # module has ever measured (naive vs aware, dcs_gate.py:220-
+            # 222's own SPECIMENS on Python 3.10.0rc2). Never reached in
+            # practice; never a crash if it somehow still is.
+            print(
+                "criterion 6: 214-LOG.md lines "
+                f"{start_a} and {start_b}: bracket {bracket_a} and "
+                f"{bracket_b} raised TypeError on comparison -- order "
+                "check skipped for this pair"
+            )
+            continue
+        if out_of_order:
+            findings.append(
+                "criterion 6: FINDING: 214-LOG.md lines "
+                f"{start_a} and {start_b} are out of chronological order "
+                f"-- {bracket_b} at line {start_b} is earlier than "
+                f"{bracket_a} at line {start_a}"
+            )
+
+    return findings
+
+
+def collect_log_order_findings(incident_dir, dcs_gate):
+    """Criterion 6's IO-collector half (mirrors safety_fence_findings()
+    above, record_integrity.py:826-839): date-scope the incident
+    directory by its own name FIRST -- reusing _DIR_DATE_RE and
+    reproducing criterion 3's three ALWAYS-PRINTED dispositions verbatim
+    in shape (no parseable date -> out of scope; date on or before
+    LOG_ORDER_EFFECTIVE_DATE -> out of scope; else in scope) -- never a
+    silent skip. Reads the INCIDENT DIRECTORY's own leading date, never an
+    individual 214-LOG.md entry's own bracketed timestamp (see
+    LOG_ORDER_EFFECTIVE_DATE's own comment above for why that distinction
+    is load-bearing for this incident's own still-open directory).
+
+    Only if in scope: read 214-LOG.md, split it into entries via the
+    EXISTING split_log_entries() + dcs_gate.ENTRY_PREFIX (never a
+    re-derived entry regex -- dcs_gate.py is the one published grammar),
+    take each entry's raw "[...]" bracket (delimiters included) off its
+    own first line as `bracket_text`, and delegate the whole
+    (start_line, bracket_text) list, in file order, to
+    log_order_findings() -- the pure comparator above -- for the actual
+    duplicate/out-of-order check. A missing 214-LOG.md is printed, not a
+    finding, here: criterion 2 (artifact_set_findings()) already owns
+    "214-LOG.md must exist" as part of ARTIFACT_SET, and duplicating that
+    as a second, criterion-6-flavored finding would itself be a behaviour
+    change to an unrelated criterion -- exactly what this incident's own
+    tasking forbids."""
+    findings = []
+    incident_dir = Path(incident_dir)
+    dir_name = incident_dir.name
+
+    m = _DIR_DATE_RE.match(dir_name)
+    if not m:
+        print(
+            f"criterion 6: {dir_name} carries no parseable leading "
+            "YYYY-MM-DD date -- 214-LOG.md order check out of scope"
+        )
+        return findings
+    dir_date = m.group(1)
+    if dir_date <= LOG_ORDER_EFFECTIVE_DATE:
+        print(
+            f"criterion 6: {dir_name} dated {dir_date} is on or before "
+            f"LOG_ORDER_EFFECTIVE_DATE {LOG_ORDER_EFFECTIVE_DATE} -- "
+            "214-LOG.md order check out of scope"
+        )
+        return findings
+    print(
+        f"criterion 6: {dir_name} dated {dir_date} is after "
+        f"LOG_ORDER_EFFECTIVE_DATE {LOG_ORDER_EFFECTIVE_DATE} -- "
+        "214-LOG.md order check in scope"
+    )
+
+    log_path = incident_dir / "214-LOG.md"
+    if not log_path.is_file():
+        print(
+            f"criterion 6: {log_path.as_posix()} is missing -- nothing "
+            "for this check to read (criterion 2 already reports a "
+            "missing 214-LOG.md as its own finding)"
+        )
+        return findings
+
+    text = log_path.read_text(encoding="utf-8")
+    entry_prefix_re = re.compile(dcs_gate.ENTRY_PREFIX)
+    entries = split_log_entries(text, entry_prefix_re)
+
+    stamps = []
+    for start, _end, body in entries:
+        body_lines = body.splitlines()
+        first_line = body_lines[0] if body_lines else ""
+        if first_line.startswith("[") and "]" in first_line:
+            bracket_text = first_line[: first_line.index("]") + 1]
+            stamps.append((start, bracket_text))
+
+    return log_order_findings(stamps)
+
+
+# ---------------------------------------------------------------------
 # Environment checks + CLI
 # ---------------------------------------------------------------------
 
@@ -1052,7 +1398,7 @@ def _git_repo_root(path):
 
 def _build_arg_parser():
     parser = argparse.ArgumentParser(
-        description="Mechanically re-derive five record-integrity properties "
+        description="Mechanically re-derive six record-integrity properties "
         "of one DCS incident directory's own artifacts.",
         epilog=f"Invocation: {INVOCATION}",
     )
@@ -1108,6 +1454,7 @@ def main():
     findings.extend(safety_fence_findings(incident_dir))
     findings.extend(collect_clean_tree_findings(repo_root, incident_dir, args.also_clean))
     findings.extend(commit_message_findings(repo_root, incident_dir, args.commit_range))
+    findings.extend(collect_log_order_findings(incident_dir, dcs_gate))
 
     if findings:
         for f in findings:
@@ -1115,7 +1462,7 @@ def main():
         sys.exit(1)
 
     print(
-        "record-integrity check: clean -- criteria 1-5 all satisfied (or "
+        "record-integrity check: clean -- criteria 1-6 all satisfied (or "
         "out of scope, as printed above) for this incident directory"
     )
     sys.exit(0)

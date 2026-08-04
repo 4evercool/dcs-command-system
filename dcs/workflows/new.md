@@ -126,8 +126,9 @@ probably describing more than one incident — reread it before typing.
 This is a command point (doctrine: "Transfer of command"). **If this
 session is not running Fable**: spawn `dcs-commander` via Task (model
 `fable`), passing the draft 201-BRIEF.md text in full; take its `typing`
-decision (schemas.md #6, commander decisions) as the proposal and record it in the eventual
-214-LOG.md as `command: typed <N> (IC=dcs-commander)`. **If this session
+decision (schemas.md #6, commander decisions) as the proposal; this becomes
+the incident's `command: typed <N> (IC=dcs-commander)` entry in `214-LOG.md`
+once step 7b initializes it. **If this session
 is Fable**, you are the IC — decide yourself using `references/typing.md`'s
 triggers and concrete examples: Type 5, 3, or 1 with a one-sentence
 rationale grounded in what the analysts actually found (file count, whether
@@ -244,7 +245,7 @@ this worktree**, never in the main checkout.
    has nowhere to live, and the forgotten-worktree audits have nothing to
    audit. Recommend founding the ESG now (`/dcs-esg` in the main
    checkout, ~2 minutes); proceed without it only on the Owner's explicit
-   acknowledgment, and record that acknowledgment in `214-LOG.md`. The
+   acknowledgment, and record that acknowledgment via `python "$HOME/.claude/dcs/tools/dcs_log.py" append <slug> --by <operator> "<text>"`. The
    register remains optional for non-worktree work.
 5. Tell the Owner the incident is open, its worktree path, and that the
    next step is `/dcs-plan`. Recommended pattern: start the next session
